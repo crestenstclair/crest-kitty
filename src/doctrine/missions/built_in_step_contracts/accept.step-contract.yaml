@@ -1,0 +1,54 @@
+schema_version: "1.0"
+id: accept
+action: accept
+mission: software-dev
+steps:
+  - id: bootstrap
+    description: Load charter context for this action
+    command: "spec-kitty charter context --action accept --role review --json"
+    inputs:
+      - flag: --profile
+        source: wp.agent_profile
+        optional: true
+      - flag: --tool
+        source: env.agent_tool
+        optional: true
+
+  - id: readiness_summary
+    description: Collect mission readiness (lanes, artifacts, invariants, matrix)
+    command: "spec-kitty accept --mission {mission_slug} --diagnose --json"
+
+  - id: deterministic_gate
+    description: >
+      Execute the deterministic acceptance engine (architecture gate, validation
+      inventory, declared checks) and record the versioned report to the mission
+      dir. Accept is the only lifecycle step that executes declared validations.
+    command: "spec-kitty accept --mission {mission_slug} --deterministic-only --json"
+
+  - id: adversarial_review
+    description: >
+      Apply the execution-acceptance contract embedded in the accept prompt:
+      obligation ledger, evidence-complete findings, and the nine
+      architecture-drift guards. Semantic conformance is never established by
+      the deterministic layer alone.
+    delegates_to:
+      kind: tactic
+      candidates:
+        - atdd-adversarial-acceptance
+        - adversarial-qa-handoff
+
+  - id: quality_gate
+    description: Verify tests pass and type checks succeed
+    delegates_to:
+      kind: directive
+      candidates:
+        - 030-test-and-typecheck-quality-gate
+
+  - id: finalize
+    description: Record acceptance metadata and share next steps
+    command: "spec-kitty accept --mission {mission_slug}"
+    guidance: >
+      Both layers must pass before reporting acceptance complete. A failed
+      deterministic gate or an applicable semantic blocker means the mission is
+      not accepted; repair and rerun. Archive later consumes this recorded
+      state and never re-runs it.

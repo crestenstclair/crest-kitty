@@ -55,8 +55,14 @@ Run acceptance after the final WP is approved:
 /spec-kitty.accept
 ```
 
-Acceptance checks mission readiness. Merge still performs its own pre-flight
-validation.
+Acceptance checks mission readiness. When the project declares an
+architecture spec (`.kittify/architecture`), accept also runs deterministic
+acceptance — every declared project check and applicable attached validation —
+and records the versioned report to `<mission>/deterministic-acceptance.json`.
+Both layers must pass: the deterministic gates and the adversarial semantic
+review embedded in the accept prompt. Accept is the only step that executes
+declared validations; archive later consumes the recorded verdict (guard AM-6)
+and never re-runs it. Merge still performs its own pre-flight validation.
 
 ## Phase 6: Merge Preview
 
