@@ -158,11 +158,30 @@ def test_green_process_with_zero_tests_fails_acceptance(tmp_path: Path) -> None:
 
 
 def test_runtime_session_proof_fails_without_provider(tmp_path: Path) -> None:
+    """With the real default registry, an unknown provider name still fails closed."""
     extra = """\
     proof:
       type: runtime-session
-      provider: process-lifecycle-v1
-      entryPoint: [./app]
+      provider: no-such-provider-v1
+      role: external-process-lifecycle
+      entryPoint: ./app
+      boundary: external-process
+      environment: synthetic
+      lifecycle: bounded
+      successCondition: terminal markers observed
+      terminationOwner: application
+      stdioMode: pipe
+      requireExitCode: 0
+      requireNoDescendants: true
+      requiredCapabilities: []
+      resources:
+      - {id: proc, type: process, disposition: release, owner: fixture}
+      timeouts:
+        {startupTimeoutMs: 1000, progressSilenceMs: 1000, completionTimeoutMs: 2000, completionToExitGraceMs: 200, teardownGraceMs: 500, hardTimeoutMs: 3000}
+      progress:
+      - {id: checkpoint, stream: stdout, contains: CHECKPOINT, minimumCount: 1}
+      completion:
+      - {id: final, stream: stdout, contains: FINAL, exactCount: 1}
     applicability: {mode: always}
 """
     validations = passing_validation([PY, "-c", "print('ok')"]).replace(

@@ -196,11 +196,44 @@ def test_test_suite_proof_defects(tmp_path: Path, proof_mutation: dict[str, Any]
     assert expected_code in _codes(inventory)
 
 
-def test_runtime_session_proof_is_carried_opaquely(tmp_path: Path) -> None:
-    proof = {"type": "runtime-session", "provider": "process-lifecycle-v1", "entryPoint": ["./app"]}
+def test_runtime_session_proof_is_fully_parsed(tmp_path: Path) -> None:
+    """A runtime-session proof now needs every required runtime declaration field."""
+    proof = {
+        "type": "runtime-session",
+        "provider": "process-lifecycle-v1",
+        "role": "external-process-lifecycle",
+        "entryPoint": "./app",
+        "boundary": "external-process",
+        "environment": "synthetic",
+        "lifecycle": "bounded",
+        "successCondition": "terminal markers observed",
+        "terminationOwner": "application",
+        "resources": [{"id": "proc", "type": "process", "disposition": "release", "owner": "fixture"}],
+        "stdioMode": "pipe",
+        "timeouts": {
+            "startupTimeoutMs": 1000,
+            "progressSilenceMs": 1000,
+            "completionTimeoutMs": 2000,
+            "completionToExitGraceMs": 200,
+            "teardownGraceMs": 500,
+            "hardTimeoutMs": 3000,
+        },
+        "progress": [{"id": "checkpoint", "stream": "stdout", "contains": "CHECKPOINT", "minimumCount": 1}],
+        "completion": [{"id": "final", "stream": "stdout", "contains": "FINAL", "exactCount": 1}],
+        "requireExitCode": 0,
+        "requireNoDescendants": True,
+        "requiredCapabilities": [],
+    }
     project = _attached_project(proof, {"mode": "always"})
     inventory = resolve_validation_inventory(project, str(tmp_path), PROJECT_SCOPE)
     assert not inventory.diagnostics
     assert inventory.applicable_attached_runtime_session_count == 1
     assert inventory.checks[0].declaration.kind == "attached_runtime"
-    assert inventory.checks[0].proof is not None and inventory.checks[0].proof["type"] == "runtime-session"
+    parsed = inventory.checks[0].proof
+    assert parsed is not None and parsed["type"] == "runtime-session"
+    assert parsed["lifecycle"] == "bounded" and parsed["interactions"] == []
+    # A partial runtime declaration (the old opaque-carry shape) now fails closed.
+    partial = {"type": "runtime-session", "provider": "process-lifecycle-v1", "entryPoint": ["./app"]}
+    failing = resolve_validation_inventory(_attached_project(partial, {"mode": "always"}), str(tmp_path), PROJECT_SCOPE)
+    assert failing.checks == []
+    assert "runtime_entry_point_malformed" in _codes(failing)

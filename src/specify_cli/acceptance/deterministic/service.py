@@ -11,10 +11,11 @@ Port of CrestOpenSpec's ``service.ts`` (reference in
   validation is `spec-kitty accept`'s existing summary machinery, which runs
   around this engine. The deterministic report carries the ``architecture``
   and ``validations`` gates only.
-- Runtime-session proofs dispatch through ``runtime_session_registry``; until
-  the runtime lifecycle engine lands the default registry is empty, so a
-  declared runtime proof fails closed with
-  ``runtime_session_provider_unsupported`` — it can never silently pass.
+- Runtime-session proofs dispatch through ``runtime_session_registry``; the
+  default registry registers ``process-lifecycle-v1`` from
+  ``specify_cli.acceptance.runtime_lifecycle``. An unknown provider name still
+  fails closed with ``runtime_session_provider_unsupported`` — a declared
+  runtime proof can never silently pass.
 
 Every dependency is injectable (loader, runner, registries) so downstream
 extension requires no orchestration changes. The report never contains
@@ -68,11 +69,6 @@ SEMANTIC_REVIEW_BOUNDARY = {
 
 class RuntimeSessionRegistry(Protocol):
     def get(self, provider: str) -> Any | None: ...
-
-
-class _EmptyRuntimeSessionRegistry:
-    def get(self, provider: str) -> None:  # noqa: ARG002 — protocol shape; no providers until the runtime engine lands
-        return None
 
 
 @dataclass
@@ -193,7 +189,11 @@ class AcceptanceService:
         self._runner = command_runner or LocalCommandRunner()
         self._assertions = assertion_registry or create_default_assertion_registry()
         self._test_evidence = test_evidence_registry or create_default_test_evidence_registry()
-        self._runtime_sessions = runtime_session_registry or _EmptyRuntimeSessionRegistry()
+        if runtime_session_registry is None:
+            from specify_cli.acceptance.runtime_lifecycle.registry import create_default_runtime_session_registry
+
+            runtime_session_registry = create_default_runtime_session_registry()
+        self._runtime_sessions = runtime_session_registry
 
     def run(self, project_root: Path, scope: AcceptanceScope) -> AcceptanceReport:
         report = AcceptanceReport(
