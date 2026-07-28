@@ -598,6 +598,11 @@ def accept(
         "--normalize-encoding/--no-normalize-encoding",
         help="Repair acceptance-artifact encoding (Windows-1252/Latin-1 -> UTF-8) before validating.",
     ),
+    deterministic_only: bool = typer.Option(
+        False,
+        "--deterministic-only",
+        help="Run only the deterministic architecture-spec acceptance engine and emit its report.",
+    ),
 ) -> None:
     """Validate mission readiness before merging to main."""
 
@@ -639,6 +644,29 @@ def accept(
 
     if not json_output:
         tracker.complete("detect", mission_slug)
+
+    # Direct (non-CLI) invocations leave typer's OptionInfo as the default,
+    # which is truthy — compare identity so only an explicit True activates.
+    if deterministic_only is True:
+        from specify_cli.cli.commands._accept_deterministic import (
+            print_deterministic_failure,
+            print_deterministic_success,
+            run_deterministic_step,
+        )
+
+        feature_dir = primary_feature_dir_for_mission(repo_root, mission_slug)
+        det_report = run_deterministic_step(
+            repo_root, mission_slug, feature_dir, record=not (diagnose or no_commit)
+        )
+        if json_output:
+            print(json.dumps(det_report.to_dict(), indent=2))
+        elif not det_report.applicable:
+            console.print("[yellow]Deterministic acceptance not applicable (no armed architecture spec).[/yellow]")
+        elif det_report.passed:
+            print_deterministic_success(det_report)
+        else:
+            print_deterministic_failure(det_report)
+        raise typer.Exit(0 if det_report.passed else 1)
 
     requested_mode = (mode or "auto").lower()
     actual_mode = choose_mode(requested_mode, repo_root)
@@ -728,6 +756,29 @@ def accept(
                 )
             raise typer.Exit(1)
         raise typer.Exit(1)
+
+    from specify_cli.cli.commands._accept_deterministic import (
+        print_deterministic_failure,
+        print_deterministic_success,
+        run_deterministic_step,
+    )
+
+    det_feature_dir = primary_feature_dir_for_mission(repo_root, mission_slug)
+    det_report = run_deterministic_step(
+        repo_root, mission_slug, det_feature_dir, record=not no_commit
+    )
+    if det_report.applicable and not det_report.passed:
+        if json_output:
+            print(json.dumps(det_report.to_dict(), indent=2))
+        else:
+            print_deterministic_failure(det_report)
+            console.print(
+                "\n[red]Deterministic acceptance failed. Fix the declared checks (or the spec) and rerun.[/red]"
+            )
+        _safe_emit_error_logged("Deterministic acceptance failed")
+        raise typer.Exit(1)
+    if det_report.applicable and not json_output:
+        print_deterministic_success(det_report)
 
     acceptance_tests = list(test)
     actor_name = resolve_acceptance_actor(actor)

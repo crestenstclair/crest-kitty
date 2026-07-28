@@ -5,7 +5,7 @@ immutable, explicitly-legacy :class:`ArchivedMission` snapshot: it is excluded
 from live validation but kept **enumerable**, so retiring a mission never hides
 unresolved state.
 
-The four ``AM`` guards are the whole point of this surface — an ungoverned
+The six ``AM`` guards are the whole point of this surface — an ungoverned
 archive would be a one-command escape from any acceptance failure:
 
 * **AM-1 — Terminal only.** Archiving is refused unless the mission is already
@@ -26,6 +26,14 @@ archive would be a one-command escape from any acceptance failure:
   the mission is abandoned, not completed), so an abandoned mission with a
   dangling deferral is still archivable. Deferrals never block archiving here;
   only ``still_present`` does (AM-2).
+* **AM-6 — Recorded acceptance, never re-run.** When the project declares an
+  armed architecture-spec acceptance gate, archiving a *merged* mission
+  requires the recorded deterministic-acceptance verdict to be ``passed``.
+  Archive-time evaluation is an ordinary read of the recorded report
+  (``deterministic-acceptance.json`` in the mission dir) — archiving never
+  starts validations, runtime sessions, supervisors, or interaction drivers.
+  Canceled missions are exempt (abandoned work has nothing to prove, matching
+  AM-5's spirit).
 
 The authority boundary: this module *reads* the canonical status snapshot and
 acceptance matrix and *appends* to an immutable registry. It never re-implements
@@ -114,7 +122,7 @@ class ArchivedMission:
 
 @dataclass(frozen=True)
 class ArchiveEligibility:
-    """The pure verdict of the AM-1/AM-2 guards, independent of any I/O."""
+    """The pure verdict of the AM-1/AM-2/AM-6 guards, independent of any I/O."""
 
     eligible: bool
     refusal_code: str | None = None
@@ -143,8 +151,9 @@ def evaluate_archive_eligibility(
     terminal_state: str | None,
     invariant_results: Iterable[str],
     reason: str,
+    deterministic_acceptance: str | None = None,
 ) -> ArchiveEligibility:
-    """Decide whether an archive is permitted, per AM-1 and AM-2.
+    """Decide whether an archive is permitted, per AM-1, AM-2, and AM-6.
 
     Pure and filesystem-free so the guard logic is exercised directly rather
     than through a mission fixture.
@@ -152,6 +161,12 @@ def evaluate_archive_eligibility(
     * **AM-1**: a stated ``reason`` is required and the mission must be terminal
       (``merged`` / ``canceled``). A non-terminal mission cannot be archived.
     * **AM-2**: refused while any invariant is ``still_present``.
+    * **AM-6**: ``deterministic_acceptance`` is the *recorded* verdict for the
+      mission (``None`` when the project declares no armed acceptance gate —
+      not applicable). A ``merged`` mission with an armed gate is archivable
+      only when the recorded verdict is ``"passed"``; anything else
+      (``"missing"``, ``"failed"``, an unreadable report) refuses. The caller
+      reads the recorded report; this guard never executes anything.
 
     A ``deferred_to_consolidation`` invariant is deliberately NOT a blocker
     (AM-5): a cancelled mission with a dangling deferral is archivable.
@@ -177,6 +192,22 @@ def evaluate_archive_eligibility(
             refusal_code="AM-2",
             reason=(
                 "a still_present invariant must be resolved, not archived past"
+            ),
+        )
+    if (
+        deterministic_acceptance is not None
+        and terminal_state == MERGED
+        and deterministic_acceptance != "passed"
+    ):
+        return ArchiveEligibility(
+            eligible=False,
+            refusal_code="AM-6",
+            reason=(
+                "this project declares an armed acceptance gate, and the "
+                "recorded deterministic-acceptance verdict is "
+                f"{deterministic_acceptance!r} (must be 'passed'); acceptance "
+                "is never re-run at archive time — record a passing report "
+                "before archiving"
             ),
         )
     return ArchiveEligibility(eligible=True)
@@ -297,6 +328,47 @@ class ArchiveOutcome:
     cleared_deferrals: list[DeferralDisposition]
 
 
+DETERMINISTIC_ACCEPTANCE_FILE = "deterministic-acceptance.json"
+
+
+def resolve_deterministic_acceptance(project_root: Path, feature_dir: Path) -> str | None:
+    """AM-6 input: the recorded deterministic-acceptance verdict for a mission.
+
+    Ordinary reads only — this never executes declared validations. Returns
+    ``None`` when the project declares no armed acceptance gate (guard not
+    applicable); otherwise ``"passed"`` / ``"failed"`` / ``"missing"`` /
+    ``"unreadable"`` / ``"invalid-spec"`` from the recorded report at
+    ``<mission>/deterministic-acceptance.json``.
+
+    Deferred imports mirror ``gates_core``'s documented monkeypatch-visibility
+    discipline.
+    """
+    from specify_cli import architecture as architecture_module
+    from specify_cli.acceptance.deterministic.inventory import resolve_validation_inventory
+    from specify_cli.acceptance.deterministic.model import AcceptanceScope
+
+    try:
+        loaded = architecture_module.load_architecture(project_root)
+    except architecture_module.ArchitectureSpecError:
+        return "invalid-spec"  # cannot prove the gate is unarmed — fail closed
+    if loaded is None:
+        return None
+    inventory = resolve_validation_inventory(
+        loaded.project, str(project_root), AcceptanceScope(mode="project")
+    )
+    if not inventory.declared:
+        return None
+
+    report_path = feature_dir / DETERMINISTIC_ACCEPTANCE_FILE
+    if not report_path.is_file():
+        return "missing"
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return "unreadable"
+    return "passed" if isinstance(report, dict) and report.get("passed") is True else "failed"
+
+
 def archive_mission(
     *,
     project_root: Path,
@@ -306,8 +378,9 @@ def archive_mission(
     now: str | None = None,
     terminal_state_resolver: Callable[[Path], str | None] = resolve_terminal_state,
     invariants_reader: Callable[[Path], list[tuple[str, str]]] = read_invariants,
+    deterministic_acceptance_resolver: Callable[[Path, Path], str | None] | None = None,
 ) -> ArchiveOutcome:
-    """Archive a mission, enforcing AM-1..AM-5.
+    """Archive a mission, enforcing AM-1..AM-6.
 
     ``archived_by`` is a required operator identity — there is no default, so no
     automated lifecycle step can archive anonymously (AM-4). The state readers
@@ -325,11 +398,15 @@ def archive_mission(
 
     terminal_state = terminal_state_resolver(feature_dir)
     invariants = invariants_reader(feature_dir)
+    acceptance_resolver = (
+        deterministic_acceptance_resolver or resolve_deterministic_acceptance
+    )
 
     eligibility = evaluate_archive_eligibility(
         terminal_state=terminal_state,
         invariant_results=[result for _inv_id, result in invariants],
         reason=reason,
+        deterministic_acceptance=acceptance_resolver(project_root, feature_dir),
     )
     if not eligibility.eligible:
         # A non-eligible verdict always carries both a code and a stated reason;
