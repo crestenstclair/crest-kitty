@@ -670,13 +670,15 @@ def test_routed_canonicalizer_floor_matches_recorded_census() -> None:
     The bounds mirror ``test_routed_count_floor`` (the floor is a concrete integer
     strictly below live, within ``ROUTED_CANONICALIZER_FLOOR_MARGIN``).
     """
-    assert ROUTED_CANONICALIZER_FLOOR == 40, (
-        "ROUTED_CANONICALIZER_FLOOR drifted from the recorded census (40 = 44 live "
+    assert ROUTED_CANONICALIZER_FLOOR == 41, (
+        "ROUTED_CANONICALIZER_FLOOR drifted from the recorded census (41 = 45 live "
         "routed − MARGIN 4). Census history: WP01 identity anchors 35→42 (floor 38); "
         "tasks-py-degod WP02 added ONE direct primitive anchor "
         "(RealFsReader.primary_anchor_dir, C-002 co-located fold) 42→43 (floor 39); "
         "runtime-state-corpus-cutover added the durable claim mission-id anchor "
-        "43→44 (floor 40). "
+        "43→44 (floor 40); port/crestopenspec-gates routed accept's "
+        "deterministic-step mission-dir read through the canonical fold 44→45 "
+        "(floor 41). "
         "If it changed again, a WP moved the census; record the honest before/after "
         "rather than re-pinning the integer."
     )

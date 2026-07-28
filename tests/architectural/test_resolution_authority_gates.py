@@ -188,7 +188,12 @@ ROUTED_CANONICALIZER_FLOOR_MARGIN = 4
 # runtime-state-corpus-cutover (#2816): durable dispatch-claim correlation
 # resolves the canonical mission id from the primary feature directory, adding
 # one direct routed anchor. Live routed census 43 → 44; floor 39 → 40.
-ROUTED_CANONICALIZER_FLOOR = 40
+# port/crestopenspec-gates: the accept deterministic-acceptance step reads the
+# mission dir through the canonical fold (two co-located
+# primary_feature_dir_for_mission(_canonicalize_primary_read_handle(...)) calls
+# in ``accept`` dedupe to one census site). Live routed census 44 → 45;
+# floor recomputed 45 − MARGIN(4) = 41. Honest before/after, not a re-pin.
+ROUTED_CANONICALIZER_FLOOR = 41
 
 
 # --------------------------------------------------------------------------- #
