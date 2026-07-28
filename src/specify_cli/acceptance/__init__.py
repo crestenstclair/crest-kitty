@@ -52,6 +52,7 @@ from specify_cli.upgrade.pre30_guard import check_pre30_layout
 from .gates_core import (
     AcceptanceCheckDiagnostic,
     _changed_workflow_files,  # noqa: F401 -- re-export consumed by test_acceptance_regressions.py
+    _check_architecture_reconciliation,
     _check_lane_gates,
     _check_workflow_run_evidence,
     _find_unchecked_tasks,
@@ -1031,6 +1032,7 @@ def collect_feature_summary(
         mutate_matrix=mutate_matrix,
     )
     _check_workflow_run_evidence(repo_root, read_feature_dir, branch, activity_issues)
+    _check_architecture_reconciliation(repo_root, read_feature_dir, activity_issues)
 
     normalized_unchecked_tasks = _normalized_unchecked_tasks(unchecked_tasks, lanes)
     recommended_fix_order = _build_recommended_fix_order(

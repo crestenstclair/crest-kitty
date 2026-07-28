@@ -641,4 +641,54 @@ def _check_workflow_run_evidence(
         )
 
 
+ARCHITECTURE_RECONCILIATION_HEADING = "## Architecture Reconciliation"
+
+
+def _check_architecture_reconciliation(
+    repo_root: Path,
+    feature_dir: Path,
+    activity_issues: list[str],
+) -> None:
+    """Fail closed on an invalid architecture spec; require plan reconciliation.
+
+    When the project declares an architecture spec (``.kittify/architecture``),
+    planning is incomplete until the mission's ``plan.md`` records how the
+    change was reconciled against it (an ``## Architecture Reconciliation``
+    section). An invalid spec blocks acceptance outright — the gate must not
+    silently pass on a model that could not be evaluated. Ordinary read: this
+    never executes declared validations.
+
+    The architecture loader is imported deferred, mirroring this module's
+    documented monkeypatch-visibility discipline (tests patch
+    ``specify_cli.architecture.load_architecture``).
+    """
+    from specify_cli import architecture as architecture_module
+
+    try:
+        loaded = architecture_module.load_architecture(repo_root)
+    except architecture_module.ArchitectureSpecError as error:
+        first = "; ".join(d.render() for d in error.diagnostics[:3])
+        activity_issues.append(
+            "Architecture spec is invalid and blocks acceptance (fail-closed): "
+            + first
+            + ". Repair the spec (see `spec-kitty doctor architecture`)."
+        )
+        return
+    if loaded is None:
+        return
+
+    plan_path = feature_dir / "plan.md"
+    try:
+        plan_text = plan_path.read_text(encoding="utf-8")
+    except OSError:
+        plan_text = ""
+    if ARCHITECTURE_RECONCILIATION_HEADING.casefold() not in plan_text.casefold():
+        activity_issues.append(
+            "Architecture reconciliation required: this project declares an "
+            "architecture spec, so plan.md must contain an "
+            f"'{ARCHITECTURE_RECONCILIATION_HEADING}' section recording the "
+            "affected canonical IDs and any spec edits made during planning."
+        )
+
+
 __all__: list[str] = []

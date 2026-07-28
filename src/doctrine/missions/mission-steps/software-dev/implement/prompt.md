@@ -104,6 +104,20 @@ token budget; whenever a fetch command appears, the accompanying
 - `spec-kitty charter context --include tactic:<id>`
 - `spec-kitty charter context --include section:<slug>`
 
+## Architecture Spec Grounding (required when present)
+
+<!-- architecture-spec:start (port/crestopenspec-gates) -->
+Run `spec-kitty context architecture` before implementing. If it reports not
+applicable, continue normally. Otherwise: implement against the rendered
+model — respect bounded contexts, ports, layer rules, and dependency
+direction; treat declared invariants as non-negotiable constraints; and check
+`plan.md`'s `## Architecture Reconciliation` section for the canonical IDs
+this work package touches. If implementation reveals the plan's
+reconciliation was wrong, stop and update `plan.md` and the spec sources
+rather than drifting from both. A runtime success marker is intermediate
+evidence, not completion.
+<!-- architecture-spec:end -->
+
 ## Execution Steps
 
 ### 1. Setup
