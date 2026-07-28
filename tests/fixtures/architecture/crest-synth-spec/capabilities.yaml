@@ -1,0 +1,597 @@
+capabilities:
+  asynchronous_engine_selection:
+    description: Request, prepare, commit, publish, activate, retire, and observe one capability-polymorphic
+      Patch structural replacement without callback work or fallback
+    goals:
+    - select_patch_engine
+    - select_soundfont_preset
+    - edit_patch_envelope
+    - observe_synth
+    - observe_live_synth
+    acceptance:
+      prepared_adjacent_choice:
+        description: the focused PATCH engine row selects both installed engines through one correlated
+          asynchronous lifecycle
+        actor: maintainer
+        steps:
+        - action: focus the first SoundFont Patch and press Edit+Right
+          observes: AppState accepts one request, enters Preparing, and leaves the active config and graph
+            revision exact while the old SoundFont graph remains audible
+        - action: request another structural edit while preparation is pending
+          observes: the reducer returns StructuralEditBusy with no generation or state change while MIDI,
+            context, and valid scalar events remain available
+        - action: advance the injected worker and control tick
+          observes: the real providers, preparers, and graph builder return a correlated Braids candidate;
+            AppState commits it before parameter projection and complete-graph publication
+        - action: render and collect the replacement
+          observes: the callback swaps only at a block boundary, returns the prior graph for off-callback
+            destruction, and the reducer reaches Ready only after exact activation and retirement acknowledgement
+        - action: press Edit+Left and complete the reverse path
+          observes: the same Patch returns to the descriptor-default HiDef SoundFont config and produces
+            finite nonzero targeted output without restoring cached inactive-engine values
+        - action: inject a typed preparation failure and stale outcomes
+          observes: the prior config, revision, graph, routing, and unrelated Patches remain exact; no
+            graph is published and no capability or asset is substituted
+        - action: run the paced live scene
+          observes: the production threaded worker completes both successful directions, each Preparing/Activating/Ready
+            state and graph revision is visible, targeted physical output is finite and nonzero, and the
+            final config is descriptor-default SoundFont
+        evidence:
+        - evidence.engine_selection_workflow
+  graphical_application_shell:
+    description: Project and render the application through a passive eframe/egui shell with canonical
+      semantic interaction, identity, workspace, persistent Utility/Inspector, and footer regions
+    goals:
+    - use_graphical_shell
+    acceptance:
+      production_shell:
+        description: the normal application and phase-specific live scene render one canonical graphical
+          shell without changing control or audio ownership
+        actor: maintainer
+        steps:
+        - action: launch the normal standalone application
+          observes: the selected eframe/egui adapter renders the context line, identity header, main workspace,
+            persistent Utility or Inspector region, and footer from one immutable graphical projection
+        - action: select PATCH and MIXER through normalized input
+          observes: AppState.apply remains the only mutation path, every visible region changes to the
+            same accepted context generation, and session values, graph revision, commands, and rendered
+            audio remain exact
+        - action: render the shell at 1920 by 1080 and 1280 by 800
+          observes: both layouts retain every structural band, the persistent side region, minimum readable
+            geometry, and the same semantic hierarchy without adapter-owned navigation state
+        - action: inspect the workspace during the Phase 2 blockout
+          observes: the shell renders the immutable semantic view-model path, mode, valid actions, status,
+            errors, surfaces, and descriptor content alongside retained read-only diagnostics without
+            inventing the Phase 4 component library or functional Phase 5/6 screens
+        - action: run make demo-live-graphical-shell
+          observes: real fixture MIDI and physical audio continue while both contexts and every shell
+            region remain visible, then semantic cleanup, window close, stream release, worker shutdown,
+            graph collection, and parent exit all succeed
+        evidence:
+        - evidence.graphical_application_shell_contract
+  instrument_capability_model:
+    description: Represent installed instrument implementations through stable capability descriptors
+      and generic Patch-owned configs while keeping preparation and prepared runtime ownership behind
+      separate ports
+    goals:
+    - play_test_song
+    - control_synth
+    - inspect_patch
+    - select_patch_engine
+    - select_soundfont_preset
+    acceptance:
+      soundfont_is_one_capability:
+        description: the current SoundFont path is expressed as one validated capability rather than the
+          universal Patch shape
+        actor: maintainer
+        steps:
+        - action: construct the application
+          observes: the immutable registry contains instrument.soundfont.hidef with EngineManaged polyphony
+            and instrument.braids with FixedPerPatch(16), plus their exact ordered structural/scalar parameter
+            descriptors
+        - action: initialize the Corridors fixture
+          observes: the fixture edge converts zero-based even parts to exact SoundFont configs and odd
+            parts to default Braids configs, then validates every InstrumentConfig before Patch installation
+        - action: inspect StateTree and TextProjection
+          observes: the registry plus every Patch capability id, value, and asset reference are projected
+            from the same canonical descriptors without SoundFont-specific projection branches
+        - action: attempt unknown, duplicate, missing, mismatched-kind, and out-of-range config mutations
+          observes: each is rejected with a typed error and no descriptor, config, preset, asset, or renderer
+            is substituted
+        evidence:
+        - evidence.capability_model_contract
+  semantic_graphical_view_model:
+    description: Project canonical state into a layout-neutral semantic model with stable focus, modes,
+      return paths, exact valid actions, descriptor-derived content, status, and typed errors
+    goals:
+    - use_semantic_graphical_view_model
+    acceptance:
+      canonical_semantic_navigation:
+        description: the reducer, projector, passive eframe shell, deterministic proof, and physical live
+          scene agree on one semantic interaction model
+        actor: maintainer
+        steps:
+        - action: inspect the current graphical projection in PATCH and MIXER
+          observes: one SemanticGraphicalViewModel names the exact context, active surface, stable FocusPath,
+            interaction mode, optional return path, valid SemanticActions, status, typed errors, and descriptor-derived
+            content for the accepted generation
+        - action: navigate each main surface and enter its persistent Utility or Inspector
+          observes: AppState.apply alone changes the semantic FocusPath, entering a side surface records
+            the exact main-surface ReturnPath, and Return restores that origin without changing session,
+            graph, parameter, or audio state
+        - action: hold and release Edit around a valid directional adjustment
+          observes: normalized SemanticActions move the reducer-owned mode Navigate to Adjust and back,
+            amber-versus-cyan state is projected explicitly, and only the accepted adjustment changes
+            its canonical target
+        - action: change viewport and replace a descriptor schema while a removable control is focused
+          observes: layout movement leaves the FocusPath identical and schema removal recovers to the
+            nearest surviving visible enabled sibling by one deterministic resolver
+        - action: exercise structural Ready, Preparing, Activating, Failed, and recovery states
+          observes: status and typed errors are projected from canonical lifecycle data without adapter
+            strings, fallback, or UI-owned state; the physical healthy path represents the empty error
+            set explicitly
+        - action: run make demo-live-semantic-view-model
+          observes: real fixture audio continues while both contexts, four surfaces, Navigate and Adjust,
+            valid actions, exact return paths, structural statuses, and focus recovery are visibly correlated
+            before complete live teardown
+        evidence:
+        - evidence.semantic_graphical_view_model_contract
+  sixteen_track_mixer_routing:
+    description: Own, edit, project, render, meter, and prove one fixed sixteen-track mixer bank independently
+      from Patch identity and instrument schema
+    goals:
+    - route_patches_through_sixteen_tracks
+    acceptance:
+      routed_track_control:
+        description: sixteen stable tracks receive Patch output routes and control their combined signal
+          through the canonical reducer and bounded renderer
+        actor: maintainer
+        steps:
+        - action: open MIXER with zero, one, and several installed Patches
+          observes: T00 through T0F remain present in stable order with track-owned Level, Pan, Mute,
+            Solo, current sends, and one meter each; Patch count and engine schemas do not create or remove
+            columns
+        - action: route two sounding Patches to one track
+          observes: their post-effect, post-trim stems sum before the track controls and the track fader
+            changes both contributions together while every other track remains sample-exact
+        - action: change one Patch trim and output track through PATCH Utility
+          observes: AppState.apply commits exactly that Patch output value, the next compatible fixed
+            snapshot moves only its contribution, and no structural graph is built or substituted
+        - action: exercise track level, pan, mute, solo, reverb send, and delay send
+          observes: the canonical state, semantic projection, fixed snapshot, pre-gate meter, dry output,
+            and post-gate sends agree; mute wins and active solo excludes non-soloed tracks
+        - action: attempt an invalid track identity and navigate empty tracks at both reference viewports
+          observes: the invalid value is a typed unchanged rejection while all sixteen stable track paths
+            remain visible, focusable, and free of Patch or widget indices
+        - action: run make demo-live-sixteen-track-mixer-routing
+          observes: the real window and physical stream expose all sixteen tracks, shared-track accumulation,
+            rerouting, track controls, meters, finite nonzero audio, exact cleanup, stream release, graph
+            collection, and normal exit
+        evidence:
+        - evidence.sixteen_track_mixer_routing_contract
+  soundfont_audio:
+    description: Parse HiDef.sf2 once, prepare one engine-managed synthesizer per SoundFont Patch, and
+      render it through the capability-neutral rack
+    goals:
+    - play_test_song
+    - select_soundfont_preset
+    acceptance:
+      audible_patches:
+        description: different MIDI instruments become correctly configured audible SoundFont patches
+        actor: maintainer
+        steps:
+        - action: start the application with HiDef.sf2 present
+          observes: the SoundFont parses once outside the callback and prepares exactly one engine-managed
+            synthesizer for each accepted SoundFont Patch
+        - action: play notes belonging to multiple instrument parts
+          observes: the generic rack targets only the prepared instrument for that Patch and produces
+            one isolated bounded stereo stem
+        evidence:
+        - evidence.running_synth
+  braids_engine:
+    description: Render an intentional second production engine through the pinned Mutable Instruments
+      Braids MacroOscillator implementation
+    goals:
+    - play_test_song
+    - control_synth
+    acceptance:
+      pinned_sixteen_voice_braids:
+        description: the official C++ DSP produces bounded, parameterized polyphonic audio without leaking
+          engine identity into shared contracts
+        actor: maintainer
+        steps:
+        - action: prepare a Braids Patch at 48 kHz
+          observes: the pinned opaque adapter initializes exactly sixteen oscillators outside the callback
+            and rejects every unsupported rate or config without fallback
+        - action: play sixteen notes and then a seventeenth
+          observes: all sixteen voices render finite audio and the oldest voice is stolen deterministically
+        - action: admit N Braids Patches, including a three-Patch witness
+          observes: the graph owns N distinct native banks and 16 × N voices, reports forty-eight for
+            three Patches, and has no shared global pool, Braids-specific Patch-count limit, or cross-Patch
+            stealing
+        - action: edit Model, Timbre, and Color through AppState.apply
+          observes: the matching descriptor-ordered scalar slots reach only that Braids Patch and each
+            produces a measured audible change
+        evidence:
+        - evidence.braids_engine_contract
+  per_voice_envelope:
+    description: Apply one canonical configurable Patch ADSR independently to each admitted SoundFont
+      and Braids note voice
+    goals:
+    - play_test_song
+    - control_synth
+    - edit_patch_envelope
+    acceptance:
+      independent_overlapping_notes:
+        description: overlapping notes retain separate envelope lifecycles in both engines
+        actor: maintainer
+        steps:
+        - action: edit every ADSR field through the normal reducer
+          observes: state, text, StateTree, and the matching fixed real-time Patch projection contain
+            the same accepted value
+        - action: release one of two overlapping notes
+          observes: only the released voice enters Release while the held voice remains independently
+            audible
+        - action: repeat for SoundFont and Braids
+          observes: both production adapters apply the envelope before note audio enters the Patch stem
+        evidence:
+        - evidence.per_voice_envelope_contract
+        - evidence.patch_adsr_editing_contract
+  automatic_test_midi:
+    description: Use Corridors of Time as an automatic MIDI input that creates one Patch per instrument
+      and assigns every part a distinct channel
+    goals:
+    - play_test_song
+    acceptance:
+      corridors_starts:
+        description: the fixed test file begins without transport input and exercises several patches
+        actor: player
+        steps:
+        - action: open the application
+          observes: the test module reads ./midi/Corridors of Time - Chrono Trigger.mid and begins emitting
+            events automatically
+        - action: inspect discovered instrument parts
+          observes: there is one Patch per instrument identity, part N uses unique channel N, and channel
+            exhaustion fails instead of reusing a channel
+        evidence:
+        - evidence.running_synth
+  global_mix:
+    description: Trim and route every already post-effect-processed Patch stem into one of sixteen tracks,
+      then apply track level, pan, mute, solo, sends, one mixer-owned global reverb, and one mixer-owned
+      global delay
+    goals:
+    - play_test_song
+    - control_synth
+    acceptance:
+      shared_effects:
+        description: Patch output routes, track parameters, and the two shared effects alter the final
+          stereo signal
+        actor: maintainer
+        steps:
+        - action: render two simultaneously active Patches on distinct tracks and then one shared track
+          observes: Patch identity is retained through trim and routing; the shared-track stems sum before
+            the one track parameter set and track sends feed the shared effects
+        - action: change one track level and one Patch trim
+          observes: the track edit changes every contribution routed there while the Patch edit changes
+            only that Patch and unrelated tracks remain sample-identical
+        - action: change a global effect parameter
+          observes: the next published snapshot changes the complete expected rendered signal
+        evidence:
+        - evidence.running_synth
+        - evidence.control_path
+  one_way_parameter_control:
+    description: Translate physical or passive-view input to SemanticActions and then AppEvents, reduce
+      them into AppState, serialize accepted instrument/effect/interaction state, project semantic graphical,
+      diagnostic, and fixed real-time values, and publish only accepted effects
+    goals:
+    - control_synth
+    - inspect_patch
+    - select_patch_engine
+    - edit_patch_envelope
+    - select_soundfont_preset
+    acceptance:
+      keyboard_edit:
+        description: navigation and editing use the same reducer and projections as every other control
+          input
+        actor: player
+        steps:
+        - action: press W, S, A, or D
+          observes: one SemanticAction becomes one AppEvent and the stable FocusPath moves without changing
+            a synth parameter
+        - action: hold K and press a direction, then release K
+          observes: mode projects Adjust while held, exactly the selected bounded parameter changes through
+            AppState.apply, and release restores Navigate
+        - action: inspect the resulting screen and audio snapshot
+          observes: serialized state, text, published parameters, and engine consumption contain the same
+            accepted value
+        - action: adjust again toward an already reached boundary, then issue a valid edit
+          observes: the boundary no-op does not close the application and the later edit succeeds
+        evidence:
+        - evidence.control_path
+        - evidence.patch_adsr_editing_contract
+  schema_driven_patch_page:
+    description: Project one stable Patch through installed instrument/effect registries into PATCH with
+      one reducer-owned Engine-plus-ADSR-plus-instrument-structural-plus-effect-scalar focus surface while
+      preserving MIXER
+    goals:
+    - inspect_patch
+    - select_patch_engine
+    - edit_patch_envelope
+    - select_soundfont_preset
+    - observe_synth
+    acceptance:
+      two_context_projection:
+        description: direct page selection produces exact context-specific projections through the canonical
+          reducer without an audio or graph change
+        actor: maintainer
+        steps:
+        - action: press 2 after the fixture Patches are installed
+          observes: WindowInput becomes SelectContext(PATCH), AppState.apply updates only reducer-owned
+            InteractionState, and the next immutable projection names PATCH and the focused PatchId
+        - action: inspect SoundFont and Braids Patch projections
+          observes: each shows Patch identity and MIDI channel, the active CapabilityId and label, all
+            four canonical ADSR values, every active descriptor section and parameter in descriptor order,
+            stable semantic ids, typed values, update class, and the exact two installed engine choices
+            without an engine-specific page branch
+        - action: compare state and audio projections before and after page selection
+          observes: session values, active graph revision, engine ownership, parameter values, and queued
+            audio commands are unchanged; only context, accepted generation, serialization, and view projection
+            advance
+        - action: press 1
+          observes: SelectContext(MIXER) restores the prior MIXER selection and the existing complete
+            diagnostic projection without a second state copy
+        - action: inspect and navigate the PATCH focus
+          observes: the stable nonwrapping order is Engine, Attack, Decay, Sustain, Release, active instrument
+            StructuralChoice controls, then configured effect ScalarEdit controls; exactly one row is
+            focused, structural rows follow lifecycle availability, ADSR/effect rows are scalar-editable,
+            and other fields remain read-only
+        - action: send leftward PATCH Main navigation, a vertical engine adjustment, or endpoint navigation
+          observes: the reducer returns the applicable typed unchanged rejection, while rightward navigation
+            enters Utility with an exact return path and a later valid navigation, adjustment, or context-selection
+            action remains accepted
+        evidence:
+        - evidence.patch_page_contract
+        - evidence.patch_adsr_editing_contract
+  observable_demo_scene:
+    description: Drive the current instrument, effect, mixer, and structural GUI vocabulary through production
+      event/reducer/projection/audio seams and emit an exhaustive machine-readable trace
+    goals:
+    - edit_patch_envelope
+    - select_soundfont_preset
+    - observe_synth
+    acceptance:
+      exhaustive_trace:
+        description: the deterministic demo proves every current input, event, editable parameter, serialized
+          property, rejection path, and emitted effect
+        actor: maintainer
+        steps:
+        - action: run make demo
+          observes: the real alternating fixture initializes and normalized GUI inputs exercise the same
+            translator, AppLoop, projections, real-time boundaries, mixed prepared rack, complete graph,
+            and mixer as the application
+        - action: inspect CREST_EVENT_LOG
+          observes: every input has one accepted or rejected record with a contiguous sequence, before/after
+            generation and state hashes, emitted effects, parameter generation, and projection identity
+        - action: inspect CREST_STATE_TREE
+          observes: every current Patch identity/instrument/parameter, global parameter, selection property,
+            text projection property, and parameter snapshot property is present with the exact value
+            from the same accepted generation
+        - action: inspect CREST_OBSERVATION coverage
+          observes: the typed current-surface descriptor exactly equals the exercised normalized-input,
+            event, direction, MIDI-kind, editable-parameter, state-tree leaf, projection, rejection, and
+            emitted-effect set; missing and unexpected are both empty
+        - action: inspect audio checkpoints
+          observes: both effect inputs are nonzero when global wet controls are compared, each comparison
+            starts from identical effect state, and all parameters, sends, selection, and projections
+            return exactly to their captured baseline
+        - action: repeat the demo
+          observes: the same scene produces the same logical event/state trace and final tree without
+            relying on a native window, device, wall clock, or random input
+        evidence:
+        - evidence.exhaustive_demo_scene
+        - evidence.mutation_resistance
+      falsifiable_seams:
+        description: the release proof rejects independently injected defects at the production control,
+          routing, serialization, and rendering seams
+        actor: maintainer
+        steps:
+        - action: drop one translated Adjust before AppLoop dispatch
+          observes: the adjustment event, exact selected value, and projection checks fail while unrelated
+            state remains unchanged
+        - action: copy one edited track parameter set into a different published MixerTrackId
+          observes: exact StateTree-to-ParameterSnapshot equality and untargeted track audio isolation
+            fail
+        - action: rewrite one PatchId at the audio-command routing seam
+          observes: the target/untargeted stem and command-to-event identity checks fail
+        - action: omit one required leaf while serializing StateTree
+          observes: typed schema equality and exact projection/state checks fail
+        - action: excite global effects from dry audio while both supplied sends are zero
+          observes: the paired zero-input wet-output isolation predicate fails from identical effect state
+        - action: zero the renderer output buffer after the production render path
+          observes: the finite nonzero audio predicate fails even though the control trace remains complete
+        evidence:
+        - evidence.mutation_resistance
+  live_observable_demo:
+    description: Run a paced autonomous instrument/effect/mix scalar-and-structural scene inside the real
+      standalone window and physical audio stream while preserving the canonical reducer, projection,
+      preparation, graph-publication, and event-log path
+    goals:
+    - edit_patch_envelope
+    - select_soundfont_preset
+    - observe_live_synth
+    acceptance:
+      live_scene:
+        description: one bounded command opens the real UI and audio output, exercises every current editable
+          parameter plus both successful engine directions, emits its completed evidence, and exits successfully
+        actor: player
+        steps:
+        - action: run make demo-live
+          observes: the normal eframe window and physical CPAL output open with HiDef.sf2 and the existing
+            Corridors of Time fixture
+        - action: watch and listen to the paced scene
+          observes: fixture MIDI remains responsive while every editable parameter instance changes through
+            AppEvent and AppState.apply, remains visible for at least one rendered frame and the declared
+            dwell, and reaches audio through the published ParameterSnapshot
+        - action: watch the focused first Patch switch SoundFont to Braids and back
+          observes: semantic requests progress through Preparing, Activating, and Ready via the production
+            threaded worker; each acknowledged graph revision receives targeted MIDI and produces finite
+            nonzero physical output before the next direction begins
+        - action: press a mapped key while the autonomous scene is active
+          observes: the window translates the semantic input but live orchestration does not dispatch
+            it, so no keyboard EventRecord, generation, projection, or parameter publication can interleave
+            with the pending checkpoint
+        - action: wait for the scene to complete
+          observes: the preset transition, both engine transitions, and accepted/rejected scalar events
+            are present in EventLog, the first Patch is Ready on descriptor-default SoundFont, all active
+            notes are stopped through semantic MIDI events, the four final records are emitted once, the
+            window closes, the physical stream is released, and the command returns success
+        evidence:
+        - evidence.live_demo_contract
+      coherent_live_trace:
+        description: each declared live checkpoint correlates its planned input with one accepted generation,
+          exact projections, emitted effects, and either a matching scalar audio observation or an acknowledged
+          structural graph revision
+        actor: maintainer
+        steps:
+        - action: inspect CREST_LIVE_CHECKPOINT records while the window remains responsive
+          observes: scalar records contain the input, expected transition, EventRecord outcome, accepted
+            generation, exact projection, emitted effects, and an AudioObservationSnapshot that consumed
+            that generation; engine-selection records additionally show Preparing, Activating, and Ready
+            with the requested capability and a newer acknowledged GraphRevision before targeted finite
+            audio
+        - action: inspect the final live outputs
+          observes: CREST_LIVE_EVENT_LOG_SUMMARY, CREST_LIVE_STATE_TREE, CREST_LIVE_COVERAGE, and CREST_LIVE_SUMMARY
+            agree on the final generation, prove a lossless retained journal, report exact and distinct
+            scalar and structural-transition coverage including the authored-name preset selection, and
+            finish Ready on descriptor-default SoundFont without flooding the terminal with every MIDI
+            record
+        - action: run make demo and the project checks
+          observes: the deterministic headless proof exercises both successful engine-selection directions
+            plus exhaustive busy, failure, stale, mismatch, and two-run-equality cases while the schema,
+            mutation, real-time, and project gates pass
+        evidence:
+        - evidence.live_demo_contract
+        - evidence.exhaustive_demo_scene
+  prepared_engine_rack:
+    description: Prepare one bounded capability-neutral instrument per Patch, render heterogeneous slots
+      through one rack, and replace complete graphs through acknowledged ownership transfer
+    goals:
+    - play_test_song
+    - control_synth
+    - select_patch_engine
+    - select_soundfont_preset
+    acceptance:
+      rack_and_handoff:
+        description: the runtime owns no SoundFont-shaped dispatch path and graph replacement never prepares
+          or destroys state on the callback
+        actor: maintainer
+        steps:
+        - action: build the production graph
+          observes: each accepted Patch resolves through exactly one matching InstrumentPreparer into
+            a unique bounded PreparedEngineRack slot without fallback
+        - action: dispatch and render through a rack containing two distinct prepared test implementations
+          observes: targeted MIDI reaches only the addressed Patch and each implementation fills only
+            its own isolated stem with dynamic dispatch outside inner sample loops
+        - action: publish a complete replacement graph
+          observes: the callback swaps it only at a block boundary and reports its active GraphRevision
+            through fixed-size acknowledgement
+        - action: fill the retired return queue
+          observes: the callback retains the old graph in bounded storage, retries without taking another
+            replacement, and no destructor runs until control collection
+        - action: attempt missing, duplicate, mismatched, or over-capacity preparation
+          observes: the build fails atomically and no preparer, capability, graph, instrument, asset,
+            or route is substituted
+        evidence:
+        - evidence.prepared_engine_rack_contract
+  realtime_execution:
+    description: Render audio through fixed-capacity lock-free boundaries without callback allocation,
+      locking, blocking, I/O, logging, or destruction
+    goals:
+    - play_test_song
+    - control_synth
+    - select_patch_engine
+    - edit_patch_envelope
+    - select_soundfont_preset
+    acceptance:
+      callback_contract:
+        description: the audio callback consumes ready commands and compatible latest parameters, swaps
+          prepared graphs, and returns retired ownership within its real-time constraints
+        actor: maintainer
+        steps:
+        - action: publish control snapshots and MIDI commands while rendering
+          observes: the callback reads them through the dedicated command ring and latest-value snapshot
+            transport without blocking
+        - action: replace engine-owned state
+          observes: a distinct structural boundary transfers the complete prepared graph in, returns its
+            predecessor out, and acknowledges both without callback destruction
+        evidence:
+        - evidence.running_synth
+  soundfont_preset_selection:
+    description: Discover playable SF2 presets once, preserve exact authored names over stable numeric
+      identities, project them as one descriptor-owned structural Choice, and select an adjacent entry
+      without fallback
+    goals:
+    - select_soundfont_preset
+    - observe_synth
+    - observe_live_synth
+    acceptance:
+      named_ordered_structural_choice:
+        description: the fixed SoundFont catalog, PATCH row, reducer lifecycle, prepared graph, and audible
+          target remain one correlated production path
+        actor: maintainer
+        steps:
+        - action: load ./sf2/HiDef.sf2 at startup
+          observes: one parse produces a control-side catalog with exact achPresetName labels sorted by
+            numeric wBank then wPreset and a separate numeric prepared bank
+        - action: inspect a focused SoundFont Patch
+          observes: the descriptor contains one soundfont.preset Choice plus the locked soundfont.file
+            asset, and PATCH focuses Preset after Release without a SoundFont branch
+        - action: hold Edit and press Right on Preset
+          observes: one semantic structural intent enters AppState.apply, the old preset remains active
+            during preparation, and only the focused Patch config commits after a matching candidate is
+            ready
+        - action: render and acknowledge the candidate
+          observes: the newer graph uses the exact selected numeric address, produces finite nonzero distinct
+            target audio, retires its predecessor off callback, and reports Ready with the authored name
+        - action: attempt a boundary, missing address, malformed catalog, stale result, or busy edit
+          observes: the typed rejection or visible failure preserves the source config and graph and never
+            substitutes a name, preset, asset, or engine
+        evidence:
+        - evidence.soundfont_preset_selection_contract
+        - evidence.exhaustive_demo_scene
+        - evidence.live_demo_contract
+  static_patch_effect:
+    description: Configure, project, edit, prepare, process, and observe one fixed Patch-local Chorus
+      through capability-owned schema and callback-safe runtime boundaries
+    goals:
+    - shape_patch_with_effect
+    - play_test_song
+    - observe_synth
+    - observe_live_synth
+    acceptance:
+      configured_chorus_insert:
+        description: one real Chorus instance is audible, isolated, schema-driven, independently prepared,
+          and ordered before Patch mixing
+        actor: maintainer
+        steps:
+        - action: start the production fixture
+          observes: the first Patch owns one stable effect.chorus config with Amount and Depth while every
+            other Patch has an empty ordered post-effect list
+        - action: inspect and navigate PATCH
+          observes: the focused first Patch shows one read-only Chorus identity followed by descriptor-derived
+            editable Amount and Depth rows after its instrument controls
+        - action: adjust Amount and Depth
+          observes: each semantic edit commits through AppState.apply, reaches the matching fixed effect-scalar
+            snapshot, changes only the first Patch's processed stem, and publishes no structural graph
+        - action: render simultaneous configured and unconfigured Patches
+          observes: the Chorus processes the configured engine stem before Patch trim and fixed track
+            routing; untargeted stems remain exact and independently prepared Chorus instances retain
+            independent delay/LFO state
+        - action: replace the configured Patch engine and SoundFont preset
+          observes: the complete candidate preserves the effect slot/config/layout exactly while the graph
+            swap may reset its tail under the existing structural contract
+        - action: run deterministic and physical demos
+          observes: both effect parameters have coherent schema-derived coverage and measured pre/post
+            effect consequences; make demo-live completes and exits normally after physical playback
+        evidence:
+        - evidence.static_patch_effect_contract

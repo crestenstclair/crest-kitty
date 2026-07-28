@@ -1,0 +1,39 @@
+context: Kernel
+purpose: shared values at the MIDI, patch, and audio boundaries
+valueObjects:
+  PatchId:
+    description: stable identity assigned to one instrument Patch
+    state:
+      value: u32
+    invariants:
+    - value is non-zero
+    contributesTo:
+      soundfont_audio: keeps instrument configuration, MIDI targeting, control state, and audio commands
+        tied to one Patch
+  MidiChannel:
+    description: the assigned MIDI channel used by a Patch
+    state:
+      value: u8
+    invariants:
+    - value is in 0..=15
+    contributesTo:
+      automatic_test_midi: represents the fixture's unique Patch-to-channel assignment
+  MidiMessage:
+    description: a normalized channel MIDI message accepted by a synthesizer
+    state:
+      channel: MidiChannel
+      kind: MidiMessageKind
+      data1: u8
+      data2: u8
+    invariants:
+    - data bytes are in 0..=127
+    - the variants required now are note-on, note-off, control-change, program-change, channel-pressure,
+      pitch-bend, and all-notes-off
+    contributesTo:
+      soundfont_audio: is the canonical command delivered through the prepared rack to a targeted SoundFont
+        instrument
+      braids_engine: carries the same capability-neutral note and expression command to a targeted Braids
+        instrument
+      prepared_engine_rack: remains capability-neutral while targeting one prepared Patch slot
+      automatic_test_midi: lets the file fixture implement the same normalized input boundary as later
+        MIDI adapters

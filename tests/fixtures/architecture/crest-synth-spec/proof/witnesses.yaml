@@ -1,0 +1,2842 @@
+witnesses:
+  engine_selection_workflow:
+    scope: goal
+    goal: select_patch_engine
+    capability: asynchronous_engine_selection
+    resources:
+    - DescriptorDefaultConfigFactory
+    - AppState
+    - AppLoop
+    - GraphPreparationWorker
+    - DeterministicGraphPreparationWorker
+    - StructuralGraphCoordinator
+    - AudioRenderer
+    - ExhaustiveGuiDemo
+    - EngineSelectionObservation
+    - EngineSelectionAcceptanceTests
+    repairResources:
+    - DescriptorDefaultConfigFactory
+    - AppState
+    - StateProjector
+    - AppLoop
+    - GraphPreparationWorker
+    - StructuralGraphCoordinator
+    - AudioRenderer
+    - ExhaustiveGuiDemo
+    evidence:
+    - evidence.engine_selection_workflow
+    command:
+    - cargo
+    - test
+    - --test
+    - engine_selection_workflow
+    - --
+    - --nocapture
+    timeout: 180s
+    observation:
+      kind: json_stdout
+      marker: 'CREST_ENGINE_SELECTION_OBSERVATION '
+      schema:
+        schemaVersion: number
+        patchId: number
+        sourceCapabilityId: string
+        forwardCapabilityId: string
+        finalCapabilityId: string
+        revisions: array
+        preparingSourceAudible: bool
+        busyRejected: bool
+        staleResultRejected: bool
+        controlledFailurePreservedSource: bool
+        fallbackCount: number
+        graphPublications: number
+        activationAcknowledgements: number
+        braidsPrimaryPatchRms: number
+        soundfontPrimaryPatchRms: number
+        targetAudioFinite: bool
+        targetedPatchExact: bool
+        untargetedPatchExact: bool
+        finalDescriptorDefaultSoundFont: bool
+        callbackAllocations: number
+        callbackDeallocations: number
+        callbackDestructions: number
+        retiredGraphsCollectedOffCallback: number
+    predicates:
+    - field: schemaVersion
+      op: eq
+      value: 1
+    - field: sourceCapabilityId
+      op: eq
+      value: instrument.soundfont.hidef
+    - field: forwardCapabilityId
+      op: eq
+      value: instrument.braids
+    - field: finalCapabilityId
+      op: eq
+      value: instrument.soundfont.hidef
+    - field: preparingSourceAudible
+      op: eq
+      value: true
+    - field: busyRejected
+      op: eq
+      value: true
+    - field: staleResultRejected
+      op: eq
+      value: true
+    - field: controlledFailurePreservedSource
+      op: eq
+      value: true
+    - field: fallbackCount
+      op: eq
+      value: 0
+    - field: graphPublications
+      op: eq
+      value: 2
+    - field: activationAcknowledgements
+      op: eq
+      value: 2
+    - field: braidsPrimaryPatchRms
+      op: gt
+      value: 0
+    - field: soundfontPrimaryPatchRms
+      op: gt
+      value: 0
+    - field: targetAudioFinite
+      op: eq
+      value: true
+    - field: targetedPatchExact
+      op: eq
+      value: true
+    - field: untargetedPatchExact
+      op: eq
+      value: true
+    - field: finalDescriptorDefaultSoundFont
+      op: eq
+      value: true
+    - field: callbackAllocations
+      op: eq
+      value: 0
+    - field: callbackDeallocations
+      op: eq
+      value: 0
+    - field: callbackDestructions
+      op: eq
+      value: 0
+    - field: retiredGraphsCollectedOffCallback
+      op: eq
+      value: 2
+  graphical_application_shell:
+    scope: goal
+    goal: use_graphical_shell
+    capability: graphical_application_shell
+    resources:
+    - GraphicalShellProjection
+    - ShellFrameObservation
+    - StateProjector
+    - AppLoop
+    - EframeGraphicalWindow
+    - StandaloneApplication
+    - CrestSynthMain
+    - BuildMakefile
+    repairResources:
+    - GraphicalShellProjection
+    - ShellFrameObservation
+    - StateProjector
+    - AppLoop
+    - EframeGraphicalWindow
+    - StandaloneApplication
+    - CrestSynthMain
+    evidence:
+    - evidence.graphical_application_shell_contract
+    command:
+    - make
+    - demo-live-graphical-shell
+    timeout: 180s
+    artifacts:
+    - target/release/crest-synth
+    observation:
+      kind: json_stdout
+      marker: 'CREST_GRAPHICAL_SHELL_LIVE_OBSERVATION '
+      schema:
+        context_line_visible: bool
+        identity_header_visible: bool
+        main_workspace_visible: bool
+        persistent_side_region_visible: bool
+        footer_visible: bool
+        patch_context_observed: bool
+        mixer_context_observed: bool
+        physical_audio_nonzero: bool
+        active_notes_after_cleanup: number
+        window_closed: bool
+        stream_released: bool
+        owned_graphs_remaining: number
+    predicates:
+    - field: context_line_visible
+      op: eq
+      value: true
+    - field: identity_header_visible
+      op: eq
+      value: true
+    - field: main_workspace_visible
+      op: eq
+      value: true
+    - field: persistent_side_region_visible
+      op: eq
+      value: true
+    - field: footer_visible
+      op: eq
+      value: true
+    - field: patch_context_observed
+      op: eq
+      value: true
+    - field: mixer_context_observed
+      op: eq
+      value: true
+    - field: physical_audio_nonzero
+      op: eq
+      value: true
+    - field: active_notes_after_cleanup
+      op: eq
+      value: 0
+    - field: window_closed
+      op: eq
+      value: true
+    - field: stream_released
+      op: eq
+      value: true
+    - field: owned_graphs_remaining
+      op: eq
+      value: 0
+  running_synth:
+    scope: goal
+    goal: play_test_song
+    capability: soundfont_audio
+    resources:
+    - HiDefSoundFontAsset
+    - SoundFontPresetCatalog
+    - HiDefSoundFontPreparer
+    - BraidsPreparer
+    - CorridorsMidiEventSource
+    - AutomaticMidiTest
+    - AudioRenderer
+    - MixEngine
+    - StandaloneApplication
+    - CrestSynthMain
+    repairResources:
+    - HiDefSoundFontAsset
+    - SoundFontPresetCatalog
+    - HiDefSoundFontPreparer
+    - BraidsPreparer
+    - AutomaticMidiTest
+    - AudioRenderer
+    - MixEngine
+    - StandaloneApplication
+    - CrestSynthMain
+    counterexampleRepairResources:
+    - applicationService.Shell.StandaloneApplication
+    - asset.CrestSynthMain
+    evidence:
+    - evidence.running_synth
+    command:
+    - cargo
+    - run
+    - --bin
+    - crest-synth
+    - --
+    - --smoke
+    - --observe
+    negativeCommand:
+    - cargo
+    - run
+    - --bin
+    - crest-synth
+    - --
+    - --smoke
+    - --observe
+    - --degenerate-audio
+    negativeExpectedExitCode: 0
+    timeout: 180s
+    artifacts:
+    - target/debug/crest-synth
+    observation:
+      kind: json_stdout
+      marker: 'CREST_OBSERVATION '
+      schema:
+        parsed_soundfont_banks: number
+        soundfont_catalog_entries: number
+        soundfont_catalog_order_exact: bool
+        fixture_preset_choices_exact: bool
+        callback_reachable_strings: number
+        prepared_instruments: number
+        soundfont_patches: number
+        braids_patches: number
+        alternating_capabilities: bool
+        active_graph_revision: number
+        presets_match: bool
+        distinct_patch_channels: bool
+        distinct_patch_stems: bool
+        automatic_midi: bool
+        event_commands_delivered: number
+        callback_allocations: number
+        callback_destructions: number
+        peak: number
+    predicates:
+    - field: parsed_soundfont_banks
+      op: eq
+      value: 1
+    - field: soundfont_catalog_entries
+      op: gt
+      value: 1
+    - field: soundfont_catalog_order_exact
+      op: eq
+      value: true
+    - field: fixture_preset_choices_exact
+      op: eq
+      value: true
+    - field: callback_reachable_strings
+      op: eq
+      value: 0
+    - field: prepared_instruments
+      op: gt
+      value: 1
+    - field: soundfont_patches
+      op: gt
+      value: 0
+    - field: braids_patches
+      op: gt
+      value: 0
+    - field: alternating_capabilities
+      op: eq
+      value: true
+    - field: active_graph_revision
+      op: gt
+      value: 0
+    - field: presets_match
+      op: eq
+      value: true
+    - field: distinct_patch_channels
+      op: eq
+      value: true
+    - field: distinct_patch_stems
+      op: eq
+      value: true
+    - field: automatic_midi
+      op: eq
+      value: true
+    - field: event_commands_delivered
+      op: gt
+      value: 0
+    - field: callback_allocations
+      op: eq
+      value: 0
+    - field: callback_destructions
+      op: eq
+      value: 0
+    - field: peak
+      op: gt
+      value: 0.001
+    - field: peak
+      op: lte
+      value: 1.0
+  control_path:
+    scope: goal
+    goal: control_synth
+    capability: one_way_parameter_control
+    resources:
+    - AppState
+    - StateProjector
+    - AppLoop
+    - LockFreeAudioBoundary
+    - EframeGraphicalWindow
+    - StandaloneApplication
+    - AudioRenderer
+    - MixEngine
+    - HiDefSoundFontPreparer
+    - CrestSynthMain
+    repairResources:
+    - AppState
+    - StateProjector
+    - AppLoop
+    - StandaloneApplication
+    - AudioRenderer
+    - MixEngine
+    - CrestSynthMain
+    counterexampleRepairResources:
+    - applicationService.Shell.StandaloneApplication
+    - asset.CrestSynthMain
+    evidence:
+    - evidence.control_path
+    command:
+    - cargo
+    - run
+    - --bin
+    - crest-synth
+    - --
+    - --smoke
+    - --observe
+    negativeCommand:
+    - cargo
+    - run
+    - --bin
+    - crest-synth
+    - --
+    - --smoke
+    - --observe
+    - --degenerate-control
+    negativeExpectedExitCode: 0
+    timeout: 180s
+    artifacts:
+    - target/debug/crest-synth
+    observation:
+      kind: json_stdout
+      marker: 'CREST_OBSERVATION '
+      schema:
+        patch_rows: number
+        channel_separators: number
+        one_value_changed: bool
+        state_roundtrip: bool
+        text_matches_state: bool
+        parameter_published: bool
+        engine_consumed_value: bool
+        edited_patch_id: number
+        edited_patch_audio_changed: bool
+        unedited_patch_audio_unchanged: bool
+        per_patch_audio_isolated: bool
+        boundary_noop_nonfatal: bool
+        post_boundary_edit_accepted: bool
+    predicates:
+    - field: patch_rows
+      op: gt
+      value: 1
+    - field: channel_separators
+      op: gt
+      value: 0
+    - field: one_value_changed
+      op: eq
+      value: true
+    - field: state_roundtrip
+      op: eq
+      value: true
+    - field: text_matches_state
+      op: eq
+      value: true
+    - field: parameter_published
+      op: eq
+      value: true
+    - field: engine_consumed_value
+      op: eq
+      value: true
+    - field: edited_patch_id
+      op: gt
+      value: 1
+    - field: edited_patch_audio_changed
+      op: eq
+      value: true
+    - field: unedited_patch_audio_unchanged
+      op: eq
+      value: true
+    - field: per_patch_audio_isolated
+      op: eq
+      value: true
+    - field: boundary_noop_nonfatal
+      op: eq
+      value: true
+    - field: post_boundary_edit_accepted
+      op: eq
+      value: true
+  exhaustive_demo_scene:
+    scope: goal
+    goal: observe_synth
+    capability: observable_demo_scene
+    resources:
+    - HiDefSoundFontAsset
+    - SoundFontPresetId
+    - SoundFontPresetCatalog
+    - BraidsCapability
+    - BraidsPreparer
+    - EffectCapabilityRegistry
+    - PostEffectConfig
+    - ChorusCapability
+    - ChorusPreparer
+    - VoiceEnvelope
+    - TopLevelContext
+    - InteractionState
+    - SemanticAction
+    - SurfaceId
+    - InteractionMode
+    - FocusPath
+    - ReturnPath
+    - ValidAction
+    - PatchControlId
+    - StructuralEditIntent
+    - AppEvent
+    - EventRecord
+    - EventLog
+    - StateTree
+    - PatchPageProjection
+    - SemanticGraphicalViewModel
+    - GraphicalShellProjection
+    - TextProjection
+    - AppState
+    - StateProjector
+    - AppLoop
+    - WindowInput
+    - KeyboardInputTranslator
+    - EframeGraphicalWindow
+    - MidiMessage
+    - DemoScene
+    - DemoSceneReport
+    - ExhaustiveGuiDemo
+    - AutomaticMidiTest
+    - MixerTrackParameters
+    - GlobalParameters
+    - GlobalEffectsProcessor
+    - GlobalReverbDelay
+    - MixEngine
+    - ParameterSnapshot
+    - AudioCommand
+    - PatchAudioBlock
+    - PatchEffectObservation
+    - PreparedPostEffectRack
+    - AudioRenderer
+    - StandaloneApplication
+    - CrestSynthMain
+    repairResources:
+    - HiDefSoundFontAsset
+    - SoundFontPresetId
+    - SoundFontPresetCatalog
+    - BraidsCapability
+    - BraidsPreparer
+    - EffectCapabilityRegistry
+    - PostEffectConfig
+    - ChorusCapability
+    - ChorusPreparer
+    - VoiceEnvelope
+    - TopLevelContext
+    - InteractionState
+    - SemanticAction
+    - SurfaceId
+    - InteractionMode
+    - FocusPath
+    - ReturnPath
+    - ValidAction
+    - PatchControlId
+    - StructuralEditIntent
+    - AppEvent
+    - EventRecord
+    - EventLog
+    - StateTree
+    - PatchPageProjection
+    - SemanticGraphicalViewModel
+    - GraphicalShellProjection
+    - TextProjection
+    - AppState
+    - StateProjector
+    - AppLoop
+    - WindowInput
+    - KeyboardInputTranslator
+    - EframeGraphicalWindow
+    - MidiMessage
+    - DemoScene
+    - DemoSceneReport
+    - ExhaustiveGuiDemo
+    - AutomaticMidiTest
+    - MixerTrackParameters
+    - GlobalParameters
+    - GlobalReverbDelay
+    - MixEngine
+    - ParameterSnapshot
+    - AudioCommand
+    - PatchAudioBlock
+    - PatchEffectObservation
+    - PreparedPostEffectRack
+    - AudioRenderer
+    - StandaloneApplication
+    - CrestSynthMain
+    counterexampleRepairResources:
+    - applicationService.Testing.ExhaustiveGuiDemo
+    - applicationService.Shell.StandaloneApplication
+    - asset.CrestSynthMain
+    evidence:
+    - evidence.exhaustive_demo_scene
+    command:
+    - cargo
+    - run
+    - --bin
+    - crest-synth
+    - --
+    - --smoke
+    - --observe
+    - --demo-scene
+    negativeCommand:
+    - cargo
+    - run
+    - --bin
+    - crest-synth
+    - --
+    - --smoke
+    - --observe
+    - --demo-scene
+    - --degenerate-control
+    negativeExpectedExitCode: 1
+    timeout: 180s
+    artifacts:
+    - target/debug/crest-synth
+    observation:
+      kind: json_stdout
+      marker: 'CREST_OBSERVATION '
+      schema:
+        demo_scene_complete: bool
+        active_graph_revision: number
+        parsed_soundfont_banks: number
+        prepared_instruments: number
+        braids_patches: number
+        prepared_post_effects: number
+        chorus_patches: number
+        alternating_capabilities: bool
+        callback_destructions: number
+        event_log_records: number
+        event_log_dropped: number
+        state_tree_schema_version: number
+        state_tree_patch_count: number
+        window_input_cases_exercised: number
+        semantic_action_variants_exercised: number
+        app_event_variants_exercised: number
+        top_level_contexts_exercised: number
+        semantic_surfaces_exercised: number
+        interaction_modes_exercised: number
+        return_path_round_trips: number
+        valid_actions_exact: bool
+        focus_recovery_exact: bool
+        semantic_status_errors_exact: bool
+        event_sources_exercised: number
+        navigate_directions_exercised: number
+        adjust_directions_exercised: number
+        midi_message_kinds_exercised: number
+        audio_command_variants_exercised: number
+        rejection_variants_exercised: number
+        global_parameter_cases_exercised: number
+        envelope_parameter_cases_exercised: number
+        patch_adsr_control_cases_exercised: number
+        patch_focus_projection_exact: bool
+        patch_adsr_scalar_only: bool
+        patch_adsr_structural_coexistence_exact: bool
+        patch_effect_control_cases_exercised: number
+        patch_effect_focus_projection_exact: bool
+        patch_effect_scalar_only: bool
+        patch_effect_order_exact: bool
+        patch_effect_target_audio_distinct: bool
+        patch_effect_stereo_side_energy_nonzero: bool
+        patch_effect_patch_isolation: bool
+        patch_effect_instances_independent: bool
+        patch_effect_structural_preservation: bool
+        soundfont_preset_control_cases_exercised: number
+        soundfont_preset_transitions_exercised: number
+        soundfont_preset_catalog_order_exact: bool
+        soundfont_preset_names_exact: bool
+        soundfont_preset_target_audio_distinct: bool
+        soundfont_preset_structural_coexistence_exact: bool
+        braids_scalar_cases_exercised: number
+        all_editable_parameter_cases_exercised: bool
+        all_serialized_properties_observed: bool
+        accepted_events: number
+        rejected_events: number
+        scene_checkpoints: number
+        coverage_missing: number
+        state_hash_chain_valid: bool
+        generation_chain_valid: bool
+        final_state_tree_matches: bool
+        gui_projection_matches_state: bool
+        parameter_projection_matches_state: bool
+        all_audio_parameter_effects_observed: bool
+        mixed_engine_stems_nonzero: bool
+        mixed_engine_parameter_isolation: bool
+        post_rejection_event_accepted: bool
+        schema_surface_equal: bool
+        unexpected_coverage: number
+        exact_state_values: bool
+        exact_projection_values: bool
+        baseline_restored: bool
+        reverb_input_nonzero: bool
+        delay_input_nonzero: bool
+        causal_audio_comparisons: bool
+        faithful_effect_path: bool
+        descriptors_unique: bool
+        event_record_payloads_exact: bool
+        all_parameter_boundaries_exercised: bool
+        selection_clamps_exact: bool
+        tick_events_exact: bool
+        two_run_trace_equal: bool
+    predicates:
+    - field: demo_scene_complete
+      op: eq
+      value: true
+      repairResources:
+      - DemoSceneReport
+      - ExhaustiveGuiDemo
+    - field: active_graph_revision
+      op: gt
+      value: 0
+      repairResources:
+      - GraphRevision
+      - StateTree
+      - AudioRenderer
+    - field: parsed_soundfont_banks
+      op: eq
+      value: 1
+      repairResources:
+      - HiDefSoundFontAsset
+      - StandaloneApplication
+    - field: prepared_instruments
+      op: gt
+      value: 1
+      repairResources:
+      - PreparedEngineRack
+      - PreparedGraphBuilder
+    - field: braids_patches
+      op: gt
+      value: 0
+      repairResources:
+      - BraidsCapability
+      - BraidsPreparer
+      - AutomaticMidiTest
+    - field: prepared_post_effects
+      op: gt
+      value: 0
+      repairResources:
+      - ChorusPreparer
+      - PreparedPostEffectRack
+      - PreparedGraphBuilder
+    - field: chorus_patches
+      op: eq
+      value: 1
+      repairResources:
+      - PostEffectConfig
+      - AutomaticMidiTest
+      - StandaloneApplication
+    - field: alternating_capabilities
+      op: eq
+      value: true
+      repairResources:
+      - AutomaticMidiTest
+      - StandaloneApplication
+    - field: callback_destructions
+      op: eq
+      value: 0
+      repairResources:
+      - AudioRenderer
+      - StructuralGraphBoundary
+    - field: event_log_records
+      op: gt
+      value: 0
+      repairResources:
+      - EventLog
+      - AppLoop
+      - ExhaustiveGuiDemo
+    - field: event_log_dropped
+      op: eq
+      value: 0
+      repairResources:
+      - EventLog
+      - ExhaustiveGuiDemo
+    - field: state_tree_schema_version
+      op: gt
+      value: 0
+      repairResources:
+      - StateTree
+      - StateProjector
+    - field: state_tree_patch_count
+      op: gt
+      value: 1
+      repairResources:
+      - AppState
+      - StateTree
+      - StateProjector
+      - AutomaticMidiTest
+    - field: window_input_cases_exercised
+      op: eq
+      value: 17
+      repairResources:
+      - WindowInput
+      - KeyboardInputTranslator
+      - DemoScene
+      - ExhaustiveGuiDemo
+    - field: semantic_action_variants_exercised
+      op: eq
+      value: 6
+      repairResources:
+      - SemanticAction
+      - KeyboardInputTranslator
+      - DemoScene
+      - AppLoop
+    - field: app_event_variants_exercised
+      op: eq
+      value: 11
+      repairResources:
+      - AppEvent
+      - DemoScene
+      - AppLoop
+    - field: top_level_contexts_exercised
+      op: eq
+      value: 2
+      repairResources:
+      - TopLevelContext
+      - InteractionState
+      - DemoScene
+      - ExhaustiveGuiDemo
+    - field: semantic_surfaces_exercised
+      op: eq
+      value: 4
+      repairResources:
+      - SurfaceId
+      - FocusPath
+      - DemoScene
+      - ExhaustiveGuiDemo
+    - field: interaction_modes_exercised
+      op: eq
+      value: 2
+      repairResources:
+      - InteractionMode
+      - SemanticAction
+      - DemoScene
+      - ExhaustiveGuiDemo
+    - field: return_path_round_trips
+      op: eq
+      value: 2
+      repairResources:
+      - ReturnPath
+      - AppState
+      - DemoScene
+      - ExhaustiveGuiDemo
+    - field: valid_actions_exact
+      op: eq
+      value: true
+      repairResources:
+      - ValidAction
+      - AppState
+      - StateProjector
+      - ExhaustiveGuiDemo
+    - field: focus_recovery_exact
+      op: eq
+      value: true
+      repairResources:
+      - FocusPath
+      - AppState
+      - StateProjector
+      - ExhaustiveGuiDemo
+    - field: semantic_status_errors_exact
+      op: eq
+      value: true
+      repairResources:
+      - SemanticGraphicalViewModel
+      - EngineSelectionStatus
+      - StateProjector
+      - ExhaustiveGuiDemo
+    - field: event_sources_exercised
+      op: eq
+      value: 6
+      repairResources:
+      - EventRecord
+      - AppLoop
+      - AutomaticMidiTest
+      - StandaloneApplication
+    - field: navigate_directions_exercised
+      op: eq
+      value: 4
+      repairResources:
+      - AppEvent
+      - DemoScene
+      - KeyboardInputTranslator
+    - field: adjust_directions_exercised
+      op: eq
+      value: 4
+      repairResources:
+      - AppEvent
+      - DemoScene
+      - KeyboardInputTranslator
+    - field: midi_message_kinds_exercised
+      op: eq
+      value: 7
+      repairResources:
+      - MidiMessage
+      - DemoScene
+      - AutomaticMidiTest
+    - field: audio_command_variants_exercised
+      op: eq
+      value: 2
+      repairResources:
+      - AudioCommand
+      - AudioRenderer
+      - DemoScene
+    - field: rejection_variants_exercised
+      op: eq
+      value: 17
+      repairResources:
+      - AppState
+      - DemoScene
+      - ExhaustiveGuiDemo
+    - field: global_parameter_cases_exercised
+      op: eq
+      value: 7
+      repairResources:
+      - GlobalParameters
+      - DemoScene
+      - ExhaustiveGuiDemo
+    - field: envelope_parameter_cases_exercised
+      op: gt
+      value: 0
+      repairResources:
+      - VoiceEnvelope
+      - DemoScene
+      - ExhaustiveGuiDemo
+    - field: patch_adsr_control_cases_exercised
+      op: eq
+      value: 4
+      repairResources:
+      - PatchControlId
+      - VoiceEnvelope
+      - DemoScene
+      - ExhaustiveGuiDemo
+    - field: patch_focus_projection_exact
+      op: eq
+      value: true
+      repairResources:
+      - InteractionState
+      - PatchPageProjection
+      - TextProjection
+      - StateProjector
+    - field: patch_adsr_scalar_only
+      op: eq
+      value: true
+      repairResources:
+      - AppState
+      - AppLoop
+      - ParameterSnapshot
+    - field: patch_adsr_structural_coexistence_exact
+      op: eq
+      value: true
+      repairResources:
+      - AppState
+      - AppLoop
+      - StructuralGraphCoordinator
+      - ExhaustiveGuiDemo
+    - field: patch_effect_control_cases_exercised
+      op: eq
+      value: 2
+      repairResources:
+      - PatchControlId
+      - EffectCapabilityRegistry
+      - DemoScene
+      - ExhaustiveGuiDemo
+    - field: patch_effect_focus_projection_exact
+      op: eq
+      value: true
+      repairResources:
+      - InteractionState
+      - PatchPageProjection
+      - TextProjection
+      - StateProjector
+    - field: patch_effect_scalar_only
+      op: eq
+      value: true
+      repairResources:
+      - AppState
+      - AppLoop
+      - ParameterSnapshot
+    - field: patch_effect_order_exact
+      op: eq
+      value: true
+      repairResources:
+      - PreparedPostEffectRack
+      - AudioRenderer
+      - MixEngine
+    - field: patch_effect_target_audio_distinct
+      op: eq
+      value: true
+      repairResources:
+      - ChorusPreparer
+      - PatchEffectObservation
+      - AudioRenderer
+    - field: patch_effect_stereo_side_energy_nonzero
+      op: eq
+      value: true
+      repairResources:
+      - ChorusPreparer
+      - PatchEffectObservation
+      - AudioRenderer
+    - field: patch_effect_patch_isolation
+      op: eq
+      value: true
+      repairResources:
+      - PreparedPostEffectRack
+      - AudioRenderer
+      - ExhaustiveGuiDemo
+    - field: patch_effect_instances_independent
+      op: eq
+      value: true
+      repairResources:
+      - ChorusPreparer
+      - PreparedPostEffectRack
+      - ExhaustiveGuiDemo
+    - field: patch_effect_structural_preservation
+      op: eq
+      value: true
+      repairResources:
+      - AppState
+      - StructuralGraphCoordinator
+      - ExhaustiveGuiDemo
+    - field: soundfont_preset_control_cases_exercised
+      op: gt
+      value: 0
+      repairResources:
+      - PatchControlId
+      - SoundFontPresetCatalog
+      - DemoScene
+      - ExhaustiveGuiDemo
+    - field: soundfont_preset_transitions_exercised
+      op: gt
+      value: 0
+      repairResources:
+      - StructuralEditIntent
+      - AppState
+      - AppLoop
+      - StructuralGraphCoordinator
+    - field: soundfont_preset_catalog_order_exact
+      op: eq
+      value: true
+      repairResources:
+      - HiDefSoundFontAsset
+      - SoundFontPresetCatalog
+      - ExhaustiveGuiDemo
+    - field: soundfont_preset_names_exact
+      op: eq
+      value: true
+      repairResources:
+      - HiDefSoundFontAsset
+      - SoundFontPresetCatalog
+      - StateProjector
+    - field: soundfont_preset_target_audio_distinct
+      op: eq
+      value: true
+      repairResources:
+      - HiDefSoundFontPreparer
+      - AudioRenderer
+      - ExhaustiveGuiDemo
+    - field: soundfont_preset_structural_coexistence_exact
+      op: eq
+      value: true
+      repairResources:
+      - AppState
+      - AppLoop
+      - StructuralGraphCoordinator
+      - ExhaustiveGuiDemo
+    - field: braids_scalar_cases_exercised
+      op: gt
+      value: 0
+      repairResources:
+      - BraidsCapability
+      - DemoScene
+      - ExhaustiveGuiDemo
+    - field: all_editable_parameter_cases_exercised
+      op: eq
+      value: true
+      repairResources:
+      - PatchOutput
+      - MixerTrackParameters
+      - DemoScene
+      - ExhaustiveGuiDemo
+    - field: all_serialized_properties_observed
+      op: eq
+      value: true
+      repairResources:
+      - EventRecord
+      - EventLog
+      - StateTree
+      - TextProjection
+      - ParameterSnapshot
+      - StateProjector
+    - field: accepted_events
+      op: gt
+      value: 0
+      repairResources:
+      - EventRecord
+      - EventLog
+      - AppLoop
+    - field: rejected_events
+      op: gt
+      value: 0
+      repairResources:
+      - AppState
+      - EventRecord
+      - EventLog
+      - AppLoop
+    - field: scene_checkpoints
+      op: gt
+      value: 10
+      repairResources:
+      - DemoScene
+      - DemoSceneReport
+      - ExhaustiveGuiDemo
+    - field: coverage_missing
+      op: eq
+      value: 0
+      repairResources:
+      - EventLog
+      - DemoScene
+      - DemoSceneReport
+      - ExhaustiveGuiDemo
+    - field: state_hash_chain_valid
+      op: eq
+      value: true
+      repairResources:
+      - EventRecord
+      - EventLog
+      - AppLoop
+      - StateProjector
+    - field: generation_chain_valid
+      op: eq
+      value: true
+      repairResources:
+      - AppState
+      - EventRecord
+      - EventLog
+      - AppLoop
+    - field: final_state_tree_matches
+      op: eq
+      value: true
+      repairResources:
+      - StateTree
+      - StateProjector
+      - DemoSceneReport
+    - field: gui_projection_matches_state
+      op: eq
+      value: true
+      repairResources:
+      - SemanticGraphicalViewModel
+      - GraphicalShellProjection
+      - TextProjection
+      - StateProjector
+      - EframeGraphicalWindow
+    - field: parameter_projection_matches_state
+      op: eq
+      value: true
+      repairResources:
+      - ParameterSnapshot
+      - StateProjector
+    - field: all_audio_parameter_effects_observed
+      op: eq
+      value: true
+      repairResources:
+      - PatchOutput
+      - MixerTrackParameters
+      - GlobalParameters
+      - GlobalReverbDelay
+      - MixEngine
+      - AudioRenderer
+      - ExhaustiveGuiDemo
+    - field: mixed_engine_stems_nonzero
+      op: eq
+      value: true
+      repairResources:
+      - HiDefSoundFontPreparer
+      - BraidsPreparer
+      - PreparedEngineRack
+      - AudioRenderer
+    - field: mixed_engine_parameter_isolation
+      op: eq
+      value: true
+      repairResources:
+      - StateProjector
+      - PreparedEngineRack
+      - ExhaustiveGuiDemo
+    - field: post_rejection_event_accepted
+      op: eq
+      value: true
+      repairResources:
+      - AppState
+      - AppLoop
+      - ExhaustiveGuiDemo
+      - StandaloneApplication
+    - field: schema_surface_equal
+      op: eq
+      value: true
+      repairResources:
+      - TopLevelContext
+      - SemanticAction
+      - SurfaceId
+      - InteractionMode
+      - FocusPath
+      - ReturnPath
+      - ValidAction
+      - InteractionState
+      - AppEvent
+      - EventRecord
+      - EventLog
+      - StateTree
+      - PatchPageProjection
+      - SemanticGraphicalViewModel
+      - GraphicalShellProjection
+      - TextProjection
+      - StateProjector
+      - DemoScene
+    - field: unexpected_coverage
+      op: eq
+      value: 0
+      repairResources:
+      - EventLog
+      - DemoScene
+      - DemoSceneReport
+      - ExhaustiveGuiDemo
+    - field: exact_state_values
+      op: eq
+      value: true
+      repairResources:
+      - AppState
+      - StateTree
+      - StateProjector
+      - ExhaustiveGuiDemo
+    - field: exact_projection_values
+      op: eq
+      value: true
+      repairResources:
+      - SemanticGraphicalViewModel
+      - GraphicalShellProjection
+      - TextProjection
+      - ParameterSnapshot
+      - StateProjector
+      - ExhaustiveGuiDemo
+    - field: baseline_restored
+      op: eq
+      value: true
+      repairResources:
+      - AppState
+      - DemoSceneReport
+      - ExhaustiveGuiDemo
+    - field: reverb_input_nonzero
+      op: eq
+      value: true
+      repairResources:
+      - MixerTrackParameters
+      - MixEngine
+      - ExhaustiveGuiDemo
+    - field: delay_input_nonzero
+      op: eq
+      value: true
+      repairResources:
+      - MixerTrackParameters
+      - MixEngine
+      - ExhaustiveGuiDemo
+    - field: causal_audio_comparisons
+      op: eq
+      value: true
+      repairResources:
+      - GlobalParameters
+      - GlobalReverbDelay
+      - MixEngine
+      - AudioRenderer
+      - ExhaustiveGuiDemo
+    - field: faithful_effect_path
+      op: eq
+      value: true
+      repairResources:
+      - GlobalReverbDelay
+      - MixEngine
+      - ExhaustiveGuiDemo
+    - field: descriptors_unique
+      op: eq
+      value: true
+      repairResources:
+      - WindowInput
+      - SemanticAction
+      - AppEvent
+      - MidiMessage
+      - PatchOutput
+      - MixerTrackParameters
+      - GlobalParameters
+      - DemoScene
+    - field: event_record_payloads_exact
+      op: eq
+      value: true
+      repairResources:
+      - EventRecord
+      - AppLoop
+      - DemoScene
+      - ExhaustiveGuiDemo
+    - field: all_parameter_boundaries_exercised
+      op: eq
+      value: true
+      repairResources:
+      - AppState
+      - PatchOutput
+      - MixerTrackParameters
+      - GlobalParameters
+      - DemoScene
+      - ExhaustiveGuiDemo
+    - field: selection_clamps_exact
+      op: eq
+      value: true
+      repairResources:
+      - AppState
+      - StateProjector
+      - DemoScene
+    - field: tick_events_exact
+      op: eq
+      value: true
+      repairResources:
+      - AutomaticMidiTest
+      - AppLoop
+      - ExhaustiveGuiDemo
+    - field: two_run_trace_equal
+      op: eq
+      value: true
+      repairResources:
+      - EventLog
+      - StateTree
+      - DemoSceneReport
+      - ExhaustiveGuiDemo
+  dropped_adjustment_mutant:
+    scope: goal
+    goal: observe_synth
+    capability: observable_demo_scene
+    resources:
+    - AppState
+    - EventRecord
+    - KeyboardInputTranslator
+    - AppLoop
+    - StateProjector
+    - ExhaustiveGuiDemo
+    - BehavioralMutationHarness
+    - BehavioralWitnessMain
+    repairResources:
+    - AppState
+    - EventRecord
+    - KeyboardInputTranslator
+    - AppLoop
+    - StateProjector
+    - ExhaustiveGuiDemo
+    - BehavioralMutationHarness
+    - BehavioralWitnessMain
+    counterexampleRepairResources:
+    - applicationService.Testing.BehavioralMutationHarness
+    - asset.BehavioralWitnessMain
+    evidence:
+    - evidence.mutation_resistance
+    command:
+    - cargo
+    - run
+    - --quiet
+    - --bin
+    - crest-synth-witness
+    - --
+    - --case
+    - dropped-adjustment
+    - --mutant
+    - none
+    negativeCommand:
+    - cargo
+    - run
+    - --quiet
+    - --bin
+    - crest-synth-witness
+    - --
+    - --case
+    - dropped-adjustment
+    - --mutant
+    - dropped-adjustment
+    negativeExpectedExitCode: 1
+    timeout: 60s
+    artifacts:
+    - target/debug/crest-synth-witness
+    observation:
+      kind: json_stdout
+      marker: 'CREST_MUTATION_OBSERVATION '
+      schema:
+        case: string
+        adjustment_dispatched: bool
+        adjust_event_recorded: bool
+        selected_value_exact: bool
+        unrelated_values_unchanged: bool
+        projection_values_exact: bool
+        baseline_restored: bool
+    predicates:
+    - field: case
+      op: eq
+      value: dropped-adjustment
+      repairResources:
+      - BehavioralMutationHarness
+      - BehavioralWitnessMain
+    - field: adjustment_dispatched
+      op: eq
+      value: true
+      repairResources:
+      - KeyboardInputTranslator
+      - AppLoop
+    - field: adjust_event_recorded
+      op: eq
+      value: true
+      repairResources:
+      - EventRecord
+      - AppLoop
+    - field: selected_value_exact
+      op: eq
+      value: true
+      repairResources:
+      - AppState
+    - field: unrelated_values_unchanged
+      op: eq
+      value: true
+      repairResources:
+      - AppState
+      - ExhaustiveGuiDemo
+    - field: projection_values_exact
+      op: eq
+      value: true
+      repairResources:
+      - StateProjector
+    - field: baseline_restored
+      op: eq
+      value: true
+      repairResources:
+      - ExhaustiveGuiDemo
+      - BehavioralMutationHarness
+  cross_track_parameter_leak_mutant:
+    scope: goal
+    goal: observe_synth
+    capability: observable_demo_scene
+    resources:
+    - AppState
+    - AppLoop
+    - StateProjector
+    - MixerTrackId
+    - MixerTrackParameters
+    - MixObservation
+    - ParameterSnapshot
+    - LockFreeAudioBoundary
+    - AudioRenderer
+    - MixEngine
+    - ExhaustiveGuiDemo
+    - BehavioralMutationHarness
+    - BehavioralWitnessMain
+    repairResources:
+    - AppState
+    - AppLoop
+    - StateProjector
+    - MixerTrackId
+    - MixerTrackParameters
+    - MixObservation
+    - ParameterSnapshot
+    - LockFreeAudioBoundary
+    - AudioRenderer
+    - MixEngine
+    - ExhaustiveGuiDemo
+    - BehavioralMutationHarness
+    - BehavioralWitnessMain
+    counterexampleRepairResources:
+    - applicationService.Testing.BehavioralMutationHarness
+    - asset.BehavioralWitnessMain
+    evidence:
+    - evidence.mutation_resistance
+    command:
+    - cargo
+    - run
+    - --quiet
+    - --bin
+    - crest-synth-witness
+    - --
+    - --case
+    - cross-track-parameter-leak
+    - --mutant
+    - none
+    negativeCommand:
+    - cargo
+    - run
+    - --quiet
+    - --bin
+    - crest-synth-witness
+    - --
+    - --case
+    - cross-track-parameter-leak
+    - --mutant
+    - cross-track-parameter-leak
+    negativeExpectedExitCode: 1
+    timeout: 60s
+    artifacts:
+    - target/debug/crest-synth-witness
+    observation:
+      kind: json_stdout
+      marker: 'CREST_MUTATION_OBSERVATION '
+      schema:
+        case: string
+        edited_track_id: number
+        comparison_track_id: number
+        track_ids_distinct: bool
+        parameter: string
+        parameter_cases_exercised: number
+        edited_value_before: number
+        edited_value_after: number
+        comparison_value_before: number
+        comparison_value_after: number
+        published_edited_value: number
+        published_comparison_value: number
+        edited_track_energy_before: number
+        edited_track_energy_after: number
+        comparison_track_energy_before: number
+        comparison_track_energy_after: number
+        edited_value_changed: bool
+        comparison_value_unchanged: bool
+        state_values_exact: bool
+        published_values_exact: bool
+        edited_track_audio_changed: bool
+        unedited_track_audio_unchanged: bool
+        all_track_parameters_isolated: bool
+        dry_path_isolated: bool
+        reverb_path_isolated: bool
+        delay_path_isolated: bool
+        baseline_restored: bool
+    predicates:
+    - field: case
+      op: eq
+      value: cross-track-parameter-leak
+      repairResources:
+      - BehavioralMutationHarness
+      - BehavioralWitnessMain
+    - field: edited_track_id
+      op: lt
+      value: 16
+      repairResources:
+      - MixerTrackId
+      - AppState
+      - ExhaustiveGuiDemo
+    - field: comparison_track_id
+      op: lt
+      value: 16
+      repairResources:
+      - MixerTrackId
+      - AppState
+      - ExhaustiveGuiDemo
+    - field: track_ids_distinct
+      op: eq
+      value: true
+      repairResources:
+      - MixerTrackId
+      - AppState
+      - ExhaustiveGuiDemo
+    - field: parameter_cases_exercised
+      op: eq
+      value: 6
+      repairResources:
+      - MixerTrackParameters
+      - ExhaustiveGuiDemo
+      - BehavioralMutationHarness
+    - field: edited_track_energy_before
+      op: gt
+      value: 0
+      repairResources:
+      - MixObservation
+      - AudioRenderer
+      - MixEngine
+    - field: comparison_track_energy_before
+      op: gt
+      value: 0
+      repairResources:
+      - MixObservation
+      - AudioRenderer
+      - MixEngine
+    - field: edited_value_changed
+      op: eq
+      value: true
+      repairResources:
+      - AppState
+      - AppLoop
+    - field: comparison_value_unchanged
+      op: eq
+      value: true
+      repairResources:
+      - AppState
+    - field: state_values_exact
+      op: eq
+      value: true
+      repairResources:
+      - AppState
+      - StateProjector
+    - field: published_values_exact
+      op: eq
+      value: true
+      repairResources:
+      - StateProjector
+      - ParameterSnapshot
+      - LockFreeAudioBoundary
+    - field: edited_track_audio_changed
+      op: eq
+      value: true
+      repairResources:
+      - AudioRenderer
+      - MixEngine
+    - field: unedited_track_audio_unchanged
+      op: eq
+      value: true
+      repairResources:
+      - ParameterSnapshot
+      - AudioRenderer
+      - MixEngine
+    - field: all_track_parameters_isolated
+      op: eq
+      value: true
+      repairResources:
+      - MixerTrackParameters
+      - ParameterSnapshot
+      - MixEngine
+      - ExhaustiveGuiDemo
+    - field: dry_path_isolated
+      op: eq
+      value: true
+      repairResources:
+      - MixEngine
+    - field: reverb_path_isolated
+      op: eq
+      value: true
+      repairResources:
+      - MixEngine
+    - field: delay_path_isolated
+      op: eq
+      value: true
+      repairResources:
+      - MixEngine
+    - field: baseline_restored
+      op: eq
+      value: true
+      repairResources:
+      - ExhaustiveGuiDemo
+      - BehavioralMutationHarness
+  patch_misroute_mutant:
+    scope: goal
+    goal: observe_synth
+    capability: observable_demo_scene
+    resources:
+    - AppLoop
+    - AudioCommand
+    - LockFreeAudioBoundary
+    - AudioRenderer
+    - PatchAudioBlock
+    - PreparedInstrument
+    - PreparedEngineRack
+    - HiDefSoundFontPreparer
+    - MixEngine
+    - ExhaustiveGuiDemo
+    - BehavioralMutationHarness
+    - BehavioralWitnessMain
+    repairResources:
+    - AppLoop
+    - AudioCommand
+    - LockFreeAudioBoundary
+    - AudioRenderer
+    - PatchAudioBlock
+    - PreparedInstrument
+    - PreparedEngineRack
+    - HiDefSoundFontPreparer
+    - MixEngine
+    - ExhaustiveGuiDemo
+    - BehavioralMutationHarness
+    - BehavioralWitnessMain
+    counterexampleRepairResources:
+    - applicationService.Testing.BehavioralMutationHarness
+    - asset.BehavioralWitnessMain
+    evidence:
+    - evidence.mutation_resistance
+    command:
+    - cargo
+    - run
+    - --quiet
+    - --bin
+    - crest-synth-witness
+    - --
+    - --case
+    - patch-misroute
+    - --mutant
+    - none
+    negativeCommand:
+    - cargo
+    - run
+    - --quiet
+    - --bin
+    - crest-synth-witness
+    - --
+    - --case
+    - patch-misroute
+    - --mutant
+    - patch-misroute
+    negativeExpectedExitCode: 1
+    timeout: 60s
+    artifacts:
+    - target/debug/crest-synth-witness
+    observation:
+      kind: json_stdout
+      marker: 'CREST_MUTATION_OBSERVATION '
+      schema:
+        case: string
+        command_patch_matches_event: bool
+        target_patch_received_command: bool
+        target_stem_changed: bool
+        untargeted_stems_unchanged: bool
+        patch_routing_exact: bool
+    predicates:
+    - field: case
+      op: eq
+      value: patch-misroute
+      repairResources:
+      - BehavioralMutationHarness
+      - BehavioralWitnessMain
+    - field: command_patch_matches_event
+      op: eq
+      value: true
+      repairResources:
+      - AppLoop
+      - AudioCommand
+      - LockFreeAudioBoundary
+    - field: target_patch_received_command
+      op: eq
+      value: true
+      repairResources:
+      - LockFreeAudioBoundary
+      - AudioRenderer
+      - PreparedEngineRack
+      - PreparedInstrument
+      - HiDefSoundFontPreparer
+    - field: target_stem_changed
+      op: eq
+      value: true
+      repairResources:
+      - AudioRenderer
+      - PatchAudioBlock
+      - HiDefSoundFontPreparer
+      - MixEngine
+    - field: untargeted_stems_unchanged
+      op: eq
+      value: true
+      repairResources:
+      - AudioRenderer
+      - PatchAudioBlock
+      - HiDefSoundFontPreparer
+      - MixEngine
+    - field: patch_routing_exact
+      op: eq
+      value: true
+      repairResources:
+      - AppLoop
+      - AudioCommand
+      - LockFreeAudioBoundary
+      - AudioRenderer
+      - MixEngine
+      - ExhaustiveGuiDemo
+  omitted_state_tree_leaf_mutant:
+    scope: goal
+    goal: observe_synth
+    capability: observable_demo_scene
+    resources:
+    - StateTree
+    - StateProjector
+    - DemoScene
+    - ExhaustiveGuiDemo
+    - BehavioralMutationHarness
+    - BehavioralWitnessMain
+    repairResources:
+    - StateTree
+    - StateProjector
+    - DemoScene
+    - ExhaustiveGuiDemo
+    - BehavioralMutationHarness
+    - BehavioralWitnessMain
+    counterexampleRepairResources:
+    - applicationService.Testing.BehavioralMutationHarness
+    - asset.BehavioralWitnessMain
+    evidence:
+    - evidence.mutation_resistance
+    command:
+    - cargo
+    - run
+    - --quiet
+    - --bin
+    - crest-synth-witness
+    - --
+    - --case
+    - omitted-state-tree-leaf
+    - --mutant
+    - none
+    negativeCommand:
+    - cargo
+    - run
+    - --quiet
+    - --bin
+    - crest-synth-witness
+    - --
+    - --case
+    - omitted-state-tree-leaf
+    - --mutant
+    - omitted-state-tree-leaf
+    negativeExpectedExitCode: 1
+    timeout: 60s
+    artifacts:
+    - target/debug/crest-synth-witness
+    observation:
+      kind: json_stdout
+      marker: 'CREST_MUTATION_OBSERVATION '
+      schema:
+        case: string
+        schema_surface_equal: bool
+        required_leaf_count: number
+        missing_leaf_count: number
+        unexpected_leaf_count: number
+        state_values_exact: bool
+        projection_values_exact: bool
+    predicates:
+    - field: case
+      op: eq
+      value: omitted-state-tree-leaf
+      repairResources:
+      - BehavioralMutationHarness
+      - BehavioralWitnessMain
+    - field: schema_surface_equal
+      op: eq
+      value: true
+      repairResources:
+      - StateTree
+      - StateProjector
+      - DemoScene
+      - ExhaustiveGuiDemo
+    - field: required_leaf_count
+      op: gt
+      value: 0
+      repairResources:
+      - StateTree
+      - DemoScene
+    - field: missing_leaf_count
+      op: eq
+      value: 0
+      repairResources:
+      - StateTree
+      - StateProjector
+      - ExhaustiveGuiDemo
+    - field: unexpected_leaf_count
+      op: eq
+      value: 0
+      repairResources:
+      - StateTree
+      - StateProjector
+      - ExhaustiveGuiDemo
+    - field: state_values_exact
+      op: eq
+      value: true
+      repairResources:
+      - StateProjector
+      - ExhaustiveGuiDemo
+    - field: projection_values_exact
+      op: eq
+      value: true
+      repairResources:
+      - StateProjector
+      - ExhaustiveGuiDemo
+  dry_to_wet_bypass_mutant:
+    scope: goal
+    goal: observe_synth
+    capability: observable_demo_scene
+    resources:
+    - MixerTrackParameters
+    - GlobalParameters
+    - GlobalEffectsProcessor
+    - GlobalReverbDelay
+    - MixEngine
+    - AudioRenderer
+    - ExhaustiveGuiDemo
+    - BehavioralMutationHarness
+    - BehavioralWitnessMain
+    repairResources:
+    - MixerTrackParameters
+    - GlobalParameters
+    - GlobalReverbDelay
+    - MixEngine
+    - AudioRenderer
+    - ExhaustiveGuiDemo
+    - BehavioralMutationHarness
+    - BehavioralWitnessMain
+    counterexampleRepairResources:
+    - applicationService.Testing.BehavioralMutationHarness
+    - asset.BehavioralWitnessMain
+    evidence:
+    - evidence.mutation_resistance
+    command:
+    - cargo
+    - run
+    - --quiet
+    - --bin
+    - crest-synth-witness
+    - --
+    - --case
+    - dry-to-wet-bypass
+    - --mutant
+    - none
+    negativeCommand:
+    - cargo
+    - run
+    - --quiet
+    - --bin
+    - crest-synth-witness
+    - --
+    - --case
+    - dry-to-wet-bypass
+    - --mutant
+    - dry-to-wet-bypass
+    negativeExpectedExitCode: 1
+    timeout: 60s
+    artifacts:
+    - target/debug/crest-synth-witness
+    observation:
+      kind: json_stdout
+      marker: 'CREST_MUTATION_OBSERVATION '
+      schema:
+        case: string
+        dry_input_energy: number
+        zero_send_reverb_input_energy: number
+        zero_send_delay_input_energy: number
+        zero_send_wet_output_energy: number
+        nonzero_send_reverb_input_energy: number
+        nonzero_send_delay_input_energy: number
+        nonzero_send_wet_output_energy: number
+        identical_effect_state: bool
+        dry_bypass_absent: bool
+        finite_audio: bool
+        baseline_restored: bool
+    predicates:
+    - field: case
+      op: eq
+      value: dry-to-wet-bypass
+      repairResources:
+      - BehavioralMutationHarness
+      - BehavioralWitnessMain
+    - field: dry_input_energy
+      op: gt
+      value: 0
+      repairResources:
+      - AudioRenderer
+      - MixEngine
+      - BehavioralMutationHarness
+    - field: zero_send_reverb_input_energy
+      op: eq
+      value: 0
+      repairResources:
+      - MixerTrackParameters
+      - MixEngine
+      - ExhaustiveGuiDemo
+    - field: zero_send_delay_input_energy
+      op: eq
+      value: 0
+      repairResources:
+      - MixerTrackParameters
+      - MixEngine
+      - ExhaustiveGuiDemo
+    - field: zero_send_wet_output_energy
+      op: eq
+      value: 0
+      repairResources:
+      - GlobalReverbDelay
+      - MixEngine
+      - BehavioralMutationHarness
+    - field: nonzero_send_reverb_input_energy
+      op: gt
+      value: 0
+      repairResources:
+      - MixerTrackParameters
+      - MixEngine
+      - ExhaustiveGuiDemo
+    - field: nonzero_send_delay_input_energy
+      op: gt
+      value: 0
+      repairResources:
+      - MixerTrackParameters
+      - MixEngine
+      - ExhaustiveGuiDemo
+    - field: nonzero_send_wet_output_energy
+      op: gt
+      value: 0
+      repairResources:
+      - GlobalParameters
+      - GlobalReverbDelay
+      - MixEngine
+    - field: identical_effect_state
+      op: eq
+      value: true
+      repairResources:
+      - GlobalReverbDelay
+      - BehavioralMutationHarness
+    - field: dry_bypass_absent
+      op: eq
+      value: true
+      repairResources:
+      - GlobalReverbDelay
+      - MixEngine
+      - BehavioralMutationHarness
+    - field: finite_audio
+      op: eq
+      value: true
+      repairResources:
+      - AudioRenderer
+      - MixEngine
+    - field: baseline_restored
+      op: eq
+      value: true
+      repairResources:
+      - ExhaustiveGuiDemo
+      - BehavioralMutationHarness
+  semantic_graphical_view_model:
+    scope: goal
+    goal: use_semantic_graphical_view_model
+    capability: semantic_graphical_view_model
+    resources:
+    - SemanticAction
+    - FocusPath
+    - ReturnPath
+    - ValidAction
+    - SemanticGraphicalViewModel
+    - AppState
+    - StateProjector
+    - AppLoop
+    - LiveDemoRunner
+    - EframeGraphicalWindow
+    - StandaloneApplication
+    - CrestSynthMain
+    - BuildMakefile
+    repairResources:
+    - SemanticAction
+    - FocusPath
+    - ReturnPath
+    - ValidAction
+    - SemanticGraphicalViewModel
+    - AppState
+    - StateProjector
+    - AppLoop
+    - LiveDemoRunner
+    - EframeGraphicalWindow
+    - StandaloneApplication
+    - CrestSynthMain
+    evidence:
+    - evidence.semantic_graphical_view_model_contract
+    command:
+    - make
+    - demo-live-semantic-view-model
+    timeout: 180s
+    artifacts:
+    - target/release/crest-synth
+    observation:
+      kind: json_stdout
+      marker: 'CREST_SEMANTIC_VIEW_MODEL_LIVE_OBSERVATION '
+      schema:
+        semantic_focus_correlated: bool
+        contexts_observed: number
+        surfaces_observed: number
+        interaction_modes_observed: number
+        return_paths_round_tripped: number
+        valid_actions_exact: bool
+        structural_statuses_observed: number
+        healthy_errors_explicitly_empty: bool
+        focus_recoveries_observed: number
+        responsive_focus_invariant: bool
+        physical_audio_nonzero: bool
+        active_notes_after_cleanup: number
+        window_closed: bool
+        stream_released: bool
+        owned_graphs_remaining: number
+    predicates:
+    - field: semantic_focus_correlated
+      op: eq
+      value: true
+    - field: contexts_observed
+      op: eq
+      value: 2
+    - field: surfaces_observed
+      op: eq
+      value: 4
+    - field: interaction_modes_observed
+      op: eq
+      value: 2
+    - field: return_paths_round_tripped
+      op: eq
+      value: 2
+    - field: valid_actions_exact
+      op: eq
+      value: true
+    - field: structural_statuses_observed
+      op: gt
+      value: 2
+    - field: healthy_errors_explicitly_empty
+      op: eq
+      value: true
+    - field: focus_recoveries_observed
+      op: gt
+      value: 0
+    - field: responsive_focus_invariant
+      op: eq
+      value: true
+    - field: physical_audio_nonzero
+      op: eq
+      value: true
+    - field: active_notes_after_cleanup
+      op: eq
+      value: 0
+    - field: window_closed
+      op: eq
+      value: true
+    - field: stream_released
+      op: eq
+      value: true
+    - field: owned_graphs_remaining
+      op: eq
+      value: 0
+  sixteen_track_mixer_routing:
+    scope: goal
+    goal: route_patches_through_sixteen_tracks
+    capability: sixteen_track_mixer_routing
+    resources:
+    - MixerTrackId
+    - PatchOutput
+    - MixerTrackParameters
+    - MixerState
+    - MixerControlId
+    - AppState
+    - StateProjector
+    - AppLoop
+    - ParameterSnapshot
+    - AudioObservationSnapshot
+    - AudioRenderer
+    - MixEngine
+    - LiveDemoRunner
+    - EframeGraphicalWindow
+    - StandaloneApplication
+    - SixteenTrackMixerRoutingObservation
+    - CrestSynthMain
+    - BuildMakefile
+    repairResources:
+    - PatchOutput
+    - MixerState
+    - MixerControlId
+    - AppState
+    - StateProjector
+    - AppLoop
+    - ParameterSnapshot
+    - AudioRenderer
+    - MixEngine
+    - LiveDemoRunner
+    - EframeGraphicalWindow
+    - StandaloneApplication
+    evidence:
+    - evidence.sixteen_track_mixer_routing_contract
+    command:
+    - make
+    - demo-live-sixteen-track-mixer-routing
+    timeout: 180s
+    artifacts:
+    - target/release/crest-synth
+    observation:
+      kind: json_stdout
+      marker: 'CREST_SIXTEEN_TRACK_MIXER_ROUTING_LIVE_OBSERVATION '
+      schema:
+        track_count: number
+        track_ids_exact: bool
+        all_tracks_projected: bool
+        empty_tracks_addressable: bool
+        shared_track_patch_count: number
+        shared_track_sum_exact: bool
+        track_level_controls_shared_sum: bool
+        patch_trim_isolated: bool
+        patch_reroute_isolated: bool
+        invalid_route_rejected: bool
+        track_parameter_classes_exercised: number
+        mute_wins: bool
+        any_solo_exact: bool
+        post_gate_sends_exact: bool
+        pre_gate_meters_exact: bool
+        fixed_snapshot_exact: bool
+        stable_focus_exact: bool
+        callback_allocations: number
+        callback_destructions: number
+        physical_audio_nonzero: bool
+        active_notes_after_cleanup: number
+        window_closed: bool
+        stream_released: bool
+        owned_graphs_remaining: number
+    predicates:
+    - field: track_count
+      op: eq
+      value: 16
+    - field: track_ids_exact
+      op: eq
+      value: true
+    - field: all_tracks_projected
+      op: eq
+      value: true
+    - field: empty_tracks_addressable
+      op: eq
+      value: true
+    - field: shared_track_patch_count
+      op: gt
+      value: 1
+    - field: shared_track_sum_exact
+      op: eq
+      value: true
+    - field: track_level_controls_shared_sum
+      op: eq
+      value: true
+    - field: patch_trim_isolated
+      op: eq
+      value: true
+    - field: patch_reroute_isolated
+      op: eq
+      value: true
+    - field: invalid_route_rejected
+      op: eq
+      value: true
+    - field: track_parameter_classes_exercised
+      op: eq
+      value: 6
+    - field: mute_wins
+      op: eq
+      value: true
+    - field: any_solo_exact
+      op: eq
+      value: true
+    - field: post_gate_sends_exact
+      op: eq
+      value: true
+    - field: pre_gate_meters_exact
+      op: eq
+      value: true
+    - field: fixed_snapshot_exact
+      op: eq
+      value: true
+    - field: stable_focus_exact
+      op: eq
+      value: true
+    - field: callback_allocations
+      op: eq
+      value: 0
+    - field: callback_destructions
+      op: eq
+      value: 0
+    - field: physical_audio_nonzero
+      op: eq
+      value: true
+    - field: active_notes_after_cleanup
+      op: eq
+      value: 0
+    - field: window_closed
+      op: eq
+      value: true
+    - field: stream_released
+      op: eq
+      value: true
+    - field: owned_graphs_remaining
+      op: eq
+      value: 0
+  soundfont_preset_selection:
+    scope: goal
+    goal: select_soundfont_preset
+    capability: soundfont_preset_selection
+    resources:
+    - SoundFontPresetId
+    - SoundFontPresetCatalog
+    - StructuralEditIntent
+    - HiDefSoundFontAsset
+    - HiDefSoundFontCapability
+    - HiDefSoundFontPreparer
+    - PatchControlId
+    - AppState
+    - StateProjector
+    - AppLoop
+    - AudioRenderer
+    - SoundFontPresetSelectionAcceptanceTests
+    repairResources:
+    - SoundFontPresetId
+    - SoundFontPresetCatalog
+    - HiDefSoundFontAsset
+    - HiDefSoundFontCapability
+    - HiDefSoundFontPreparer
+    - PatchControlId
+    - AppState
+    - StateProjector
+    - AppLoop
+    - AudioRenderer
+    evidence:
+    - evidence.soundfont_preset_selection_contract
+    command:
+    - cargo
+    - test
+    - --release
+    - --test
+    - soundfont_preset_selection
+    - --
+    - --nocapture
+    timeout: 300s
+    artifacts:
+    - target/release/deps/soundfont_preset_selection-*
+    observation:
+      kind: json_stdout
+      marker: 'CREST_SOUNDFONT_PRESET_OBSERVATION '
+      schema:
+        parsed_soundfonts: number
+        catalog_entries: number
+        exact_authored_names: bool
+        numeric_order_exact: bool
+        raw_order_rejected: bool
+        alphabetical_order_rejected: bool
+        gm_names_synthesized: number
+        fixture_addresses_resolved: bool
+        preset_control_descriptor_derived: bool
+        adjacent_directions_exercised: number
+        boundaries_exercised: number
+        active_graph_revision: number
+        target_config_exact: bool
+        untargeted_configs_exact: bool
+        target_audio_nonzero: bool
+        target_audio_distinct: bool
+        fallbacks: number
+        callback_reachable_strings: number
+        callback_allocations: number
+        callback_destructions: number
+    predicates:
+    - field: parsed_soundfonts
+      op: eq
+      value: 1
+    - field: catalog_entries
+      op: gt
+      value: 1
+    - field: exact_authored_names
+      op: eq
+      value: true
+    - field: numeric_order_exact
+      op: eq
+      value: true
+    - field: raw_order_rejected
+      op: eq
+      value: true
+    - field: alphabetical_order_rejected
+      op: eq
+      value: true
+    - field: gm_names_synthesized
+      op: eq
+      value: 0
+    - field: fixture_addresses_resolved
+      op: eq
+      value: true
+    - field: preset_control_descriptor_derived
+      op: eq
+      value: true
+    - field: adjacent_directions_exercised
+      op: eq
+      value: 2
+    - field: boundaries_exercised
+      op: eq
+      value: 2
+    - field: active_graph_revision
+      op: gt
+      value: 0
+    - field: target_config_exact
+      op: eq
+      value: true
+    - field: untargeted_configs_exact
+      op: eq
+      value: true
+    - field: target_audio_nonzero
+      op: eq
+      value: true
+    - field: target_audio_distinct
+      op: eq
+      value: true
+    - field: fallbacks
+      op: eq
+      value: 0
+    - field: callback_reachable_strings
+      op: eq
+      value: 0
+    - field: callback_allocations
+      op: eq
+      value: 0
+    - field: callback_destructions
+      op: eq
+      value: 0
+  static_patch_effect:
+    scope: goal
+    goal: shape_patch_with_effect
+    capability: static_patch_effect
+    resources:
+    - PostEffectConfig
+    - Patch
+    - AppState
+    - StateProjector
+    - AppLoop
+    - PreparedPostEffectRack
+    - AudioRenderer
+    - MixEngine
+    - ChorusCapability
+    - ChorusPreparer
+    - ChorusSourceBundle
+    - StaticPatchEffectObservation
+    - StaticPatchEffectAcceptanceTests
+    repairResources:
+    - PostEffectConfig
+    - Patch
+    - AppState
+    - StateProjector
+    - AppLoop
+    - PreparedPostEffectRack
+    - AudioRenderer
+    - MixEngine
+    - ChorusCapability
+    - ChorusPreparer
+    evidence:
+    - evidence.static_patch_effect_contract
+    command:
+    - cargo
+    - test
+    - --release
+    - --test
+    - static_patch_effect
+    - --
+    - --nocapture
+    timeout: 240s
+    artifacts:
+    - target/release/deps/static_patch_effect-*
+    observation:
+      kind: json_stdout
+      marker: 'CREST_PATCH_EFFECT_OBSERVATION '
+      schema:
+        schemaVersion: number
+        upstreamRevision: string
+        stmlibRevision: string
+        sourceHashesMatch: bool
+        licensePresent: bool
+        configuredPatchId: number
+        configuredEffectSlots: number
+        amountDepthCasesExercised: number
+        patchFocusOrderExact: bool
+        scalarOnlyPublication: bool
+        orderedBeforeMix: bool
+        targetAudioDistinct: bool
+        stereoSideEnergyNonzero: bool
+        targetPatchExact: bool
+        untargetedPatchesExact: bool
+        independentInstances: bool
+        independentTails: bool
+        structuralConfigPreserved: bool
+        unsupportedRateRejected: bool
+        missingRegistrationRejected: bool
+        fallbackCount: number
+        callbackReachableStrings: number
+        callbackAllocations: number
+        callbackDeallocations: number
+        callbackDestructions: number
+        p99RenderMicroseconds: number
+    predicates:
+    - field: schemaVersion
+      op: eq
+      value: 1
+    - field: upstreamRevision
+      op: eq
+      value: 08460a69a7e1f7a81c5a2abcc7189c9a6b7208d4
+    - field: stmlibRevision
+      op: eq
+      value: e3bd7c9cc00e4364166f9905c0509b6ffd0535ec
+    - field: sourceHashesMatch
+      op: eq
+      value: true
+    - field: licensePresent
+      op: eq
+      value: true
+    - field: configuredEffectSlots
+      op: eq
+      value: 1
+    - field: amountDepthCasesExercised
+      op: eq
+      value: 2
+    - field: patchFocusOrderExact
+      op: eq
+      value: true
+    - field: scalarOnlyPublication
+      op: eq
+      value: true
+    - field: orderedBeforeMix
+      op: eq
+      value: true
+    - field: targetAudioDistinct
+      op: eq
+      value: true
+    - field: stereoSideEnergyNonzero
+      op: eq
+      value: true
+    - field: targetPatchExact
+      op: eq
+      value: true
+    - field: untargetedPatchesExact
+      op: eq
+      value: true
+    - field: independentInstances
+      op: eq
+      value: true
+    - field: independentTails
+      op: eq
+      value: true
+    - field: structuralConfigPreserved
+      op: eq
+      value: true
+    - field: unsupportedRateRejected
+      op: eq
+      value: true
+    - field: missingRegistrationRejected
+      op: eq
+      value: true
+    - field: fallbackCount
+      op: eq
+      value: 0
+    - field: callbackReachableStrings
+      op: eq
+      value: 0
+    - field: callbackAllocations
+      op: eq
+      value: 0
+    - field: callbackDeallocations
+      op: eq
+      value: 0
+    - field: callbackDestructions
+      op: eq
+      value: 0
+    - field: p99RenderMicroseconds
+      op: lt
+      value: 2666
+  zero_renderer_mutant:
+    scope: goal
+    goal: observe_synth
+    capability: observable_demo_scene
+    resources:
+    - AppLoop
+    - LockFreeAudioBoundary
+    - AudioRenderer
+    - PatchAudioBlock
+    - MixEngine
+    - ExhaustiveGuiDemo
+    - BehavioralMutationHarness
+    - BehavioralWitnessMain
+    repairResources:
+    - AppLoop
+    - AudioRenderer
+    - PatchAudioBlock
+    - MixEngine
+    - ExhaustiveGuiDemo
+    - BehavioralMutationHarness
+    - BehavioralWitnessMain
+    counterexampleRepairResources:
+    - applicationService.Testing.BehavioralMutationHarness
+    - asset.BehavioralWitnessMain
+    evidence:
+    - evidence.mutation_resistance
+    command:
+    - cargo
+    - run
+    - --quiet
+    - --bin
+    - crest-synth-witness
+    - --
+    - --case
+    - zero-renderer
+    - --mutant
+    - none
+    negativeCommand:
+    - cargo
+    - run
+    - --quiet
+    - --bin
+    - crest-synth-witness
+    - --
+    - --case
+    - zero-renderer
+    - --mutant
+    - zero-renderer
+    negativeExpectedExitCode: 1
+    timeout: 60s
+    artifacts:
+    - target/debug/crest-synth-witness
+    observation:
+      kind: json_stdout
+      marker: 'CREST_MUTATION_OBSERVATION '
+      schema:
+        case: string
+        control_trace_complete: bool
+        renderer_called: bool
+        renderer_nonzero: bool
+        render_peak: number
+        finite_audio: bool
+    predicates:
+    - field: case
+      op: eq
+      value: zero-renderer
+      repairResources:
+      - BehavioralMutationHarness
+      - BehavioralWitnessMain
+    - field: control_trace_complete
+      op: eq
+      value: true
+      repairResources:
+      - AppLoop
+      - ExhaustiveGuiDemo
+    - field: renderer_called
+      op: eq
+      value: true
+      repairResources:
+      - AudioRenderer
+      - BehavioralMutationHarness
+    - field: renderer_nonzero
+      op: eq
+      value: true
+      repairResources:
+      - AudioRenderer
+      - PatchAudioBlock
+      - MixEngine
+    - field: render_peak
+      op: gt
+      value: 0.001
+      repairResources:
+      - AudioRenderer
+      - PatchAudioBlock
+      - MixEngine
+    - field: finite_audio
+      op: eq
+      value: true
+      repairResources:
+      - AudioRenderer
+      - MixEngine
+  braids_engine:
+    scope: goal
+    goal: play_test_song
+    capability: braids_engine
+    resources:
+    - BraidsCapability
+    - BraidsPreparer
+    - PreparedInstrument
+    - PreparedEngineRack
+    - AudioRenderer
+    - ExhaustiveGuiDemo
+    - BehavioralAcceptanceTests
+    repairResources:
+    - BraidsCapability
+    - BraidsPreparer
+    - PreparedEngineRack
+    - AudioRenderer
+    - ExhaustiveGuiDemo
+    evidence:
+    - evidence.braids_engine_contract
+    command:
+    - cargo
+    - test
+    - --release
+    - --test
+    - braids_engine
+    - --
+    - --nocapture
+    timeout: 180s
+    observation:
+      kind: json_stdout
+      marker: 'CREST_BRAIDS_OBSERVATION '
+      schema:
+        upstream_revision: string
+        stmlib_revision: string
+        source_hashes_match: bool
+        model_count: number
+        voices_per_patch: number
+        braids_patch_count: number
+        total_braids_voice_capacity: number
+        capacity_matches_patch_count: bool
+        no_braids_specific_patch_limit: bool
+        independent_patch_banks: bool
+        sixteen_voices_audible: bool
+        seventeenth_stole_oldest: bool
+        scalar_cases_exercised: number
+        unsupported_rate_rejected: bool
+        mixed_routing_exact: bool
+        parameter_isolation_exact: bool
+        finite_audio: bool
+        callback_allocations: number
+        callback_destructions: number
+        native_callback_destructions: number
+        p99_render_microseconds: number
+    predicates:
+    - field: upstream_revision
+      op: eq
+      value: 08460a69a7e1f7a81c5a2abcc7189c9a6b7208d4
+    - field: stmlib_revision
+      op: eq
+      value: e3bd7c9cc00e4364166f9905c0509b6ffd0535ec
+    - field: source_hashes_match
+      op: eq
+      value: true
+    - field: model_count
+      op: eq
+      value: 47
+    - field: voices_per_patch
+      op: eq
+      value: 16
+    - field: braids_patch_count
+      op: eq
+      value: 3
+    - field: total_braids_voice_capacity
+      op: eq
+      value: 48
+    - field: capacity_matches_patch_count
+      op: eq
+      value: true
+    - field: no_braids_specific_patch_limit
+      op: eq
+      value: true
+    - field: independent_patch_banks
+      op: eq
+      value: true
+    - field: sixteen_voices_audible
+      op: eq
+      value: true
+    - field: seventeenth_stole_oldest
+      op: eq
+      value: true
+    - field: scalar_cases_exercised
+      op: eq
+      value: 3
+    - field: unsupported_rate_rejected
+      op: eq
+      value: true
+    - field: mixed_routing_exact
+      op: eq
+      value: true
+    - field: parameter_isolation_exact
+      op: eq
+      value: true
+    - field: finite_audio
+      op: eq
+      value: true
+    - field: callback_allocations
+      op: eq
+      value: 0
+    - field: callback_destructions
+      op: eq
+      value: 0
+    - field: native_callback_destructions
+      op: eq
+      value: 0
+    - field: p99_render_microseconds
+      op: lt
+      value: 2666
+  per_voice_envelope:
+    scope: goal
+    goal: edit_patch_envelope
+    capability: per_voice_envelope
+    resources:
+    - VoiceEnvelope
+    - PatchControlId
+    - PatchPageProjection
+    - Patch
+    - AppState
+    - StateProjector
+    - AppLoop
+    - KeyboardInputTranslator
+    - HiDefSoundFontPreparer
+    - BraidsPreparer
+    - AudioRenderer
+    - BehavioralAcceptanceTests
+    repairResources:
+    - VoiceEnvelope
+    - PatchControlId
+    - PatchPageProjection
+    - Patch
+    - AppState
+    - StateProjector
+    - AppLoop
+    - KeyboardInputTranslator
+    - HiDefSoundFontPreparer
+    - BraidsPreparer
+    - AudioRenderer
+    evidence:
+    - evidence.per_voice_envelope_contract
+    - evidence.patch_adsr_editing_contract
+    command:
+    - cargo
+    - test
+    - --test
+    - per_voice_envelope
+    - --
+    - --nocapture
+    timeout: 180s
+    observation:
+      kind: json_stdout
+      marker: 'CREST_ENVELOPE_OBSERVATION '
+      schema:
+        parameter_cases_exercised: number
+        patch_control_cases_exercised: number
+        patch_focus_order_exact: bool
+        fine_coarse_adjustment_exact: bool
+        mixer_patch_mutation_shared: bool
+        scalar_only_publication: bool
+        target_patch_isolated: bool
+        soundfont_synthesizers_per_patch: number
+        braids_voices_per_patch: number
+        state_text_snapshot_exact: bool
+        soundfont_overlap_independent: bool
+        braids_overlap_independent: bool
+        all_fields_audible: bool
+        post_stem_envelope_absent: bool
+        extremes_finite: bool
+        callback_allocations: number
+        callback_destructions: number
+    predicates:
+    - field: parameter_cases_exercised
+      op: eq
+      value: 4
+    - field: patch_control_cases_exercised
+      op: eq
+      value: 4
+    - field: patch_focus_order_exact
+      op: eq
+      value: true
+    - field: fine_coarse_adjustment_exact
+      op: eq
+      value: true
+    - field: mixer_patch_mutation_shared
+      op: eq
+      value: true
+    - field: scalar_only_publication
+      op: eq
+      value: true
+    - field: target_patch_isolated
+      op: eq
+      value: true
+    - field: soundfont_synthesizers_per_patch
+      op: eq
+      value: 1
+    - field: braids_voices_per_patch
+      op: eq
+      value: 16
+    - field: state_text_snapshot_exact
+      op: eq
+      value: true
+    - field: soundfont_overlap_independent
+      op: eq
+      value: true
+    - field: braids_overlap_independent
+      op: eq
+      value: true
+    - field: all_fields_audible
+      op: eq
+      value: true
+    - field: post_stem_envelope_absent
+      op: eq
+      value: true
+    - field: extremes_finite
+      op: eq
+      value: true
+    - field: callback_allocations
+      op: eq
+      value: 0
+    - field: callback_destructions
+      op: eq
+      value: 0

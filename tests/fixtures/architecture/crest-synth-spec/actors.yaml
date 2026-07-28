@@ -1,0 +1,6 @@
+actors:
+  player:
+    description: the person listening to the running synth and changing its parameters from the keyboard
+  maintainer:
+    description: the person verifying that control events, state, real-time parameters, MIDI routing,
+      and audio agree

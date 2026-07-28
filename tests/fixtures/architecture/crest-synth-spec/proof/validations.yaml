@@ -1,0 +1,2102 @@
+defaults:
+  workingDirectory: .
+  limits:
+    timeoutMs: 300000
+    stdoutBytes: 8388608
+    stderrBytes: 8388608
+projectValidations:
+  engine_selection_workflow:
+    scope: project
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - engine_selection_workflow
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE engine_selection_workflow passed
+    timeout: 180s
+    resources:
+    - DescriptorDefaultConfigFactory
+    - PatchControlId
+    - EngineSelectionRequestId
+    - EngineSelectionFailure
+    - EngineSelectionStatus
+    - EngineSelectionEffect
+    - AppState
+    - StateProjector
+    - AppLoop
+    - GraphPreparationRequest
+    - GraphPreparationResult
+    - GraphPreparationWorker
+    - ThreadedGraphPreparationWorker
+    - DeterministicGraphPreparationWorker
+    - PreparedGraphBuilder
+    - StructuralGraphCoordinator
+    - StructuralGraphBoundary
+    - AudioRenderer
+    - EngineSelectionObservation
+    - EngineSelectionAcceptanceTests
+    capabilities:
+    - asynchronous_engine_selection
+    - instrument_capability_model
+    - prepared_engine_rack
+    - realtime_execution
+    - observable_demo_scene
+    goals:
+    - select_patch_engine
+    - observe_synth
+    description: the production-path target proves both engine directions, pending/busy/failure/stale
+      semantics, exact config and revision correlation, complete graph activation/retirement, audible
+      target output, deterministic evidence, and zero callback allocation or destruction
+  format:
+    scope: project
+    kind: custom
+    command:
+    - cargo
+    - fmt
+    - --all
+    - --
+    - --check
+    description: Rust formatting is canonical
+  clippy:
+    scope: project
+    kind: compiles
+    command:
+    - cargo
+    - clippy
+    - --all-targets
+    - --
+    - -D
+    - warnings
+    description: all targets compile without warnings
+  graphical_application_shell:
+    scope: project
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - graphical_application_shell
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE graphical_application_shell passed
+    resources:
+    - GraphicalShellProjection
+    - SemanticGraphicalViewModel
+    - ShellFrameObservation
+    - StateProjector
+    - AppLoop
+    - AppWindow
+    - EframeGraphicalWindow
+    - StandaloneApplication
+    - GraphicalShellAcceptanceTests
+    capabilities:
+    - graphical_application_shell
+    - one_way_parameter_control
+    - schema_driven_patch_page
+    goals:
+    - use_graphical_shell
+    description: the production egui update path proves exact graphical shell structure, responsive geometry,
+      canonical context projection, passive input, and retained diagnostic content
+  semantic_graphical_view_model:
+    scope: project
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - semantic_graphical_view_model
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE semantic_graphical_view_model passed
+    resources:
+    - SemanticAction
+    - SurfaceId
+    - InteractionMode
+    - MixerControlId
+    - SemanticControlId
+    - FocusPath
+    - ReturnPath
+    - ValidAction
+    - SemanticControlViewModel
+    - SemanticSurfaceViewModel
+    - SemanticGraphicalViewModel
+    - InteractionState
+    - AppEvent
+    - AppState
+    - StateProjector
+    - AppLoop
+    - KeyboardInputTranslator
+    - EframeGraphicalWindow
+    - SemanticGraphicalViewModelAcceptanceTests
+    capabilities:
+    - semantic_graphical_view_model
+    - graphical_application_shell
+    - one_way_parameter_control
+    - schema_driven_patch_page
+    goals:
+    - use_semantic_graphical_view_model
+    description: the production reducer/projector/action/window path proves semantic focus and descriptor-driven
+      multi-layout projection without UI-owned state or audio mutation
+  sixteen_track_mixer_routing:
+    scope: project
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - sixteen_track_mixer_routing
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE sixteen_track_mixer_routing passed
+    resources:
+    - MixerTrackId
+    - PatchOutputParameter
+    - PatchOutput
+    - MixerTrackParameter
+    - MixerTrackParameters
+    - MixerState
+    - TrackMeter
+    - Patch
+    - MixerControlId
+    - PatchControlId
+    - FocusPath
+    - SemanticGraphicalViewModel
+    - AppState
+    - StateProjector
+    - AppLoop
+    - ParameterSnapshot
+    - AudioObservationSnapshot
+    - AudioRenderer
+    - MixEngine
+    - ExhaustiveGuiDemo
+    - LiveDemoRunner
+    - SixteenTrackMixerRoutingObservation
+    - SixteenTrackMixerRoutingAcceptanceTests
+    capabilities:
+    - sixteen_track_mixer_routing
+    - global_mix
+    - one_way_parameter_control
+    - semantic_graphical_view_model
+    - realtime_execution
+    goals:
+    - route_patches_through_sixteen_tracks
+    description: the named production path proves exact track ownership, Patch routing, semantic control,
+      fixed real-time transport, mix behavior, metering, and callback safety
+  soundfont_preset_selection:
+    scope: project
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --release
+    - --test
+    - soundfont_preset_selection
+    - --
+    - --nocapture
+    timeout: 300s
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE soundfont_preset_selection passed
+    resources:
+    - SoundFontPresetId
+    - SoundFontPresetCatalogEntry
+    - SoundFontPresetCatalog
+    - StructuralEditIntent
+    - HiDefSoundFontAsset
+    - HiDefSoundFontCapability
+    - HiDefSoundFontPreparer
+    - PatchControlId
+    - AppState
+    - StateProjector
+    - AppLoop
+    - AudioRenderer
+    - SoundFontPresetSelectionAcceptanceTests
+    capabilities:
+    - soundfont_preset_selection
+    - instrument_capability_model
+    - schema_driven_patch_page
+    - asynchronous_engine_selection
+    - prepared_engine_rack
+    - realtime_execution
+    goals:
+    - select_soundfont_preset
+    description: the real fixed SF2, canonical reducer, generic structural workflow, complete graph handoff,
+      and production renderer prove authored-name preset selection without callback metadata or fallback
+  static_patch_effect:
+    scope: project
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --release
+    - --test
+    - static_patch_effect
+    - --
+    - --nocapture
+    timeout: 240s
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE static_patch_effect passed
+    resources:
+    - EffectCapabilityId
+    - EffectSlotId
+    - EffectCapabilityDescriptor
+    - PostEffectConfig
+    - EffectCapabilityRegistry
+    - EffectCapabilityProvider
+    - PreparedPostEffect
+    - EffectPreparer
+    - PreparedPostEffectRackBuilder
+    - Patch
+    - AppState
+    - StateProjector
+    - AppLoop
+    - RtPostEffectParameters
+    - PatchEffectObservation
+    - PreparedPostEffectRack
+    - PreparedGraph
+    - AudioRenderer
+    - MixEngine
+    - ChorusCapability
+    - ChorusPreparer
+    - ChorusSourceBundle
+    - StaticPatchEffectObservation
+    - StaticPatchEffectAcceptanceTests
+    capabilities:
+    - static_patch_effect
+    - schema_driven_patch_page
+    - one_way_parameter_control
+    - prepared_engine_rack
+    - global_mix
+    - realtime_execution
+    goals:
+    - shape_patch_with_effect
+    - play_test_song
+    description: the production path proves the pinned Chorus schema, canonical PATCH editing, fixed scalar
+      transport, engine-effect-mix order, Patch/instance isolation, structural preservation, audible stereo
+      output, typed failures, source provenance, and callback/timing contracts
+  test:
+    scope: project
+    kind: test
+    command:
+    - cargo
+    - test
+    - --all-targets
+    description: domain, reducer, adapter, and integration tests pass
+  production_runtime_contracts:
+    scope: project
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - production_runtime_contracts
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE production_runtime_contracts passed
+    resources:
+    - InstrumentCapabilityProvider
+    - InstrumentPreparer
+    - EffectCapabilityProvider
+    - EffectPreparer
+    - DescriptorDefaultConfigFactory
+    - AudioDeviceConfig
+    - AudioDeviceRuntimeError
+    - AudioOutput
+    - StructuralGraphBoundary
+    - GraphPreparationWorker
+    - ThreadedGraphPreparationWorker
+    - AudioObservation
+    - AudioRenderer
+    - StandaloneApplication
+    - ProductionRuntimeContractTests
+    capabilities:
+    - instrument_capability_model
+    - static_patch_effect
+    - asynchronous_engine_selection
+    - prepared_engine_rack
+    - realtime_execution
+    goals:
+    - play_test_song
+    - control_synth
+    - select_patch_engine
+    - shape_patch_with_effect
+    description: the production constructor, exact instrument/effect registration, injected capacity-one
+      preparation worker, negotiated complete-graph preparation, callback adaptation, control-owned shutdown,
+      visible device failure, and routing observation contracts pass together
+  zero_selection_guard:
+    scope: project
+    kind: custom
+    command:
+    - bash
+    - scripts/run_exact_test_validation.sh
+    - --self-test
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_TEST_VALIDATION zero-selection-rejected passed
+    resources:
+    - ProductionRuntimeContractTests
+    capabilities:
+    - realtime_execution
+    goals:
+    - play_test_song
+    description: a declared test selector cannot pass with zero executed tests even when broad-suite text
+      claims success
+  audio_renderer_realtime_contract:
+    scope: project
+    kind: integration
+    command:
+    - bash
+    - scripts/run_exact_test_validation.sh
+    - production_runtime_contracts
+    - audio_renderer_realtime_contract
+    - CREST_RT_VALIDATION audio_renderer_realtime_contract passed
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: '"testsExecuted":1'
+    resources:
+    - AudioRenderer
+    - StandaloneApplication
+    - ProductionRuntimeContractTests
+    capabilities:
+    - prepared_engine_rack
+    - realtime_execution
+    goals:
+    - play_test_song
+    description: the production renderer selector executes exactly one assertion-bearing negotiated-capacity
+      and complete-chunking test
+  prepared_graph_handoff_contract:
+    scope: project
+    kind: integration
+    command:
+    - bash
+    - scripts/run_exact_test_validation.sh
+    - production_runtime_contracts
+    - prepared_graph_handoff
+    - CREST_RT_VALIDATION prepared_graph_handoff passed
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: '"testsExecuted":1'
+    resources:
+    - StructuralGraphBoundary
+    - AudioRenderer
+    - ProductionRuntimeContractTests
+    capabilities:
+    - prepared_engine_rack
+    - realtime_execution
+    goals:
+    - play_test_song
+    description: the prepared-graph handoff selector executes exactly one assertion-bearing ownership
+      and collection test
+  audio_observation_realtime_contract:
+    scope: project
+    kind: integration
+    command:
+    - bash
+    - scripts/run_exact_test_validation.sh
+    - production_runtime_contracts
+    - audio_observation_realtime_contract
+    - CREST_RT_VALIDATION audio_observation_realtime_contract passed
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: '"testsExecuted":1'
+    resources:
+    - AudioObservation
+    - AudioRenderer
+    - ProductionRuntimeContractTests
+    capabilities:
+    - prepared_engine_rack
+    - realtime_execution
+    goals:
+    - play_test_song
+    description: the audio-observation selector executes exactly one assertion-bearing unknown-Patch routing-failure
+      test
+  smoke:
+    scope: project
+    kind: integration
+    command:
+    - cargo
+    - run
+    - --bin
+    - crest-synth
+    - --
+    - --smoke
+    timeout: 180s
+    resources:
+    - HiDefSoundFontAsset
+    - SoundFontPresetCatalog
+    - HiDefSoundFontPreparer
+    - BraidsPreparer
+    - ChorusPreparer
+    - PreparedEngineRackBuilder
+    - PreparedPostEffectRackBuilder
+    - DescriptorDefaultConfigFactory
+    - PreparedGraphBuilder
+    - PreparedEngineRack
+    - PreparedPostEffectRack
+    - PreparedGraph
+    - LockFreeStructuralGraphBoundary
+    - ThreadedGraphPreparationWorker
+    - CorridorsMidiEventSource
+    - AutomaticMidiTest
+    - StandaloneApplication
+    - CrestSynthMain
+    capabilities:
+    - prepared_engine_rack
+    - soundfont_audio
+    - soundfont_preset_selection
+    - braids_engine
+    - per_voice_envelope
+    - static_patch_effect
+    - automatic_test_midi
+    - one_way_parameter_control
+    - asynchronous_engine_selection
+    - realtime_execution
+    goals:
+    - play_test_song
+    - control_synth
+    - select_soundfont_preset
+    - shape_patch_with_effect
+    description: one fixed SoundFont parse supplies exact catalog choices and numeric prepared data while
+      the MIDI fixture alternates real SoundFont/Braids engines and processes one first-Patch Chorus through
+      the control, effect, mixer, and audio path
+  prepared_engine_rack:
+    scope: project
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - prepared_engine_rack
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE prepared_engine_rack passed
+    resources:
+    - PreparedInstrument
+    - InstrumentPreparer
+    - PreparedEngineRackBuilder
+    - PreparedPostEffect
+    - EffectPreparer
+    - PreparedPostEffectRackBuilder
+    - PreparedEngineRack
+    - PreparedPostEffectRack
+    - GraphRevision
+    - PreparedGraph
+    - GraphHandoffStatus
+    - StructuralGraphBoundary
+    - LockFreeStructuralGraphBoundary
+    - PreparedGraphBuilder
+    - StructuralGraphCoordinator
+    - AudioRenderer
+    - HiDefSoundFontPreparer
+    - BraidsPreparer
+    - ChorusPreparer
+    - BehavioralAcceptanceTests
+    capabilities:
+    - prepared_engine_rack
+    - static_patch_effect
+    - realtime_execution
+    - soundfont_audio
+    - braids_engine
+    - per_voice_envelope
+    goals:
+    - play_test_song
+    - control_synth
+    - shape_patch_with_effect
+    description: the named rack target proves bounded SoundFont/Braids dispatch followed by the aligned
+      prepared Chorus rack, matching scalar/envelope/effect projection, complete-graph replacement, pressure
+      recovery, and off-callback destruction
+  braids_engine:
+    scope: project
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --release
+    - --test
+    - braids_engine
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE braids_engine passed
+    resources:
+    - BraidsCapability
+    - BraidsPreparer
+    - PreparedInstrument
+    - PreparedEngineRack
+    - AudioRenderer
+    - BehavioralAcceptanceTests
+    capabilities:
+    - braids_engine
+    - prepared_engine_rack
+    - realtime_execution
+    goals:
+    - play_test_song
+    - control_synth
+    description: the pinned native MacroOscillator adapter proves 47 models, exact 48/96 kHz adaptation,
+      one independent sixteen-voice bank per Braids Patch, 16 × N scaling, Patch-local stealing, scalar
+      isolation, finite output, lifecycle safety, and bounded timing
+  per_voice_envelope:
+    scope: project
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - per_voice_envelope
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE per_voice_envelope passed
+    resources:
+    - VoiceEnvelope
+    - HiDefSoundFontPreparer
+    - BraidsPreparer
+    - StateProjector
+    - AudioRenderer
+    - BehavioralAcceptanceTests
+    capabilities:
+    - per_voice_envelope
+    - schema_driven_patch_page
+    - one_way_parameter_control
+    - soundfont_audio
+    - braids_engine
+    - realtime_execution
+    goals:
+    - play_test_song
+    - control_synth
+    - edit_patch_envelope
+    description: all four ADSR values edit through the canonical PATCH reducer path without becoming track
+      state, project exactly, and independently shape overlapping SoundFont and Braids note voices with
+      bounded callback work
+  capability_schema:
+    scope: project
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - capability_schema
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE capability_schema passed
+    resources:
+    - CapabilityId
+    - ParameterId
+    - AssetReference
+    - ParameterValue
+    - ParameterAssignment
+    - ParameterSpec
+    - CapabilityDescriptor
+    - InstrumentConfig
+    - CapabilityRegistry
+    - EffectCapabilityId
+    - EffectSlotId
+    - EffectCapabilityDescriptor
+    - PostEffectConfig
+    - EffectCapabilityRegistry
+    - SoundFontPresetId
+    - SoundFontPresetCatalog
+    - InstrumentCapabilityProvider
+    - EffectCapabilityProvider
+    - HiDefSoundFontAsset
+    - HiDefSoundFontCapability
+    - BraidsCapability
+    - ChorusCapability
+    - VoiceEnvelope
+    - Patch
+    - AppState
+    - StateProjector
+    - AutomaticMidiTest
+    - BehavioralAcceptanceTests
+    capabilities:
+    - instrument_capability_model
+    - static_patch_effect
+    - one_way_parameter_control
+    - soundfont_audio
+    - soundfont_preset_selection
+    goals:
+    - control_synth
+    - select_soundfont_preset
+    - shape_patch_with_effect
+    description: both instrument descriptors, the separate Chorus descriptor, catalog-hydrated SoundFont
+      preset Choice, and generic fixture Patch/effect configs survive reducer installation, serialization,
+      and projection while malformed, unknown, or mismatched configs fail without fallback or bypass
+  patch_page_projection:
+    scope: project
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - patch_page_projection
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE patch_page_projection passed
+    resources:
+    - TopLevelContext
+    - InteractionState
+    - PatchControlId
+    - StructuralEditIntent
+    - EffectCapabilityRegistry
+    - PostEffectConfig
+    - EngineSelectionStatus
+    - EngineSelectionFailure
+    - AppEvent
+    - PatchPageProjection
+    - TextProjection
+    - AppState
+    - StateProjector
+    - AppLoop
+    - WindowInput
+    - KeyboardInputTranslator
+    - EframeGraphicalWindow
+    - ParameterSnapshot
+    - AudioBoundary
+    - AudioRenderer
+    - PreparedGraph
+    - BehavioralAcceptanceTests
+    capabilities:
+    - schema_driven_patch_page
+    - static_patch_effect
+    - asynchronous_engine_selection
+    - instrument_capability_model
+    - one_way_parameter_control
+    - per_voice_envelope
+    - soundfont_preset_selection
+    goals:
+    - inspect_patch
+    - select_patch_engine
+    - edit_patch_envelope
+    - select_soundfont_preset
+    - shape_patch_with_effect
+    description: direct 1/2 input, reducer-owned Patch and dynamic Engine-plus-ADSR-plus-instrument-StructuralChoice-plus-effect-ScalarEdit
+      focus, exact SoundFont/Braids/Chorus rows and lifecycle status, preserved MIXER projection, audio-neutral
+      navigation, canonical ADSR/effect editing, and semantic engine/preset request projection pass through
+      production seams
+  control_dispatch_performance:
+    scope: project
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - control_dispatch_performance
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE control_dispatch_performance passed
+    resources:
+    - AppState
+    - StateProjector
+    - AppLoop
+    - EventLog
+    - StateSnapshot
+    - StateTree
+    - TextProjection
+    - ParameterSnapshot
+    - BehavioralAcceptanceTests
+    capabilities:
+    - one_way_parameter_control
+    - live_observable_demo
+    goals:
+    - control_synth
+    - observe_live_synth
+    description: the production fifteen-Patch reducer/projector/journal/publication path dispatches 512
+      MIDI events within 50 ms while lazy materialization remains exactly equal to eager canonical projections
+  demo_scene:
+    scope: project
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - exhaustive_demo_scene
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE exhaustive_demo_scene passed
+    timeout: 180s
+    resources:
+    - HiDefSoundFontAsset
+    - SoundFontPresetId
+    - SoundFontPresetCatalog
+    - EffectCapabilityRegistry
+    - PostEffectConfig
+    - ChorusCapability
+    - ChorusPreparer
+    - AppEvent
+    - TopLevelContext
+    - InteractionState
+    - PatchControlId
+    - StructuralEditIntent
+    - EngineSelectionStatus
+    - EngineSelectionFailure
+    - EngineSelectionEffect
+    - PatchPageProjection
+    - EventRecord
+    - EventLog
+    - StateTree
+    - TextProjection
+    - AppState
+    - StateProjector
+    - AppLoop
+    - DescriptorDefaultConfigFactory
+    - WindowInput
+    - KeyboardInputTranslator
+    - EframeGraphicalWindow
+    - MixerTrackParameters
+    - GlobalParameters
+    - MixObservation
+    - GlobalEffectsProcessor
+    - GlobalReverbDelay
+    - MixEngine
+    - ParameterSnapshot
+    - AudioCommand
+    - PatchAudioBlock
+    - PatchEffectObservation
+    - PreparedPostEffectRack
+    - GraphPreparationWorker
+    - DeterministicGraphPreparationWorker
+    - StructuralGraphCoordinator
+    - AudioRenderer
+    - DemoScene
+    - DemoSceneReport
+    - EngineSelectionObservation
+    - ExhaustiveGuiDemo
+    - StandaloneApplication
+    - CrestSynthMain
+    - BehavioralAcceptanceTests
+    capabilities:
+    - instrument_capability_model
+    - observable_demo_scene
+    - one_way_parameter_control
+    - schema_driven_patch_page
+    - asynchronous_engine_selection
+    - soundfont_preset_selection
+    - global_mix
+    - static_patch_effect
+    goals:
+    - select_patch_engine
+    - edit_patch_envelope
+    - select_soundfont_preset
+    - shape_patch_with_effect
+    - observe_synth
+    description: the exhaustive deterministic GUI scene covers every current event, focused PATCH ADSR/Chorus/catalog-backed
+      preset control, editable scalar and structural controls, effect order/isolation/independent state,
+      coexistence, lifecycle state/effect/failure, serialized property, projection, and downstream audio
+      consequence
+  live_demo:
+    scope: project
+    kind: integration
+    command:
+    - cargo
+    - test
+    - live_demo
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE live_demo_scene passed
+    timeout: 180s
+    resources:
+    - HiDefSoundFontAsset
+    - SoundFontPresetCatalog
+    - EffectCapabilityRegistry
+    - PostEffectConfig
+    - ChorusCapability
+    - ChorusPreparer
+    - AppEvent
+    - TopLevelContext
+    - InteractionState
+    - PatchControlId
+    - StructuralEditIntent
+    - PatchPageProjection
+    - EventRecord
+    - EventLog
+    - StateTree
+    - TextProjection
+    - EngineSelectionStatus
+    - EngineSelectionEffect
+    - AppState
+    - StateProjector
+    - AppLoop
+    - DescriptorDefaultConfigFactory
+    - MixerTrackParameters
+    - GlobalParameters
+    - MixObservation
+    - ParameterSnapshot
+    - AudioObservationSnapshot
+    - PatchEffectObservation
+    - PreparedPostEffectRack
+    - AudioObservation
+    - AtomicAudioObservation
+    - AudioRenderer
+    - GraphPreparationWorker
+    - ThreadedGraphPreparationWorker
+    - StructuralGraphCoordinator
+    - StructuralGraphBoundary
+    - AutomaticMidiTest
+    - LiveDemoScene
+    - LiveDemoCheckpoint
+    - LiveDemoReport
+    - LiveDemoRunner
+    - AppWindow
+    - EframeGraphicalWindow
+    - AudioOutput
+    - CpalAudioOutput
+    - StandaloneApplication
+    - CrestSynthMain
+    - BuildMakefile
+    - BehavioralAcceptanceTests
+    capabilities:
+    - live_observable_demo
+    - one_way_parameter_control
+    - schema_driven_patch_page
+    - per_voice_envelope
+    - static_patch_effect
+    - asynchronous_engine_selection
+    - soundfont_preset_selection
+    - realtime_execution
+    goals:
+    - edit_patch_envelope
+    - select_soundfont_preset
+    - shape_patch_with_effect
+    - observe_live_synth
+    description: a deterministic-clock harness proves live pacing, schedule-independent semantic Patch
+      probes around every scalar checkpoint, the focused Patch's four ADSR plus Chorus Amount/Depth instances
+      through PATCH, exact scalar coverage, effect-config preservation across the adjacent preset and
+      both engine replacements, coherent lifecycle/revision/effect-audio checkpoints, semantic all-notes-off
+      completion, mapped-input isolation, controlled no-progress timeout cleanup, one completed report,
+      and immediate successful close without substituting a second reducer, worker workflow, or renderer
+  schema_surface:
+    scope: project
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - schema_surface
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE schema_surface passed
+    resources:
+    - WindowInput
+    - MidiMessage
+    - TopLevelContext
+    - InteractionState
+    - EngineSelectionStatus
+    - EngineSelectionFailure
+    - EngineSelectionEffect
+    - AppEvent
+    - EventRecord
+    - EventLog
+    - StateTree
+    - PatchPageProjection
+    - TextProjection
+    - EffectCapabilityDescriptor
+    - PostEffectConfig
+    - PatchEffectObservation
+    - StateProjector
+    - MixerTrackParameters
+    - GlobalParameters
+    - ParameterSnapshot
+    - DemoScene
+    - ExhaustiveGuiDemo
+    - BehavioralAcceptanceTests
+    capabilities:
+    - instrument_capability_model
+    - static_patch_effect
+    - schema_driven_patch_page
+    - asynchronous_engine_selection
+    - observable_demo_scene
+    goals:
+    - control_synth
+    - inspect_patch
+    - select_patch_engine
+    - shape_patch_with_effect
+    - observe_synth
+    description: typed instrument/effect production surface descriptors and discovered serialized leaves
+      are exactly equal with no missing or unexpected identifiers
+  egui_context:
+    scope: project
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - eframe_context
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE eframe_context passed
+    resources:
+    - WindowInput
+    - TopLevelContext
+    - InteractionState
+    - EngineSelectionStatus
+    - PatchPageProjection
+    - KeyboardInputTranslator
+    - EframeGraphicalWindow
+    - AppState
+    - AppLoop
+    - EventLog
+    - StateProjector
+    - BehavioralAcceptanceTests
+    capabilities:
+    - observable_demo_scene
+    - one_way_parameter_control
+    - schema_driven_patch_page
+    - asynchronous_engine_selection
+    goals:
+    - observe_synth
+    - control_synth
+    - inspect_patch
+    - select_patch_engine
+    description: a headless egui Context dispatches real RawInput through EframeGraphicalApplication.update
+      into AppLoop and proves the next frame, event record, accepted state, exact shell and diagnostic
+      projection values, structural regions, engine-row lifecycle status, selection, and scroll target
+      all reflect that event
+  mutation_harness:
+    scope: project
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - behavioral_mutation_harness
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE behavioral_mutation_harness passed
+    resources:
+    - BehavioralMutationHarness
+    - ExhaustiveGuiDemo
+    - KeyboardInputTranslator
+    - AppState
+    - AppLoop
+    - EventRecord
+    - EventLog
+    - StateTree
+    - StateProjector
+    - AudioCommand
+    - ParameterSnapshot
+    - PatchAudioBlock
+    - LockFreeAudioBoundary
+    - AudioRenderer
+    - MixerTrackParameters
+    - GlobalParameters
+    - MixEngine
+    - GlobalEffectsProcessor
+    - GlobalReverbDelay
+    - BehavioralWitnessMain
+    - BehavioralAcceptanceTests
+    capabilities:
+    - observable_demo_scene
+    - one_way_parameter_control
+    - global_mix
+    goals:
+    - observe_synth
+    description: six isolated real-seam mutants cover dropped edits, cross-track parameter leakage, MIDI
+      misrouting, schema omission, dry-to-wet bypass, and zero rendering with schema-valid measured counterexamples
+attachedValidations:
+  service.mix_engine_global_mix:
+    attachedTo: MixEngine
+    kind: test
+    command:
+    - cargo
+    - test
+    - global_mix
+    description: shared-track accumulation, track isolation, mute/solo, post-gate sends, global effects,
+      and master output are exact
+  service.mix_engine_faithful_effects:
+    attachedTo: MixEngine
+    kind: test
+    command:
+    - cargo
+    - test
+    - faithful_effects_nonzero_sends_and_baseline_restoration
+    description: effect observations use nonzero routed track sends, identical initial effect state, zero-input
+      silence, and exact baseline restoration
+  service.mix_engine_observation:
+    attachedTo: MixEngine
+    kind: test
+    command:
+    - cargo
+    - test
+    - mix_observation
+    description: all sixteen pre-gate meters plus send, wet, final, finite, and clipping measurements
+      come from their declared buffers
+  value_object.capability_registry:
+    attachedTo: CapabilityRegistry
+    kind: test
+    command:
+    - cargo
+    - test
+    - capability_registry
+    description: duplicate ids, invalid assignments, unknown capabilities, fallback attempts, and descriptor-order
+      drift are rejected
+  value_object.soundfont_preset_catalog:
+    attachedTo: SoundFontPresetCatalog
+    kind: test
+    command:
+    - cargo
+    - test
+    - soundfont_preset_catalog
+    description: synthetic reordered, duplicate-name, coordinate-collision, empty-name, invalid-program,
+      and empty-zone fixtures prove exact deterministic catalog behavior
+  service.descriptor_default_config_factory:
+    attachedTo: DescriptorDefaultConfigFactory
+    kind: test
+    command:
+    - cargo
+    - test
+    - descriptor_default_config_factory
+    description: both installed default configs are exact and every missing, mismatched, or invalid default
+      fails without fallback
+  service.prepared_engine_rack_builder:
+    attachedTo: PreparedEngineRackBuilder
+    kind: test
+    command:
+    - cargo
+    - test
+    - prepared_engine_rack_builder
+    description: exact preparation succeeds while missing, duplicate, mismatched, over-capacity, and partial
+      configurations fail without fallback
+  service.prepared_post_effect_rack_builder:
+    attachedTo: PreparedPostEffectRackBuilder
+    kind: test
+    command:
+    - cargo
+    - test
+    - prepared_post_effect_rack_builder
+    description: exact zero/one-slot preparation succeeds while every registration, identity, config,
+      rate, and capacity mismatch fails atomically
+  value_object.graphical_shell_projection:
+    attachedTo: GraphicalShellProjection
+    kind: test
+    command:
+    - cargo
+    - test
+    - graphical_shell_projection
+    description: both contexts project exact canonical labels, diagnostic content, generation, hash, and
+      stable serialized leaves
+  value_object.patch_page_projection:
+    attachedTo: PatchPageProjection
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - patch_page_projection
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE patch_page_projection passed
+    description: both production capabilities project exact descriptor-derived rows, registry choices,
+      Patch identity, MIDI channel, and ADSR without engine-specific page logic
+  value_object.semantic_graphical_view_model:
+    attachedTo: SemanticGraphicalViewModel
+    kind: test
+    command:
+    - cargo
+    - test
+    - semantic_graphical_view_model
+    description: both contexts project exact stable paths, surfaces, modes, valid actions, descriptor
+      content, status, errors, and serialized leaves
+  aggregate.app_state:
+    attachedTo: AppState
+    kind: test
+    command:
+    - cargo
+    - test
+    - app_state
+    description: capability-aware installation, semantic action mapping, stable FocusPath/mode/return,
+      deterministic recovery, context-gated navigation/adjustment, bounds, and MIDI effects are deterministic
+  service.state_projector_exact_values:
+    attachedTo: StateProjector
+    kind: test
+    command:
+    - cargo
+    - test
+    - state_projector_exact_projection_values
+    description: every rendered Patch/global value, selection marker, selected line, and hash exactly
+      matches one accepted state
+  service.state_projector_performance:
+    attachedTo: StateProjector
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - control_dispatch_performance
+    - --
+    - --nocapture
+    description: the complete fifteen-Patch production control path dispatches 512 MIDI events within
+      50 ms and deferred projections equal eager canonical output
+  service.state_projector_schema_surface:
+    attachedTo: StateProjector
+    kind: test
+    command:
+    - cargo
+    - test
+    - schema_derived_current_surface
+    description: production-owned typed descriptors exactly equal discovered serialized leaves with no
+      missing or unexpected paths
+  service.app_loop_one_way_control:
+    attachedTo: AppLoop
+    kind: integration
+    command:
+    - cargo
+    - test
+    - one_way_control_loop
+    description: an edit on a non-first Patch changes only its serialized value and audio contribution,
+      and a boundary no-op leaves the loop running for the next event
+  service.app_loop_observation_trace:
+    attachedTo: AppLoop
+    kind: test
+    command:
+    - cargo
+    - test
+    - control_observation_trace
+    description: accepted and rejected event records form an exact hash/generation chain and the state
+      tree contains every current property
+  aggregate.prepared_engine_rack:
+    attachedTo: PreparedEngineRack
+    kind: test
+    command:
+    - cargo
+    - test
+    - prepared_engine_rack
+    description: two distinct prepared test instrument implementations route targeted MIDI and render
+      isolated bounded stems through one rack
+  aggregate.prepared_post_effect_rack:
+    attachedTo: PreparedPostEffectRack
+    kind: test
+    command:
+    - cargo
+    - test
+    - prepared_post_effect_rack
+    description: ordered target-only in-place processing, layout rejection, zero-slot pass-through, and
+      independent instance state are exact
+  service.prepared_graph_builder:
+    attachedTo: PreparedGraphBuilder
+    kind: test
+    command:
+    - cargo
+    - test
+    - prepared_graph_builder
+    description: complete compatible graphs prepare deterministically while every partial, mismatched,
+      unsupported, or over-capacity input fails before publication
+  service.structural_graph_coordinator:
+    attachedTo: StructuralGraphCoordinator
+    kind: test
+    command:
+    - cargo
+    - test
+    - structural_graph_coordinator
+    description: one-in-flight throttling, ownership preservation, acknowledgement, retry, and explicit
+      control-side collection are exact
+  service.audio_renderer_realtime_contract:
+    attachedTo: AudioRenderer
+    kind: integration
+    command:
+    - bash
+    - scripts/run_exact_test_validation.sh
+    - production_runtime_contracts
+    - audio_renderer_realtime_contract
+    - CREST_RT_VALIDATION audio_renderer_realtime_contract passed
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: '"testsExecuted":1'
+    description: the production application prepares from a supported non-default negotiated rate and
+      exact capacity, then completely chunks an oversized callback through injected boundaries
+  service.audio_renderer_graph_handoff:
+    attachedTo: AudioRenderer
+    kind: integration
+    command:
+    - bash
+    - scripts/run_exact_test_validation.sh
+    - production_runtime_contracts
+    - prepared_graph_handoff
+    - CREST_RT_VALIDATION prepared_graph_handoff passed
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: '"testsExecuted":1'
+    description: complete graphs swap only at block boundaries, acknowledge active and retired revisions,
+      and drop only during control collection
+  service.audio_renderer_observation_contract:
+    attachedTo: AudioRenderer
+    kind: integration
+    command:
+    - bash
+    - scripts/run_exact_test_validation.sh
+    - production_runtime_contracts
+    - audio_observation_realtime_contract
+    - CREST_RT_VALIDATION audio_observation_realtime_contract passed
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: '"testsExecuted":1'
+    description: the production renderer preserves exact unknown-Patch failure through coherent bounded
+      callback observation without fallback or mutation
+  service.keyboard_input_translator:
+    attachedTo: KeyboardInputTranslator
+    kind: test
+    command:
+    - cargo
+    - test
+    - keyboard_input_translator
+    description: both context mappings plus every direction mapping, K transition, focus loss, key release,
+      and unrelated key are deterministic
+  service.standalone_application:
+    attachedTo: StandaloneApplication
+    kind: integration
+    command:
+    - cargo
+    - test
+    - standalone_application
+    description: a boundary adjustment on a non-first Patch is ignored without terminating the window,
+      and a following valid edit is accepted
+  service.standalone_exhaustive_demo:
+    attachedTo: StandaloneApplication
+    kind: integration
+    command:
+    - cargo
+    - test
+    - standalone_exhaustive_gui_demo
+    description: the composed headless application emits a complete event log, state tree, coverage matrix,
+      and audio observations
+  service.standalone_live_demo:
+    attachedTo: StandaloneApplication
+    kind: integration
+    command:
+    - cargo
+    - test
+    - standalone_live_demo_composition
+    description: the live mode wires the threaded preparation and graph handoff plus real window/audio
+      lifetime to the paced two-direction runner while a deterministic harness proves lifecycle/revision/audio
+      checkpoints, mapped-input isolation, one completion, immediate close, and successful teardown
+  service.standalone_runtime_contracts:
+    attachedTo: StandaloneApplication
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - production_runtime_contracts
+    - --
+    - --nocapture
+    description: the injected production constructor, negotiated device lifecycle, replaceable boundaries,
+      oversized callback adaptation, and post-start typed error path are executable
+  service.exhaustive_gui_demo:
+    attachedTo: ExhaustiveGuiDemo
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - exhaustive_demo_scene
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE exhaustive_demo_scene passed
+    description: the generated scene covers every typed current input/event/property/parameter, compares
+      exact state/projection values, records accepted and rejected transitions, and restores its baseline
+  service.exhaustive_gui_schema_surface:
+    attachedTo: ExhaustiveGuiDemo
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - schema_surface
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE schema_surface passed
+    description: typed production descriptors and discovered serialized leaves are exactly equal in both
+      directions
+  service.exhaustive_gui_effects:
+    attachedTo: ExhaustiveGuiDemo
+    kind: test
+    command:
+    - cargo
+    - test
+    - faithful_effects_nonzero_sends_and_baseline_restoration
+    description: wet controls are measured with nonzero routed sends, identical effect state, no dry bypass,
+      and exact baseline restoration
+  service.live_demo_runner:
+    attachedTo: LiveDemoRunner
+    kind: integration
+    command:
+    - cargo
+    - test
+    - live_demo
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE live_demo_scene passed
+    description: the deterministic-clock integration harness and standalone composition tests drive the
+      live runner through production events, schedule-independent semantic parameter probes, one preset
+      and both engine transitions, lifecycle/revision checkpoints, targeted render observations, rejection
+      recovery, exact scalar and structural coverage, all-notes-off, inert report completion, and controlled
+      no-audio and whole-run stalls that close with typed timeouts without giving the runner window or
+      worker ownership
+  service.behavioral_mutation_harness:
+    attachedTo: BehavioralMutationHarness
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - behavioral_mutation_harness
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE behavioral_mutation_harness passed
+    description: all six isolated seam mutants alter only their named seam and produce measured falsifying
+      observations without report tampering
+  adapter.chorus_capability:
+    attachedTo: ChorusCapability
+    kind: test
+    command:
+    - cargo
+    - test
+    - chorus_capability
+    description: the exact two-parameter schema, defaults, config validation, and no-fallback failures
+      are stable
+  adapter.chorus_preparer:
+    attachedTo: ChorusPreparer
+    kind: test
+    command:
+    - cargo
+    - test
+    - chorus_preparer
+    description: pins, source hashes, license, lifecycle, exact-rate policy, scalar response, finite stereo
+      output, and independent state are proven
+  adapter.chorus_preparer_integration:
+    attachedTo: ChorusPreparer
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --release
+    - --test
+    - static_patch_effect
+    - --
+    - --nocapture
+    description: the named production-path Chorus acceptance runs
+  adapter.corridors_midi_event_source:
+    attachedTo: CorridorsMidiEventSource
+    kind: test
+    command:
+    - cargo
+    - test
+    - corridors_midi_event_source
+    description: the real fixture discovers multiple instruments, keeps note pairs together, assigns a
+      unique channel to every Patch, rejects channel exhaustion, and emits due bounded events
+  adapter.eframe_graphical_window:
+    attachedTo: EframeGraphicalWindow
+    kind: test
+    command:
+    - cargo
+    - test
+    - eframe_graphical_window
+    description: the adapter normalizes the complete egui input vocabulary and paints every structural
+      region without owning semantic state
+  adapter.eframe_context:
+    attachedTo: EframeGraphicalWindow
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - eframe_context
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE eframe_context passed
+    description: a headless egui Context executes EframeGraphicalApplication.update, invokes the real
+      callback, renders exact shell/diagnostic projection values, and targets the exact selected line
+      without a native window
+  adapter.hidef_soundfont_asset:
+    attachedTo: HiDefSoundFontAsset
+    kind: test
+    command:
+    - cargo
+    - test
+    - hidef_soundfont_asset
+    description: one parse yields exact separated catalog/numeric projections and raw string-bearing parser
+      state is absent from callback-reachable ownership
+  adapter.hidef_soundfont_capability:
+    attachedTo: HiDefSoundFontCapability
+    kind: test
+    command:
+    - cargo
+    - test
+    - hidef_soundfont_capability
+    description: the descriptor and every fixture-derived config are exact, deterministic, schema-valid,
+      and rejected when altered
+  adapter.braids_capability:
+    attachedTo: BraidsCapability
+    kind: test
+    command:
+    - cargo
+    - test
+    - braids_capability
+    description: the full 47-model descriptor and default/config validation are stable, exact, and fallback-free
+  adapter.hidef_soundfont_preparer:
+    attachedTo: HiDefSoundFontPreparer
+    kind: test
+    command:
+    - cargo
+    - test
+    - hidef_soundfont_preparer
+    description: one parsed bank prepares independent melodic and percussion instruments whose targeted
+      MIDI and bounded non-silent stems remain isolated behind PreparedInstrument
+  adapter.braids_preparer:
+    attachedTo: BraidsPreparer
+    kind: test
+    command:
+    - cargo
+    - test
+    - braids_preparer
+    description: source pins, lifecycle, exact-rate preparation, MIDI routing, scalar response, finite
+      audio, sixteen voices, and deterministic stealing are proven
+  adapter.braids_preparer_integration:
+    attachedTo: BraidsPreparer
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --release
+    - --test
+    - braids_engine
+    - --
+    - --nocapture
+    description: the named production-path Braids acceptance runs with its declared callback timing profile
+  adapter.lock_free_structural_graph_boundary:
+    attachedTo: LockFreeStructuralGraphBoundary
+    kind: test
+    command:
+    - cargo
+    - test
+    - lock_free_structural_graph_boundary
+    description: both directions are bounded FIFO ownership transfer, pressure preserves values, status
+      is coherent, and destructors run only under explicit control collection
+  adapter.atomic_audio_observation:
+    attachedTo: AtomicAudioObservation
+    kind: test
+    command:
+    - cargo
+    - test
+    - atomic_audio_observation
+    description: publication and reads are coherent, latest-wins, monotonic, and allocation-free on the
+      callback side
+  adapter.threaded_graph_preparation_worker:
+    attachedTo: ThreadedGraphPreparationWorker
+    kind: test
+    command:
+    - cargo
+    - test
+    - threaded_graph_preparation_worker
+    description: capacity, both real engine directions, failure mapping, correlation, nonblocking polling,
+      and control-side shutdown are exact
+  adapter.deterministic_graph_preparation_worker:
+    attachedTo: DeterministicGraphPreparationWorker
+    kind: test
+    command:
+    - cargo
+    - test
+    - deterministic_graph_preparation_worker
+    description: manual pending, real healthy preparation, controlled failure, capacity, and deterministic
+      ownership are exact
+  asset.cargo_manifest:
+    attachedTo: CargoManifest
+    kind: custom
+    command:
+    - cargo
+    - metadata
+    - --no-deps
+    - --format-version
+    - '1'
+    description: the manifest resolves
+  asset.make_ui:
+    attachedTo: BuildMakefile
+    kind: custom
+    command:
+    - make
+    - -n
+    - ui
+    description: the interactive human entry point exists
+  asset.make_observe:
+    attachedTo: BuildMakefile
+    kind: custom
+    command:
+    - make
+    - -n
+    - observe
+    description: the behavioral observation entry point exists
+  asset.make_demo:
+    attachedTo: BuildMakefile
+    kind: custom
+    command:
+    - make
+    - -n
+    - demo
+    description: the exhaustive GUI demo and trace entry point exists
+  asset.make_demo_live:
+    attachedTo: BuildMakefile
+    kind: custom
+    command:
+    - make
+    - -n
+    - demo-live
+    description: the live real-window and physical-audio demo entry point exists without executing an
+      interactive process in validation
+  asset.make_demo_live_graphical_shell:
+    attachedTo: BuildMakefile
+    kind: custom
+    command:
+    - make
+    - -n
+    - demo-live-graphical-shell
+    description: the retained Phase 1 graphical-shell live scene has its own stable human command
+  asset.make_demo_live_semantic_view_model:
+    attachedTo: BuildMakefile
+    kind: custom
+    command:
+    - make
+    - -n
+    - demo-live-semantic-view-model
+    description: the Phase 2 semantic-view-model live scene has its own stable human command
+  asset.make_demo_live_sixteen_track_mixer_routing:
+    attachedTo: BuildMakefile
+    kind: custom
+    command:
+    - make
+    - -n
+    - demo-live-sixteen-track-mixer-routing
+    description: the corrective sixteen-track routing live scene has its own stable human command
+  asset.make_smoke:
+    attachedTo: BuildMakefile
+    kind: integration
+    command:
+    - make
+    - smoke
+    timeout: 180s
+    description: the Makefile drives the complete headless synth path
+    assertions:
+    - type: exit-code
+      equals: 0
+  asset.chorus_source_bundle:
+    attachedTo: ChorusSourceBundle
+    kind: custom
+    command:
+    - cargo
+    - test
+    - chorus_source_provenance
+    description: all audited files, hashes, pins, and MIT notices are exact and no unrelated firmware/module
+      code is present
+  asset.engine_selection_acceptance:
+    attachedTo: EngineSelectionAcceptanceTests
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - engine_selection_workflow
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE engine_selection_workflow passed
+    description: the named engine-selection target exists, executes assertions, and emits its marker only
+      after the structured predicates pass
+  asset.graphical_shell_acceptance:
+    attachedTo: GraphicalShellAcceptanceTests
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - graphical_application_shell
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE graphical_application_shell passed
+    description: the named shell target executes assertion-bearing desktop and Steam Deck frames
+  asset.behavioral_witness_main:
+    attachedTo: BehavioralWitnessMain
+    kind: compiles
+    command:
+    - cargo
+    - check
+    - --bin
+    - crest-synth-witness
+    description: the bounded verification-only mutation runner compiles
+  asset.acceptance_capability_schema:
+    attachedTo: BehavioralAcceptanceTests
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - capability_schema
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE capability_schema passed
+    description: the named capability-schema target proves generic registry/config behavior and typed
+      no-fallback rejection
+  asset.acceptance_patch_page_projection:
+    attachedTo: BehavioralAcceptanceTests
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - patch_page_projection
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE patch_page_projection passed
+    description: the named Patch-page target proves semantic page selection, schema-derived exact instrument/effect
+      projection, dynamic focus, canonical fine/coarse ADSR/effect editing, and structural neutrality
+      of scalar focus movement
+  asset.acceptance_prepared_engine_rack:
+    attachedTo: BehavioralAcceptanceTests
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - prepared_engine_rack
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE prepared_engine_rack passed
+    description: the named rack target proves capability-neutral prepared rendering and destruction-safe
+      structural ownership handoff
+  asset.acceptance_braids_engine:
+    attachedTo: BehavioralAcceptanceTests
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --release
+    - --test
+    - braids_engine
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE braids_engine passed
+    description: the named Braids target proves pinned sixteen-voice native DSP and hard-real-time mixed-engine
+      behavior
+  asset.acceptance_per_voice_envelope:
+    attachedTo: BehavioralAcceptanceTests
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - per_voice_envelope
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE per_voice_envelope passed
+    description: the named envelope target proves canonical PATCH/MIXER editing and independent overlapping
+      note lifecycles in both engines
+  asset.acceptance_soundfont_preset_selection:
+    attachedTo: BehavioralAcceptanceTests
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --release
+    - --test
+    - soundfont_preset_selection
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE soundfont_preset_selection passed
+    description: the named real-SF2 target proves exact authored catalog order, generic structural preset
+      replacement, numeric callback ownership, measured target audio, restoration, and no fallback
+  asset.acceptance_control_dispatch_performance:
+    attachedTo: BehavioralAcceptanceTests
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - control_dispatch_performance
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE control_dispatch_performance passed
+    description: the named control-performance target proves responsive sustained MIDI dispatch through
+      every production control seam
+  asset.acceptance_exhaustive_demo_scene:
+    attachedTo: BehavioralAcceptanceTests
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - exhaustive_demo_scene
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE exhaustive_demo_scene passed
+    description: the named exhaustive acceptance target executes behavioral assertions and passes
+  asset.acceptance_live_demo_scene:
+    attachedTo: BehavioralAcceptanceTests
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - live_demo_scene
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE live_demo_scene passed
+    description: the named live-demo contract target executes pacing, canonical scalar and two-direction
+      engine paths, lifecycle/revision/audio observations, coverage, cleanup, and final-state assertions
+  asset.acceptance_schema_surface:
+    attachedTo: BehavioralAcceptanceTests
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - schema_surface
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE schema_surface passed
+    description: the named schema-equality target executes behavioral assertions and passes
+  asset.acceptance_eframe_context:
+    attachedTo: BehavioralAcceptanceTests
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - eframe_context
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE eframe_context passed
+    description: the named egui-context target executes behavioral assertions and passes
+  asset.acceptance_graphical_application_shell:
+    attachedTo: BehavioralAcceptanceTests
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - graphical_application_shell
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE graphical_application_shell passed
+    description: the named graphical-shell target proves desktop and Steam Deck structure through the
+      production egui update path
+  asset.acceptance_mutation_harness:
+    attachedTo: BehavioralAcceptanceTests
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - behavioral_mutation_harness
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE behavioral_mutation_harness passed
+    description: the named six-mutant target executes behavioral assertions and passes
+  asset.production_runtime_contracts:
+    attachedTo: ProductionRuntimeContractTests
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - production_runtime_contracts
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE production_runtime_contracts passed
+    description: the complete production runtime repair target passes
+  asset.production_audio_renderer:
+    attachedTo: ProductionRuntimeContractTests
+    kind: integration
+    command:
+    - bash
+    - scripts/run_exact_test_validation.sh
+    - production_runtime_contracts
+    - audio_renderer_realtime_contract
+    - CREST_RT_VALIDATION audio_renderer_realtime_contract passed
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: '"testsExecuted":1'
+    description: the renderer selector executes exactly one test
+  asset.production_graph_handoff:
+    attachedTo: ProductionRuntimeContractTests
+    kind: integration
+    command:
+    - bash
+    - scripts/run_exact_test_validation.sh
+    - production_runtime_contracts
+    - prepared_graph_handoff
+    - CREST_RT_VALIDATION prepared_graph_handoff passed
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: '"testsExecuted":1'
+    description: the graph-handoff selector executes exactly one test
+  asset.production_audio_observation:
+    attachedTo: ProductionRuntimeContractTests
+    kind: integration
+    command:
+    - bash
+    - scripts/run_exact_test_validation.sh
+    - production_runtime_contracts
+    - audio_observation_realtime_contract
+    - CREST_RT_VALIDATION audio_observation_realtime_contract passed
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: '"testsExecuted":1'
+    description: the observation selector executes exactly one test
+  asset.production_zero_selection_guard:
+    attachedTo: ProductionRuntimeContractTests
+    kind: custom
+    command:
+    - bash
+    - scripts/run_exact_test_validation.sh
+    - --self-test
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_TEST_VALIDATION zero-selection-rejected passed
+    description: zero-selection output is rejected independently of broad-suite success text
+  asset.crest_synth_smoke:
+    attachedTo: CrestSynthMain
+    kind: integration
+    command:
+    - cargo
+    - run
+    - --bin
+    - crest-synth
+    - --
+    - --smoke
+    timeout: 180s
+    description: the complete headless path runs against HiDef.sf2 and Corridors of Time
+  asset.crest_synth_demo_live:
+    attachedTo: CrestSynthMain
+    kind: custom
+    command:
+    - make
+    - -n
+    - demo-live
+    description: the dedicated live option is reachable through one stable human command
+  asset.semantic_graphical_view_model_acceptance:
+    attachedTo: SemanticGraphicalViewModelAcceptanceTests
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - semantic_graphical_view_model
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE semantic_graphical_view_model passed
+    description: the named Phase 2 target executes assertion-bearing action, focus, projection, recovery,
+      responsive, and audio-neutral cases
+  asset.sixteen_track_mixer_routing_acceptance:
+    attachedTo: SixteenTrackMixerRoutingAcceptanceTests
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --test
+    - sixteen_track_mixer_routing
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE sixteen_track_mixer_routing passed
+    description: the named target executes production-path assertions before its marker
+  asset.static_patch_effect_acceptance:
+    attachedTo: StaticPatchEffectAcceptanceTests
+    kind: integration
+    command:
+    - cargo
+    - test
+    - --release
+    - --test
+    - static_patch_effect
+    - --
+    - --nocapture
+    assertions:
+    - type: exit-code
+      equals: 0
+    - type: stdout-contains
+      value: CREST_ACCEPTANCE static_patch_effect passed
+    description: the named Chorus target exists, executes assertions, and emits its marker only after
+      structured predicates pass

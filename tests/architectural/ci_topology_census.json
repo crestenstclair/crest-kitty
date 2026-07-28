@@ -4,6 +4,14 @@
   "rule": "D in worklist iff D is a direct child directory of src/specify_cli/ AND sum(LOC of *.py under D) >= t_loc AND no src-backed dorny filter group (excluding any_src) globs src/specify_cli/<D>/.",
   "worklist": [
     {
+      "dir": "architecture",
+      "cone_roots": [
+        "tests/architecture_spec"
+      ],
+      "target_group": "acceptance",
+      "target_shard": "misc"
+    },
+    {
       "dir": "audit",
       "cone_roots": [
         "tests/audit",
@@ -281,6 +289,7 @@
   "mapped_dirs": [
     "acceptance",
     "agent_utils",
+    "architecture",
     "audit",
     "auth",
     "bulk_edit",

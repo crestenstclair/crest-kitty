@@ -984,6 +984,10 @@ _EMPTY_ROUTING: _CompositeRoute = (None, None, ())
 # (:func:`live_derived_worklist`); this table is the committed plan authority
 # SC-001 (WP03) asserts the live workflow conforms to, not a derived fact.
 _COMPOSITE_ROUTING: dict[str, _CompositeRoute] = {
+    # acceptance -> ``misc`` (port/crestopenspec-gates: the architecture-spec
+    # loader is the first acceptance gate, so its cone joins the existing
+    # ``acceptance`` group rather than minting a new one).
+    "architecture": ("acceptance", "misc", ("tests/architecture_spec",)),
     # auth_audit_git -> existing ``auth-audit-git`` integration shard.
     "auth": ("auth_audit_git", "auth-audit-git", ("tests/auth",)),
     "audit": (

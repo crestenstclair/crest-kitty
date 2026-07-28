@@ -1,0 +1,144 @@
+name: crest-synth
+mission: crest-synth is a standalone controller-first instrument host. Its current executable slice prepares
+  alternating capability-configured HiDef SoundFont and Braids instruments with capability-polymorphic
+  voice policies and common per-note envelopes, processes one configured first-Patch Chorus through a
+  separate capability-described prepared effect rack, routes Patch outputs through one fixed sixteen-track
+  mixer to low-latency stereo audio, projects reducer-owned PATCH/MIXER focus, modes, return paths, valid
+  actions, status, errors, and descriptor content through one immutable host-neutral semantic graphical
+  view model inside the eframe/egui shell, edits canonical Patch and track values, selects SoundFont presets
+  by exact authored identity, and replaces structural instrument configuration through one off-callback
+  prepared-graph workflow.
+nonGoals:
+  sequencing: crest-synth does not provide sequencing, transport, recording, arrangement, clips, patterns,
+    a timeline, or song editing
+  other_engines: production installs and permits prepared selection only between HiDef SoundFont and Braids;
+    no additional oscillator, physical-model, standalone sampler, wavetable, FM, plugin, or layering is
+    exposed
+  additional_effects: crest-synth provides only one statically configured Patch-local Chorus capability
+    plus the existing global reverb and delay; it does not provide another insert type, more than one
+    slot per Patch, bypass, selection, reordering, effect chains, EQ, compression, distortion, or limiting
+  elaborate_ui: crest-synth now provides the Phase 1 graphical shell, Phase 2 host-neutral semantic graphical
+    contract, and the corrective canonical sixteen-track routing/control slice; it does not yet provide
+    the Phase 4 reusable component library, complete Phase 5 Patch editor, component-polished Phase 6
+    Mixer composition, browser workflows, multi-select, or final Figma polish
+  sound_library: crest-synth does not provide preset/session persistence, alternate SoundFont assets,
+    a bank browser, sample-library management, or a patch browser; selecting a preset embedded in the
+    fixed SoundFont is in scope
+  live_midi_adapter: a physical MIDI device adapter is not included; the automatic file fixture implements
+    the MIDI input port used by the application
+  later_phase_three_increments: This increment does not introduce general PATCH Scalar editing, asset
+    selection, an engine- or preset-choice modal, inactive-engine config caching, sibling-Patch navigation,
+    or seamless voice/effect-tail migration
+  later_roadmap_phases: This increment does not introduce Phase 3 expansion beyond at most three effect
+    slots per Patch and eight bus returns, Phase 4 components, the complete Phase 5 Patch editor or component-polished
+    Phase 6 Mixer, asset workflows, Modal or MultiSelect behavior, modulation, arbitrary graph editing,
+    persistence, or final visual completion
+meta:
+  language: rust
+  style: idiomatic Rust; explicit domain types; small modules; ports at external and real-time boundaries
+  rules:
+  - one resource owns each public type and consumers import that type
+  - the standalone binary is a composition root; behavior lives behind domain and application abstractions
+  - test support uses the same ports, reducer, parameter bridge, event ring, engine, mixer, and audio
+    callback as the running application
+  avoid:
+  - engine-specific branches in Patch, reducer, projector, page projection, selection workflow, rack,
+    renderer, or demo coverage; layering, unprepared structural replacement, or synthesis fallback
+  - effects other than the one statically configured Patch-local Chorus plus the one global reverb and
+    one global delay; effect selection, bypass, multiple slots, reordering, or arbitrary routing
+  - sequencer, transport, timeline, pattern, clip, or song-editing domain models
+  - preset/session persistence or browsing, alternate SoundFont assets, modulation matrices, additional
+    per-channel inserts, dynamic effect chains, arbitrary buses, or plugin hosting; the fixed Chorus insert
+    and embedded SoundFont preset selection are permitted
+  - Phase 4 reusable component library, the complete Phase 5 Patch editor or component-polished Phase
+    6 Mixer, Modal or MultiSelect behavior before their owning workflows, asset browsers, final visual
+    polish, or UI-owned domain/navigation/audio state; the Phase 1 shell, Phase 2 semantic model, corrective
+    sixteen-track routing controls/meters, and retained diagnostic content are permitted
+layers:
+- domain
+- application
+- infrastructure
+layerRules:
+  application:
+    dependsOn:
+    - domain
+  infrastructure:
+    dependsOn:
+    - domain
+    - application
+contextMap:
+- from: Kernel
+  to: Synth
+  kind: shared-kernel
+- from: Kernel
+  to: Control
+  kind: shared-kernel
+- from: Synth
+  to: Control
+  kind: customer-supplier
+  direction: upstream
+- from: Mixer
+  to: Control
+  kind: customer-supplier
+  direction: upstream
+- from: Control
+  to: RealTime
+  kind: anti-corruption
+  direction: downstream
+- from: Testing
+  to: Control
+  kind: anti-corruption
+  direction: downstream
+- from: Testing
+  to: Shell
+  kind: anti-corruption
+  direction: downstream
+- from: Shell
+  to: Control
+  kind: anti-corruption
+  direction: downstream
+- from: Shell
+  to: RealTime
+  kind: anti-corruption
+  direction: downstream
+completion:
+  requiredGoals:
+  - play_test_song
+  - control_synth
+  - inspect_patch
+  - select_patch_engine
+  - edit_patch_envelope
+  - select_soundfont_preset
+  - shape_patch_with_effect
+  - observe_synth
+  - observe_live_synth
+  - use_graphical_shell
+  - use_semantic_graphical_view_model
+  - route_patches_through_sixteen_tracks
+  projectChecks:
+  - format
+  - clippy
+  - test
+  - smoke
+  - capability_schema
+  - static_patch_effect
+  - validation.patch_page_projection
+  - engine_selection_workflow
+  - soundfont_preset_selection
+  - validation.prepared_engine_rack
+  - braids_engine
+  - per_voice_envelope
+  - control_dispatch_performance
+  - demo_scene
+  - schema_surface
+  - egui_context
+  - graphical_application_shell
+  - validation.semantic_graphical_view_model
+  - sixteen_track_mixer_routing
+  - mutation_harness
+  - live_demo
+  - validation.production_runtime_contracts
+  - validation.audio_renderer_realtime_contract
+  - prepared_graph_handoff_contract
+  - audio_observation_realtime_contract
+  - zero_selection_guard

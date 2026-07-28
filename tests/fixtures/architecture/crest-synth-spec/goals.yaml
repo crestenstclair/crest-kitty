@@ -1,0 +1,282 @@
+goals:
+  edit_patch_envelope:
+    description: The player can focus and edit the existing common per-voice Attack, Decay, Sustain, and
+      Release values on PATCH while the same canonical Patch state, scalar publication, and engine-native
+      DSP remain authoritative
+    priority: required
+    actors:
+    - player
+    - maintainer
+    dependsOn:
+    - goal.select_patch_engine
+    capabilities:
+    - schema_driven_patch_page
+    - one_way_parameter_control
+    - per_voice_envelope
+    - asynchronous_engine_selection
+    - realtime_execution
+    - observable_demo_scene
+    - live_observable_demo
+    requirements:
+    - patch_adsr_focus_surface
+    - canonical_patch_adsr_adjustment
+    - scalar_only_patch_adsr_publication
+    - patch_adsr_structural_coexistence
+    - patch_adsr_behavioral_proof
+  play_test_song:
+    description: The application automatically plays Corridors of Time through alternating correctly configured
+      SoundFont and Braids Patches and produces stereo audio
+    priority: required
+    actors:
+    - player
+    - maintainer
+    capabilities:
+    - instrument_capability_model
+    - prepared_engine_rack
+    - soundfont_audio
+    - braids_engine
+    - per_voice_envelope
+    - automatic_test_midi
+    - global_mix
+    - static_patch_effect
+    - realtime_execution
+    requirements:
+    - production_two_engines
+    - polymorphic_voice_envelopes
+    - prepared_instrument_boundary
+    - structural_graph_handoff
+    - off_callback_graph_retirement
+    - fixed_soundfont
+    - fixed_midi_fixture
+    - mixer_global_effects_only
+    - fixed_patch_effect_topology
+    - hard_realtime_audio
+    - test_input_is_not_a_sequencer
+  control_synth:
+    description: The player can navigate and edit every current mixer, envelope, engine-scalar, and global
+      parameter through normalized SemanticActions while the semantic graphical model, retained diagnostics,
+      and audio projections remain downstream of the same capability-polymorphic one-way loop
+    priority: required
+    actors:
+    - player
+    - maintainer
+    dependsOn:
+    - goal.play_test_song
+    capabilities:
+    - instrument_capability_model
+    - prepared_engine_rack
+    - one_way_parameter_control
+    - global_mix
+    - realtime_execution
+    - per_voice_envelope
+    requirements:
+    - generic_instrument_config
+    - descriptor_owned_instrument_schema
+    - explicit_capability_failure
+    - one_way_loop
+    - basic_text_contexts
+    - keyboard_controls
+    - evolvable_boundaries
+  inspect_patch:
+    description: The player can directly select PATCH or MIXER and inspect one stable Patch identity,
+      MIDI channel, active engine, common ADSR, and capability-provided fields from canonical state without
+      changing audio
+    priority: required
+    actors:
+    - player
+    - maintainer
+    dependsOn:
+    - goal.control_synth
+    capabilities:
+    - instrument_capability_model
+    - one_way_parameter_control
+    - schema_driven_patch_page
+    requirements:
+    - two_top_level_contexts
+    - semantic_context_selection
+    - descriptor_driven_patch_projection
+    - stable_patch_focus
+    - projection_only_context_switch
+  observe_synth:
+    description: The maintainer can run an exhaustive deterministic GUI demo and inspect a complete event
+      log, state tree, coverage matrix, projections, and audio effects
+    priority: required
+    actors:
+    - maintainer
+    dependsOn:
+    - goal.shape_patch_with_effect
+    capabilities:
+    - observable_demo_scene
+    - schema_driven_patch_page
+    - asynchronous_engine_selection
+    - soundfont_preset_selection
+    requirements:
+    - deterministic_demo_scene
+    - llm_readable_trace
+    - exhaustive_current_surface
+    - schema_derived_surface
+    - faithful_audio_observation
+    - egui_context_verification
+    - seam_mutation_falsifiability
+  observe_live_synth:
+    description: The maintainer can launch the real standalone UI and audio device, watch a paced autonomous
+      scene exercise every current editable mixer, instrument, envelope, Chorus, and global parameter
+      plus the structural preset/engine path, hear each acknowledged result, and inspect coherent live
+      checkpoints
+    priority: required
+    actors:
+    - player
+    - maintainer
+    dependsOn:
+    - goal.observe_synth
+    capabilities:
+    - live_observable_demo
+    - asynchronous_engine_selection
+    requirements:
+    - separate_live_demo
+    - paced_production_path
+    - live_current_surface
+    - canonical_live_projection
+    - bounded_audio_observation
+    - live_demo_completion
+    - live_engine_selection_proof
+    - headless_demo_preserved
+  route_patches_through_sixteen_tracks:
+    description: The player can route each Patch to one of sixteen persistent mixer tracks and control
+      the combined routed signal through track-owned level, pan, mute, solo, sends, and meters
+    priority: required
+    actors:
+    - player
+    - maintainer
+    dependsOn:
+    - goal.use_semantic_graphical_view_model
+    capabilities:
+    - sixteen_track_mixer_routing
+    requirements:
+    - canonical_sixteen_track_bank
+    - patch_output_route_and_trim
+    - fixed_realtime_track_routing
+    - track_owned_semantic_mixer
+    - sixteen_track_mixer_behavioral_proof
+  select_patch_engine:
+    description: The player can replace the focused Patch engine with an adjacent installed capability
+      while the current graph stays audible until a complete prepared replacement activates
+    priority: required
+    actors:
+    - player
+    - maintainer
+    dependsOn:
+    - goal.inspect_patch
+    capabilities:
+    - instrument_capability_model
+    - schema_driven_patch_page
+    - asynchronous_engine_selection
+    - prepared_engine_rack
+    - one_way_parameter_control
+    - realtime_execution
+    requirements:
+    - descriptor_default_engine_config
+    - reducer_owned_engine_selection
+    - one_in_flight_structural_work
+    - atomic_prepared_activation
+    - correlated_structural_outcomes
+    - retryable_structural_publication
+    - engine_selection_demo_proof
+  select_soundfont_preset:
+    description: The player can see the fixed SoundFont's authored preset names in numeric SF2 bank/program
+      order and replace the focused SoundFont Patch preset through the same prepared structural workflow
+      as engine selection
+    priority: required
+    actors:
+    - player
+    - maintainer
+    dependsOn:
+    - goal.edit_patch_envelope
+    capabilities:
+    - soundfont_preset_selection
+    - instrument_capability_model
+    - schema_driven_patch_page
+    - asynchronous_engine_selection
+    - prepared_engine_rack
+    - realtime_execution
+    requirements:
+    - sf2_preset_catalog_fidelity
+    - catalog_backed_soundfont_schema
+    - descriptor_derived_preset_focus
+    - correlated_preset_replacement
+    - soundfont_metadata_rt_separation
+    - soundfont_preset_behavioral_proof
+  shape_patch_with_effect:
+    description: The player can edit one configured Patch-local Chorus through PATCH and hear it process
+      only that Patch between instrument rendering and mix/routing
+    priority: required
+    actors:
+    - player
+    - maintainer
+    dependsOn:
+    - goal.select_soundfont_preset
+    capabilities:
+    - static_patch_effect
+    - instrument_capability_model
+    - schema_driven_patch_page
+    - one_way_parameter_control
+    - prepared_engine_rack
+    - global_mix
+    - realtime_execution
+    - observable_demo_scene
+    - live_observable_demo
+    requirements:
+    - effect_capability_contract
+    - fixed_patch_effect_topology
+    - canonical_patch_effect_control
+    - pinned_chorus_adapter
+    - patch_effect_realtime_safety
+    - patch_effect_behavioral_proof
+  use_graphical_shell:
+    description: The player can run Crest Synth in a controller-first graphical shell, see PATCH or MIXER
+      in the authored structural bands at desktop and Steam Deck sizes, and switch context without moving
+      state or audio behavior into the UI
+    priority: required
+    actors:
+    - player
+    - maintainer
+    dependsOn:
+    - goal.observe_live_synth
+    capabilities:
+    - graphical_application_shell
+    - one_way_parameter_control
+    - schema_driven_patch_page
+    - observable_demo_scene
+    - live_observable_demo
+    requirements:
+    - selected_egui_stack
+    - immutable_graphical_shell_projection
+    - authored_shell_composition
+    - responsive_shell_blockout
+    - passive_graphical_window
+    - retained_diagnostic_projection
+    - graphical_shell_behavioral_proof
+  use_semantic_graphical_view_model:
+    description: The player can traverse PATCH and MIXER through one reducer-owned semantic focus contract
+      while any graphical layout renders the same immutable content, modes, valid actions, status, errors,
+      and return path
+    priority: required
+    actors:
+    - player
+    - maintainer
+    dependsOn:
+    - goal.use_graphical_shell
+    capabilities:
+    - semantic_graphical_view_model
+    - graphical_application_shell
+    - one_way_parameter_control
+    - schema_driven_patch_page
+    - observable_demo_scene
+    - live_observable_demo
+    requirements:
+    - canonical_semantic_focus_contract
+    - descriptor_driven_graphical_projection
+    - exact_valid_action_contract
+    - deterministic_focus_recovery
+    - passive_semantic_action_boundary
+    - semantic_view_model_behavioral_proof

@@ -1,0 +1,357 @@
+context: Shell
+purpose: keyboard/graphical-window and audio-device boundaries around the application services
+valueObjects:
+  ShellFrameObservation:
+    description: one immutable adapter-boundary observation of the graphical shell frame actually painted
+      for live and headless verification
+    state:
+      viewport: '{width: f32, height: f32}'
+      generation: u64
+      stateHash: String
+      context: TopLevelContext
+      activeSurface: SurfaceId
+      focusPath: FocusPath
+      interactionMode: InteractionMode
+      regions: ordered {contextLine, identityHeader, mainWorkspace, persistentSideRegion, footer} rectangles
+        with stable identity and visible-label evidence
+    invariants:
+    - the adapter emits the observation only after painting the supplied GraphicalShellProjection and
+      copies its semantic generation, stateHash, context, surface, focus, and mode identity exactly
+    - rectangles are finite, viewport-bounded adapter output and never become AppState, navigation, focus,
+      Patch, graph, or audio state
+    - expected region names or a pre-render layout plan alone cannot construct a passing observation
+    contributesTo:
+      graphical_application_shell: makes actual production-frame visibility and geometry observable without
+        moving it into canonical state
+      live_observable_demo: lets the control-side live report credit only qualifying rendered PATCH and
+        MIXER frames
+  WindowInput:
+    description: a normalized window-boundary input used by both eframe and deterministic GUI scenes
+    state:
+      kind:
+      - KeyDown
+      - KeyUp
+      - FocusLost
+      key:
+      - Digit1
+      - Digit2
+      - W
+      - S
+      - A
+      - D
+      - K
+      - Other
+      surfaceDescriptor: typed exhaustive descriptors for every valid normalized kind/key combination,
+        including key-down, key-up, focus loss, and unrelated input
+    invariants:
+    - platform key codes are normalized at the eframe boundary before translation
+    - WindowInput is shell data and never enters AppState or the audio boundary
+    - the deterministic demo feeds the same values to the same translator as the real window
+    - surfaceDescriptor is defined beside WindowInput and is the only GUI-input vocabulary consumed by
+      DemoScene and acceptance tests; no test owns a second list of Digit1/Digit2/W/S/A/D/K, key-up, focus-loss,
+      or unrelated-input strings
+    - 'surfaceDescriptor contains exactly 17 unique valid values before any set conversion: KeyDown and
+      KeyUp for Digit1, Digit2, W, S, A, D, K, and Other plus FocusLost with no key payload'
+    contributesTo:
+      observable_demo_scene: lets automated scenes exercise the actual current GUI input vocabulary
+      schema_driven_patch_page: normalizes the two direct page bindings before semantic translation
+  AudioDeviceConfig:
+    description: validated physical-device facts selected before any graph is prepared or stream callback
+      starts
+    state:
+      sampleRate: f32
+      channels: u16
+      sampleFormat: AudioSampleFormat
+      channelMapping: StereoToFirstTwo
+      renderCapacityFrames: usize
+    invariants:
+    - sampleRate is finite and positive, channels is at least two, the sample format is supported PCM,
+      and renderCapacityFrames is nonzero
+    - the value is returned by negotiation before PreparedGraphBuilder prepares engines, effects, stems,
+      or scratch
+    - renderCapacityFrames is the maximum bounded block submitted to PreparedGraph even when a native
+      device callback is larger
+    contributesTo:
+      realtime_execution: binds complete graph preparation to the accepted physical device configuration
+  AudioDeviceRuntimeError:
+    description: fixed-size post-start device failure transferred from callback to control ownership
+    state:
+      kind:
+      - DeviceBusy
+      - DeviceChanged
+      - DeviceUnavailable
+      - HostUnavailable
+      - InvalidInput
+      - PermissionDenied
+      - RealtimeDenied
+      - ResourceExhausted
+      - StreamInvalidated
+      - UnsupportedConfig
+      - UnsupportedOperation
+      - Xrun
+      - Backend
+      - Other
+    invariants:
+    - the value is Copy, fixed-size, non-allocating, and contains no framework error, string, path, or
+      owned resource
+    - the callback publishes only the first unconsumed failure through bounded atomics and control ownership
+      takes and formats it
+    contributesTo:
+      realtime_execution: keeps a failed running device visible without callback I/O or allocation
+ports:
+  AppWindow:
+    direction: outbound
+    contract:
+      run: '(onInput: FnMut(SemanticAction), projection: Fn() -> GraphicalShellProjection, audioObservation:
+        Fn() -> AudioObservationSnapshot, onTick: FnMut(Duration) -> bool, onFrame: FnMut(ShellFrameObservation))
+        -> Result<(), WindowError>'
+    consumes:
+    - SemanticAction
+    - GraphicalShellProjection
+    - AudioObservationSnapshot
+    invariants:
+    - the window receives immutable GraphicalShellProjection plus the latest fixed AudioObservationSnapshot
+      and emits only SemanticAction
+    - the window owns raw key and K-modifier state but no synth parameter, context, FocusPath, InteractionMode,
+      ReturnPath, or selection state
+    - an AppEvent rejection does not close the window or disable later input
+    - each interactive frame advances the injected control-side tick and then requests the current immutable
+      GraphicalShellProjection; autonomous live-demo state is never stored or applied by the window
+    - after painting, the window emits one immutable ShellFrameObservation through the injected control-side
+      callback; it does not infer checkpoint completion, edit a report, or retain canonical state
+    - layout class and pixel geometry are adapter-local responses to viewport size and never become canonical
+      application or navigation state
+    - 'a false tick result closes the disposable window only after application control ownership has retained
+      a terminal outcome: either the completed live report or a typed fatal runtime error'
+    contributesTo:
+      one_way_parameter_control: keeps the disposable graphical view outside application state
+      schema_driven_patch_page: renders whichever immutable semantic context the reducer projects
+      graphical_application_shell: owns the passive production-window boundary for the structural shell
+      live_observable_demo: renders canonical projections while the control-side live runner advances
+        and closes when its owning application reports completion
+      sixteen_track_mixer_routing: renders all sixteen fixed meters without storing or feeding them back
+        into domain state
+      semantic_graphical_view_model: is the passive action/view-model host boundary
+  AudioOutput:
+    direction: outbound
+    contract:
+      negotiate: () -> Result<NegotiatedAudioOutput, AudioOutputError>
+      config: (&NegotiatedAudioOutput) -> AudioDeviceConfig
+      start: '(NegotiatedAudioOutput, render: FnMut(&mut [f32]), onRuntimeError: FnMut(AudioDeviceRuntimeError))
+        -> Result<AudioStream, AudioOutputError>'
+    consumes:
+    - AudioDeviceConfig
+    - AudioDeviceRuntimeError
+    invariants:
+    - negotiate selects and validates the device, sample rate, channel mapping, PCM sample format, and
+      bounded render capacity without starting its callback
+    - a valid preferred-rate default configuration is accepted before optional format-range enumeration;
+      if optional enumeration fails, an already validated default remains usable and no device or configuration
+      is invented
+    - start consumes that exact negotiated owner only after a compatible PreparedGraph and AudioRenderer
+      exist
+    - AudioRenderer always receives interleaved stereo f32 frames; a native stereo f32 device may forward
+      its exact caller-owned buffer
+    - a device with more than two channels uses bounded preallocated callback storage, writes stereo to
+      its first two output channels, and silences every surplus channel
+    - post-start framework errors are mapped to AudioDeviceRuntimeError and published without allocation,
+      locking, blocking, I/O, logging, formatting, panic, or destruction
+    contributesTo:
+      realtime_execution: connects the hard real-time renderer to a stereo device
+applicationServices:
+  KeyboardInputTranslator:
+    purpose: translate normalized 1/2/W/S/A/D/K window input and focus changes into the closed SemanticAction
+      vocabulary
+    uses:
+    - WindowInput
+    - SemanticAction
+    operations:
+      translate:
+        input:
+          event: WindowInput
+        output:
+          action: Option<SemanticAction>
+    meta:
+      rules:
+      - Digit1 key-down emits SelectContext(MIXER), Digit2 key-down emits SelectContext(PATCH), and their
+        key-up events emit nothing regardless of K modifier state
+      - bare W/S/A/D key-down emits Navigate Up/Down/Left/Right and key-up emits nothing
+      - K key-down records physical modifier state and emits SetInteractionMode(Adjust); while held W/S/A/D
+        key-down emits Adjust Up/Down/Left/Right; K key-up clears physical modifier state and emits SetInteractionMode(Navigate)
+      - FocusLost clears physical modifier state and emits SetInteractionMode(Navigate) exactly when Adjust
+        had been entered
+      - Other input emits nothing
+      - translation owns only raw held-key normalization and no semantic focus/mode authority, Patch,
+        selection, parameter, projection, or audio state
+    contributesTo:
+      one_way_parameter_control: keeps physical keyboard normalization outside the reducer
+      schema_driven_patch_page: maps direct page keys to semantic context events without reading AppState
+      observable_demo_scene: is the single translator shared by the eframe window and exhaustive scene
+        runner
+      semantic_graphical_view_model: makes physical Edit press/release and directional intent explicit
+        before AppEvent mapping
+  StandaloneApplication:
+    purpose: compose the control loop, capacity-one graph-preparation worker, automatic MIDI fixture,
+      exhaustive GUI demo, audio renderer, graphical window, and device output
+    uses:
+    - CapabilityRegistry
+    - EffectCapabilityRegistry
+    - SoundFontPresetCatalog
+    - InstrumentCapabilityProvider
+    - InstrumentPreparer
+    - EffectCapabilityProvider
+    - EffectPreparer
+    - PreparedEngineRackBuilder
+    - PreparedPostEffectRackBuilder
+    - AppLoop
+    - AutomaticMidiTest
+    - ExhaustiveGuiDemo
+    - LiveDemoRunner
+    - LiveDemoScene
+    - LiveDemoCheckpoint
+    - LiveDemoReport
+    - AudioRenderer
+    - PreparedGraphBuilder
+    - StructuralGraphCoordinator
+    - StructuralGraphBoundary
+    - GraphPreparationWorker
+    - DescriptorDefaultConfigFactory
+    - AudioObservation
+    - AppWindow
+    - AudioOutput
+    operations:
+      run:
+        input: {}
+        output:
+          result: Result<(), ApplicationError>
+      runLiveDemo:
+        input:
+          onCheckpoint: FnMut(&LiveDemoCheckpoint)
+          onComplete: FnOnce(&LiveDemoReport)
+        output:
+          result: Result<(), ApplicationError>
+      runSmoke:
+        input:
+          degenerate: Option<DegenerateMode>
+        output:
+          observation: Result<SmokeObservation, ApplicationError>
+      runDemoScene:
+        input:
+          degenerate: Option<DegenerateMode>
+        output:
+          result: Result<DemoSceneReport, ApplicationError>
+    meta:
+      rules:
+      - the crest-synth composition root parses HiDef.sf2 once through HiDefSoundFontAsset, constructs
+        and injects ordered instrument and effect capability providers, their matching separate preparers,
+        shared SoundFontPresetCatalog, StructuralGraphBoundary, AudioObservation, AudioBoundary, MIDI
+        source, window, and AudioOutput; StandaloneApplication imports no concrete infrastructure adapter
+        and constructs none of those boundaries
+      - startup validates duplicate, missing, unknown, and mismatched instrument/effect provider/preparer
+        registrations plus every fixture SoundFont address, freezes both hydrated ordered registries in
+        AppState, and performs no structural publication before registration succeeds
+      - physical startup negotiates AudioDeviceConfig first, prepares complete engine and effect racks
+        plus the graph from its exact sampleRate and renderCapacityFrames, constructs AudioRenderer, starts
+        the same negotiated output owner, then opens the graphical window
+      - startup fails visibly before audio on duplicate, missing, unknown, or mismatched instrument/effect
+        capability or preparer registration and never chooses or substitutes a fallback provider, preparer,
+        prepared instrument/effect, config, asset, preset, graph, engine, or bypass
+      - normal-mode MIDI begins automatically only after the initial graph is fully prepared; each window
+        tick advances the private test input, polls at most one worker outcome and structural status,
+        retries a staged graph, and collects returned graphs outside the callback
+      - production startup alternates HiDef SoundFont and Braids instruments in PreparedEngineRack, configures
+        one effect.chorus slot only on the first fixture Patch, and prepares it through PreparedPostEffectRack;
+        PATCH exposes instrument StructuralChoice and effect ScalarEdit rows generically, and the injected
+        worker prepares one complete replacement at a time without substituting an engine, preset, effect,
+        asset, or config
+      - normal, smoke, headless-demo, and live-demo compositions inject the same instrument/effect registries,
+        providers, preparers, DescriptorDefaultConfigFactory, GraphPreparationWorker port, graph builder,
+        structural coordinator, reducer, projector, and renderer; only the deterministic headless harness
+        manually advances its worker adapter while live uses ThreadedGraphPreparationWorker
+      - runLiveDemo uses the exact normal startup order, real EframeGraphicalWindow, physical CpalAudioOutput,
+        HiDef.sf2, pinned Braids adapter, and Corridors of Time fixture, then starts LiveDemoRunner on
+        the control side and advances it from the existing window-tick callback
+      - runLiveDemo injects the same AppLoop into AutomaticMidiTest, LiveDemoRunner, and immutable projection
+        callbacks; its live-mode window input callback is a stateless semantic no-op, none receives mutable
+        AppState, and no live-specific reducer, engine, mixer, window, or audio-output implementation
+        exists
+      - in live mode only LiveDemoRunner advances AutomaticMidiTest; StandaloneApplication does not also
+        tick the fixture and every due fixture event is dispatched exactly once
+      - the live EventLog is pre-sized to a declared bounded capacity sufficient for the frozen scene
+        and fixture events; dropped records make the final report incomplete rather than being hidden
+      - in normal interactive mode normalized SemanticActions are dispatched through AppLoop.dispatchAction
+        before a new GraphicalShellProjection is requested
+      - in autonomous live-demo mode mapped semantic window input is ignored without an EventRecord, generation
+        change, projection change, parameter publication, or application failure; native window close
+        remains available and follows the typed early-close path
+      - 'ParameterAtBoundary and every other EventRejection caused by ordinary user input are nonfatal
+        no-ops: keep the window and audio running, preserve the current projection, and accept the next
+        key event'
+      - run returns ApplicationError only for startup, adapter, audio-device, window-runtime, automatic-input,
+        or real-time boundary failures; it never promotes a rejected user edit to an application failure
+      - each window tick first consumes any post-start AudioDeviceRuntimeError on control ownership, retains
+        the exact ApplicationError, and asks the window to close; it never formats, logs, or invokes UI
+        behavior from the device callback
+      - runSmoke uses the same services without a physical device or window and measures real control,
+        routing, and rendered-sample results
+      - runDemoScene initializes the real fixture, then drives normalized WindowInputs through KeyboardInputTranslator,
+        SemanticAction mapping, and the production AppLoop; it never mutates state or projections directly
+      - runDemoScene injects DeterministicGraphPreparationWorker, exercises one adjacent SoundFont preset
+        replacement followed by the complete SoundFont to Braids to descriptor-default SoundFont lifecycle
+        plus one controlled failure, and never fabricates a graph, status, event, measurement, or report
+        field
+      - runLiveDemo completes its frozen editable-scalar coverage, then submits one adjacent SoundFont
+        preset choice followed by SoundFont to Braids and Braids to descriptor-default SoundFont for the
+        focused first Patch through LiveDemoRunner semantic events; each window tick advances AppLoop
+        structural work nonblockingly, each transition waits for visible Preparing, Activating, Ready,
+        an acknowledged newer revision, and finite nonzero targeted physical output, and no live path
+        injects failure or fabricates acknowledgement
+      - before physical live startup the composition root prints one actionable control-side status explaining
+        the autonomous input-isolated bounded run; a typed progress or whole-run timeout follows the same
+        fatal tick, close, semantic cleanup, stream-release, and worker/graph shutdown path as another
+        retained live runtime failure
+      - demo execution retains the complete EventLog and final StateTree and reports zero missing coverage
+        before returning success
+      - 'verification-only demo degeneracy is injected before observation at exactly one real seam: control
+        drops one translated Adjust before AppLoop, audio clears the rendered buffer after AudioRenderer;
+        neither mode edits coverage, a completed DemoSceneReport, or any measured observation field'
+      - each checkpoint is passed exactly once to the injected control-side onCheckpoint callback; when
+        LiveDemoRunner completes, pass its report exactly once to onComplete and return false from that
+        same tick so the window closes without a post-completion tick or frame
+      - after the completed window returns, release the physical stream on control ownership and return
+        success when no retained runtime error exists
+      - after every normal, error, demo, or live exit release the audio stream before shutting down the
+        worker, then drain or destroy pending, staged, returned, and retired graph ownership only on control/worker
+        ownership
+      - if the user closes the window before completion, dispatch semantic all-notes-off for installed
+        Patches while the control loop is available, do not call onComplete with a successful report,
+        and return a typed incomplete-live-demo result without fabricating coverage
+      - --demo-live has no degenerate, headless, no-device, no-window, persistent-final-window, or silent-fallback
+        mode; startup or runtime device failures remain typed visible ApplicationErrors
+    contributesTo:
+      instrument_capability_model: constructs the immutable descriptor registry and injects the provider
+        into the fixture installation path
+      soundfont_preset_selection: validates the shared catalog, exact fixture choice identities, and production
+        structural-preset composition before audio starts
+      static_patch_effect: validates and composes the Chorus provider/preparer, first-Patch config, prepared
+        rack, canonical control path, and physical demo
+      prepared_engine_rack: composes registered preparation, the complete initial graph, distinct structural
+        handoff, and control-side retirement collection
+      soundfont_audio: composes the running SoundFont audio path
+      braids_engine: composes the intentional second engine from its independent provider and preparer
+      per_voice_envelope: uses the same canonical Patch envelope and projection for both prepared implementations
+      automatic_test_midi: starts the fixed test input automatically
+      one_way_parameter_control: joins keyboard events to the shared reducer and immutable graphical plus
+        diagnostic projections
+      graphical_application_shell: composes the production graphical window with the canonical shell projection
+        and retained live lifecycle
+      schema_driven_patch_page: composes direct context input with the canonical Patch-page projection
+      asynchronous_engine_selection: composes descriptor defaults, capacity-one preparation, one-way lifecycle
+        events, structural handoff, and control-owned shutdown
+      realtime_execution: starts control and audio sides in the correct preparation order
+      observable_demo_scene: composes the exhaustive scene against production input, reducer, projection,
+        boundary, engine, and mixer services
+      live_observable_demo: composes the paced runner with the real standalone UI, physical audio stream,
+        canonical control loop, and final visible state
+      semantic_graphical_view_model: composes the normalized action, canonical view-model, passive window,
+        live traversal, and teardown path

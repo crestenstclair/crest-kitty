@@ -1,0 +1,594 @@
+context: RealTime
+purpose: fixed-capacity values and lock-free ports crossing into the audio callback
+valueObjects:
+  GraphPreparationRequest:
+    description: one immutable control-owned request to prepare a complete candidate graph
+    state:
+      requestId: EngineSelectionRequestId
+      patchId: PatchId
+      intent: StructuralEditIntent
+      sourceCapabilityId: CapabilityId
+      targetCapabilityId: CapabilityId
+      sourceGraphRevision: GraphRevision
+      targetGraphRevision: GraphRevision
+      candidatePatches: Vec<Patch>
+      candidateParameters: ParameterSnapshot
+      audioConfig: AudioDeviceConfig
+    invariants:
+    - candidatePatches has the exact active PatchIds, order, capacity, PatchOutput values, envelopes,
+      and ordered PostEffectConfigs and candidateParameters has the exact complete MixerState, with only
+      patchId's InstrumentConfig replaced by the intent's descriptor-default capability config or one-assignment
+      structural-choice config
+    - candidateParameters is compatible with candidatePatches and targetGraphRevision; the prepared graph
+      is refreshed from the exact committed target snapshot before publication
+    - targetGraphRevision is greater than sourceGraphRevision and the selected candidate Patch config
+      matches targetCapabilityId plus StructuralEditIntent through the immutable registry
+    - the request is created and consumed outside the callback and contains no active graph, device owner,
+      UI object, or fallback
+    contributesTo:
+      asynchronous_engine_selection: freezes the exact candidate and correlation sent to off-callback
+        preparation
+      soundfont_preset_selection: freezes the exact single-preset delta sent to off-callback preparation
+  GraphPreparationResult:
+    description: one ownership-bearing worker outcome returned to the control coordinator
+    state:
+      kind:
+      - Prepared
+      - Failed
+      correlation: '{requestId: EngineSelectionRequestId, patchId: PatchId, intent: StructuralEditIntent,
+        sourceCapabilityId: CapabilityId, targetCapabilityId: CapabilityId, sourceGraphRevision: GraphRevision,
+        targetGraphRevision: GraphRevision}'
+      candidateConfig: Option<InstrumentConfig>
+      preparedGraph: Option<PreparedGraph>
+      failure: Option<EngineSelectionFailure>
+    invariants:
+    - Prepared owns exactly one matching candidate config and complete graph and no failure; Failed owns
+      one typed failure and no config or graph
+    - the result never enters AppState; AppLoop extracts stable semantic payload for AppState.apply and
+      retains or destroys graph ownership only outside the callback
+    - a stale, mismatched, or rejected Prepared result is destroyed on worker/control ownership and never
+      published or used as fallback
+    contributesTo:
+      asynchronous_engine_selection: keeps complete graph ownership external to canonical control state
+      soundfont_preset_selection: returns the exact preset candidate or typed failure without moving graph
+        ownership into AppState
+      prepared_engine_rack: returns a complete capability-neutral candidate or an explicit failure
+  GraphRevision:
+    description: a monotonic numeric identity for one completely prepared structural audio graph
+    from: u64
+    invariants:
+    - zero denotes no published graph and every prepared replacement uses a greater revision
+    - the value is Copy, fixed-size, and contains no state owner or destructor
+    contributesTo:
+      prepared_engine_rack: correlates publication, block-boundary activation, parameter compatibility,
+        acknowledgement, and retirement
+      asynchronous_engine_selection: joins one request's source and target graphs without carrying ownership
+  ParameterSnapshot:
+    description: the newest complete control state required for rendering
+    state:
+      generation: u64
+      graphRevision: GraphRevision
+      patchCount: usize
+      patches: '[RtPatchParameters; MAX_PATCHES]'
+      postEffects: '[RtPostEffectParameters; MAX_PATCHES]'
+      tracks: '[MixerTrackParameters; 16]'
+      global: GlobalParameters
+    invariants:
+    - MAX_PATCHES equals the bounded prepared rack capacity and is independent from the exactly sixteen
+      persistent mixer tracks
+    - graphRevision identifies the PreparedGraph whose exact PatchId order and fixed capacities this snapshot
+      targets
+    - unused entries are inactive
+    - the snapshot is fully owned, fixed-size, and readable without allocation
+    - each RtPatchParameters contains PatchId, fixed PatchOutput, VoiceEnvelope, scalarCount, and a descriptor-ordered
+      [f32; 16] engine-scalar array fixed by the active graph revision
+    - postEffects is a separate Patch-aligned zero-or-one-slot section whose active entry carries stable
+      EffectSlotId, scalarCount, and descriptor-ordered [f32; 8] effect values fixed by the active graph
+      revision
+    - tracks contains exactly sixteen fixed MixerTrackParameters entries in MixerTrackId order whether
+      or not a Patch targets them
+    - choice values are encoded as descriptor indices and snapshots contain no string, vector, asset,
+      capability union, engine object, or destructor-bearing owner
+    - a production-owned typed leaf descriptor covers generation, graphRevision, patchCount, every active
+      PatchId/output/envelope/scalar parameter, all sixteen track parameter sets, and every global parameter
+      and exactly matches the StateTree parameters projection
+    contributesTo:
+      one_way_parameter_control: carries accepted AppState values to audio
+      asynchronous_engine_selection: carries the exact descriptor scalar layout for the source or committed
+        target graph revision
+      static_patch_effect: carries the latest complete effect scalars without sharing instrument layout
+        storage
+      sixteen_track_mixer_routing: carries Patch routes/trims and the complete sixteen-track bank through
+        fixed latest-value storage
+      realtime_execution: provides a fixed-size latest-wins callback input
+  GraphHandoffStatus:
+    description: fixed-size control-readable acknowledgement for structural publication and retirement
+    state:
+      activeRevision: GraphRevision
+      retiredRevision: GraphRevision
+      swapsApplied: u64
+      retirementRetries: u64
+      incompatibleSnapshots: u64
+    invariants:
+    - the value is Copy, numeric, fixed-size, and published through atomics or an equivalent coherent
+      latest-value transport
+    - activeRevision advances only after a complete graph swap at a block boundary
+    - retiredRevision advances only after ownership of the replaced graph has entered the audio-to-control
+      return queue
+    - the callback reports swap, retirement-pressure, and incompatible-snapshot counters without logging,
+      formatting, allocation, or backpressure
+    contributesTo:
+      prepared_engine_rack: lets control throttle structural work until the prior graph is active and
+        safely returned
+      asynchronous_engine_selection: supplies the fixed activation and retirement facts required before
+        Ready
+  PatchAudioBlock:
+    description: caller-owned prepared stereo stems that preserve Patch identity from instrument rendering
+      through ordered Patch effects into mixing
+    state:
+      patchCount: usize
+      frameCount: usize
+      stems: '[PatchStereoStem; MAX_PATCHES]'
+    invariants:
+    - capacity for MAX_PATCHES and maxFrames is allocated only while building a PreparedGraph outside
+      the callback
+    - each active stem is keyed by the same PatchId and index as ParameterSnapshot.patches
+    - one stem contains only audio produced by that Patch's assigned PreparedInstrument slot
+    - a configured PreparedPostEffectRack slot may mutate only that same stem in place before MixEngine
+      reads it
+    - clearing, filling, and reading active frames are allocation-free
+    contributesTo:
+      prepared_engine_rack: preserves one independently routable stem for each capability-neutral rack
+        slot
+      soundfont_audio: preserves Patch identity after synthesis instead of collapsing all voices to one
+        master stream
+      global_mix: gives MixEngine one identity-preserving source contribution to route into a track
+      sixteen_track_mixer_routing: preserves Patch identity until trim and track accumulation
+      static_patch_effect: is the exact identity-preserving carrier processed between engine and mixer
+      realtime_execution: provides prepared callback-owned synthesis scratch storage
+  AudioCommand:
+    description: a bounded discrete command for the audio callback
+    state:
+      kind:
+      - PatchMidi
+      - AllNotesOff
+      patchId: Option<PatchId>
+      message: Option<MidiMessage>
+    invariants:
+    - contains no heap-owned data
+    - PatchMidi contains both patchId and message
+    meta:
+      rules:
+      - PatchMidi carrying MidiMessageKind::AllNotesOff and the separate AudioCommand::AllNotesOff variant
+        are distinct typed cases and both are asserted; coverage for one never credits the other
+    contributesTo:
+      soundfont_audio: targets MIDI at the configured Patch
+      realtime_execution: is safe to copy through the event ring
+  AudioObservationSnapshot:
+    description: a fixed-size latest-value observation of audio work completed by the real-time callback
+    state:
+      sequence: u64
+      renderedBlocks: u64
+      renderedFrames: u64
+      parameterGeneration: u64
+      commandsConsumed: u64
+      activeNotes: u32
+      routingFailures: u64
+      lastUnknownPatchId: Option<PatchId>
+      tracks: '[TrackMeter; 16]'
+      leftPeak: f32
+      rightPeak: f32
+      outputRms: f32
+      reverbInputRms: f32
+      delayInputRms: f32
+      wetOutputRms: f32
+      patchEffect: PatchEffectObservation
+      nonFiniteSamples: u64
+      clippedSamples: u64
+    invariants:
+    - the snapshot is Copy, fixed-size, numeric, and contains no Vec, String, path, reference, mutex,
+      decoder, allocation, or destructible owner
+    - sequence and renderedBlocks increase monotonically and parameterGeneration is the exact ParameterSnapshot
+      generation used for the measured block
+    - tracks plus peak, RMS, wet-input, and wet-output fields copy the MixObservation produced from the
+      actual mixer-owned buffers for that observation window
+    - tracks contains exactly one post-level/pan, pre-gate numeric meter per MixerTrackId, including zero-valued
+      empty tracks and sounding muted tracks
+    - patchEffect copies fixed pre/post/difference/side measurements from the exact configured Patch stem
+      around PreparedPostEffectRack processing
+    - activeNotes is maintained by a prepared fixed-capacity Patch/channel/note bitset updated only when
+      the callback dispatches the corresponding MIDI lifecycle command; Patch-targeted or global all-notes-off
+      clears it with bounded work
+    - routingFailures increments exactly once for each PatchMidi command whose PatchId is absent from
+      either the compatible parameter projection or prepared rack, and lastUnknownPatchId retains that
+      exact identity without fallback or broadcast
+    - the callback updates nonFiniteSamples and clippedSamples instead of logging, formatting, panicking,
+      or performing I/O
+    contributesTo:
+      live_observable_demo: correlates visible accepted generations with measured physical audio work
+      sixteen_track_mixer_routing: publishes the fixed complete track-meter bank without UI-owned measurement
+        state
+      realtime_execution: keeps callback diagnostics bounded and allocation-free
+  RtPostEffectParameters:
+    description: one fixed destructor-free effect slot scalar projection inside a Patch entry
+    state:
+      active: bool
+      slotId: EffectSlotId
+      scalarCount: usize
+      scalars: '[f32; 8]'
+    invariants:
+    - inactive entries contain zero scalar count and active entries match one immutable prepared effect
+      descriptor layout
+    - values are finite, choices use descriptor indices, and the value contains no String, Vec, asset,
+      config, processor, pointer, reference, or destructor
+    contributesTo:
+      static_patch_effect: carries latest accepted Amount and Depth to one matching prepared Chorus slot
+  PatchEffectObservation:
+    description: fixed-size callback-local measurements around the configured Patch effect stage
+    state:
+      patchId: Option<PatchId>
+      inputRms: f32
+      outputRms: f32
+      differenceRms: f32
+      sideRms: f32
+    invariants:
+    - the value is Copy, fixed-size, numeric, finite, nonnegative, and measured from the exact stem immediately
+      before and after PreparedPostEffectRack processing
+    - the observation never controls processing and uses no allocation, logging, formatting, locking,
+      blocking, I/O, or borrowed audio buffer
+    contributesTo:
+      static_patch_effect: makes effect order and audible stereo consequence falsifiable in deterministic
+        and physical demos
+      live_observable_demo: lets the control-side live checkpoint observe the real Patch effect stage
+aggregates:
+  PreparedEngineRack:
+    root: true
+    purpose: own a fixed-capacity ordered set of capability-neutral prepared instruments for callback
+      dispatch and rendering
+    state:
+      patchCount: usize
+      slots: '[Option<{patchId: PatchId, instrument: Box<dyn PreparedInstrument>}>; MAX_PATCHES]'
+    invariants:
+    - the rack is constructed outside the callback and every active slot contains one unique PatchId plus
+      exactly one fully prepared instrument
+    - slot order and PatchIds exactly match the PreparedGraph initial ParameterSnapshot and PatchAudioBlock
+      stems
+    - dispatch resolves one PatchId through bounded storage and passes only that slot's compatible RtPatchParameters;
+      unknown PatchId or layout mismatch returns fixed-size status without fallback or broadcast
+    - render clears caller-owned stems and calls each active instrument once per block with only its matching
+      RtPatchParameters into only its matching stem
+    - all-notes-off visits at most MAX_PATCHES prepared instruments
+    - the rack never allocates, grows, reorders, locks, blocks, performs I/O, logs, formats, panics, unwinds,
+      or destroys an instrument in callback operations
+    - heterogeneous trait objects are allowed across slots, but dynamic dispatch never occurs inside an
+      instrument's inner sample loop
+    contributesTo:
+      prepared_engine_rack: is the capability-neutral bounded runtime owner later used by SoundFont and
+        Braids together
+      asynchronous_engine_selection: replaces one selected slot implementation without branching on capability
+        identity
+      realtime_execution: bounds polymorphic dispatch and rendering outside inner sample loops
+  PreparedGraph:
+    root: true
+    purpose: own one complete callback-ready engine, ordered Patch effect, mixer/global-effect, routing,
+      stem, and scratch configuration
+    state:
+      revision: GraphRevision
+      sampleRate: f32
+      maxFrames: usize
+      initialParameters: ParameterSnapshot
+      engineRack: PreparedEngineRack
+      patchAudio: PatchAudioBlock
+      postEffectRack: PreparedPostEffectRack
+      mixer: MixEngine<GlobalReverbDelay>
+    invariants:
+    - all owned engines, parsed assets, voices, effect memory, stems, routing, and scratch capacity are
+      fully prepared outside the callback
+    - revision is nonzero and equals initialParameters.graphRevision
+    - the engine rack, post-effect rack, parameter snapshot, instrument/effect scalar layouts, stems,
+      and mixer routing contain the same PatchIds in the same bounded order
+    - sampleRate and maxFrames come from the accepted negotiated AudioDeviceConfig and are validated once
+      before the device stream starts
+    - every graph render block is bounded by maxFrames; a larger native device callback is completely
+      rendered as consecutive bounded blocks without truncation or a silent tail
+    - a replacement preserves the accepted PatchId set, order, rack capacity, every PatchOutput, the complete
+      MixerState, ordered PostEffectConfigs, effect scalar layouts, and device bounds while permitting
+      exactly the selected instrument config delta named by StructuralEditIntent—capability/default layout
+      or one descriptor-owned structural choice—to change to its validated candidate config
+    - initialParameters is refreshed from the exact committed EnginePrepared generation immediately before
+      publication so scalar edits accepted during preparation cannot be reverted by the swap
+    - moving graph ownership through a queue performs no allocation or destruction; destruction is permitted
+      only after the retired graph reaches control or worker ownership
+    contributesTo:
+      prepared_engine_rack: makes structural audio state one complete ownership-transfer unit
+      asynchronous_engine_selection: carries one fully prepared target engine and its committed scalar
+        layout as an atomic replacement
+      global_mix: keeps the current reverb, delay, and sixteen-track mixer prepared with the engine rack
+      sixteen_track_mixer_routing: owns all sixteen preallocated destinations and scratch buffers before
+        callback activation
+      static_patch_effect: owns the prepared ordered Patch-local processing stage independently from the
+        mixer-owned global effects
+      realtime_execution: prevents partially prepared topology from reaching the callback
+  PreparedPostEffectRack:
+    root: true
+    purpose: own a fixed-capacity Patch-aligned set of ordered capability-neutral prepared post effects
+    state:
+      patchCount: usize
+      slots: '[Option<{patchId: PatchId, slotId: EffectSlotId, effect: Box<dyn PreparedPostEffect>}>;
+        MAX_PATCHES]'
+    invariants:
+    - construction occurs outside the callback and slot positions align exactly with PreparedEngineRack,
+      PatchAudioBlock, and ParameterSnapshot Patch order
+    - the current bound is zero or one effect per Patch while processing semantics remain ordered
+    - process visits at most MAX_PATCHES slots, requires exact PatchId/EffectSlotId/scalar-layout agreement,
+      mutates each configured Patch stem in place after synthesis and before mixing, and reports mismatch
+      without bypass or cross-Patch processing
+    - each prepared instance owns independent delay/LFO state and no state, buffer, or tail is shared
+      between Patches
+    - callback operations never allocate, deallocate, destroy, lock, block, log, format, perform I/O,
+      panic, throw, or unwind
+    contributesTo:
+      static_patch_effect: owns the bounded Patch-local processing stage between synthesis and mix
+      realtime_execution: bounds effect dynamic dispatch and callback work
+ports:
+  AudioBoundary:
+    direction: outbound
+    contract:
+      pushCommand: (AudioCommand) -> Result<(), BoundaryFull>
+      publishParameters: (ParameterSnapshot)
+      popCommand: () -> Option<AudioCommand>
+      readLatestParameters: () -> ParameterSnapshot
+    consumes:
+    - AudioCommand
+    - ParameterSnapshot
+    invariants:
+    - commands use a bounded single-producer single-consumer queue
+    - parameters are latest-wins and the consumer sees one complete snapshot
+    - all operations used by the audio thread are allocation-free, lock-free, and non-blocking
+    contributesTo:
+      one_way_parameter_control: publishes accepted parameters through the single real-time seam
+      realtime_execution: owns only the discrete-command and latest-scalar transfer semantics
+  GraphPreparationWorker:
+    direction: outbound
+    contract:
+      trySubmit: (GraphPreparationRequest) -> Result<(), WorkerBusy>
+      tryPoll: () -> Option<GraphPreparationResult>
+      shutdownOnControl: () -> Result<(), WorkerShutdownError>
+    consumes:
+    - GraphPreparationRequest
+    - GraphPreparationResult
+    invariants:
+    - request and result capacities are exactly one and control operations never block a UI tick
+    - all provider lookup, asset access, parsing, allocation, engine/effect preparation, graph construction,
+      rejected-result destruction, and worker joining occur outside the audio callback
+    - the port has one production threaded adapter and one manually advanced deterministic adapter; neither
+      changes lifecycle semantics or constructs a fallback
+    - shutdown begins only after the audio stream is released and drains or destroys every retained request,
+      result, staged graph, and retired graph on non-real-time ownership
+    contributesTo:
+      asynchronous_engine_selection: separates slow preparation from reducer, UI tick, and callback ownership
+      soundfont_preset_selection: prepares a preset replacement through the same capacity-one worker
+      realtime_execution: keeps structural construction and destruction off the callback
+  StructuralGraphBoundary:
+    direction: outbound
+    contract:
+      publishPreparedOnControl: (PreparedGraph) -> Result<(), StructuralBoundaryFull>
+      takePreparedOnAudio: () -> Option<PreparedGraph>
+      returnRetiredOnAudio: (PreparedGraph) -> Result<(), RetiredBoundaryFull>
+      collectRetiredOnControl: ()
+      readStatusOnControl: () -> GraphHandoffStatus
+      publishStatusOnAudio: (GraphHandoffStatus)
+    consumes:
+    - PreparedGraph
+    - GraphHandoffStatus
+    invariants:
+    - prepared control-to-audio ownership and retired audio-to-control ownership use distinct preallocated
+      bounded SPSC queues and never share AudioCommand or ParameterSnapshot storage
+    - a full publish queue returns the untouched prepared graph to control and a full retirement queue
+      returns the untouched retired graph to the callback
+    - the callback can move graph ownership and publish status without allocation, deallocation, locking,
+      blocking, I/O, logging, formatting, panic, unwinding, or destruction
+    - collectRetiredOnControl is the only runtime operation that destroys a replaced graph and never runs
+      on the audio callback
+    - control publishes at most one replacement and does not publish another until status reports the
+      prior revision retired
+    - publication pressure returns complete ownership to control for staged retry; it never rolls back
+      committed state, drops a graph, or selects a substitute
+    contributesTo:
+      prepared_engine_rack: transfers complete prepared graph ownership and returns replaced ownership
+        without callback destruction
+      asynchronous_engine_selection: carries the correlated candidate only after its control config commits
+      realtime_execution: keeps structural state separate from commands and latest scalar snapshots
+  AudioObservation:
+    direction: outbound
+    contract:
+      publishFromCallback: (AudioObservationSnapshot)
+      readLatestOnControl: () -> AudioObservationSnapshot
+    consumes:
+    - AudioObservationSnapshot
+    invariants:
+    - publishFromCallback is bounded, lock-free, non-blocking, allocation-free, and cannot log or destroy
+      owned state
+    - readLatestOnControl returns one coherent complete snapshot and never executes on the audio callback
+    - observation delivery is a dedicated latest-value transport and never shares the discrete AudioCommand
+      ring or ParameterSnapshot publication storage
+    - a slow UI may skip intermediate observations; it cannot slow or backpressure the callback
+    contributesTo:
+      live_observable_demo: lets the control-side live runner read bounded audio consequences without
+        callback logging
+      realtime_execution: separates callback-to-control observations from command and parameter transports
+applicationServices:
+  PreparedGraphBuilder:
+    purpose: prepare one complete graph from bounded engine/effect racks and current mixer topology before
+      publication
+    uses:
+    - PreparedEngineRackBuilder
+    - PreparedPostEffectRackBuilder
+    - PreparedGraph
+    - ParameterSnapshot
+    - MixEngine
+    - GlobalReverbDelay
+    operations:
+      build:
+        input:
+          revision: GraphRevision
+          patches: '&[Patch]'
+          parameters: ParameterSnapshot
+          sampleRate: f32
+          maxFrames: usize
+        output:
+          result: Result<PreparedGraph, GraphPreparationError>
+    meta:
+      rules:
+      - run only on control or worker ownership and finish engine, asset, voice, Patch effect, global
+        effect, routing, stem, and scratch preparation before returning
+      - require the supplied parameter graphRevision, PatchIds, order, count, stable effect slots, and
+        instrument/effect scalar layouts to match both prepared racks exactly
+      - fail atomically with a typed error on any capacity, format, capability, asset, engine, effect,
+        routing, or allocation failure and never return a partial graph
+      - construct the fixed PreparedEngineRack to PatchAudioBlock to PreparedPostEffectRack to MixEngine
+        topology; MixEngine retains exactly one global reverb and delay and no arbitrary graph edge or
+        feedback cycle exists
+      - for structural editing preserve PatchIds, order, count, every PatchOutput, the complete MixerState,
+        envelopes, ordered PostEffectConfigs, effect scalar layouts, device bounds, and untargeted instrument
+        configs exactly while allowing only the selected Patch instrument candidate and resulting instrument
+        scalar layout to differ according to StructuralEditIntent
+    contributesTo:
+      prepared_engine_rack: turns accepted structural state into one complete callback-ready ownership
+        unit
+      asynchronous_engine_selection: builds the exact complete candidate consumed by the correlated worker
+        result
+      static_patch_effect: prepares the fixed ordered Patch effect stage and preserves it across instrument
+        rebuilds
+      sixteen_track_mixer_routing: prepares all track scratch and validates the complete fixed routing
+        snapshot
+      realtime_execution: keeps every allocating preparation step outside the callback
+  StructuralGraphCoordinator:
+    purpose: stage or publish at most one prepared replacement, preserve its layout correlation, and collect
+      its predecessor after callback acknowledgement
+    uses:
+    - StructuralGraphBoundary
+    - PreparedGraph
+    - GraphHandoffStatus
+    - EngineSelectionRequestId
+    operations:
+      submit:
+        input:
+          requestId: EngineSelectionRequestId
+          sourceRevision: GraphRevision
+          graph: PreparedGraph
+        output:
+          result: Result<Published | Staged, StructuralGraphBusy>
+      retryStaged:
+        input: {}
+        output:
+          result: Result<Option<GraphRevision>, StructuralBoundaryError>
+      poll:
+        input: {}
+        output:
+          status: GraphHandoffStatus
+    meta:
+      rules:
+      - run only outside the audio callback and preserve ownership of a graph rejected by queue pressure
+      - allow exactly one correlated revision in flight and reject another submission until the previous
+        target is active, its source is acknowledged retired, and the returned graph is collected
+      - if publication pressure returns the graph, retain exactly one staged complete graph on control
+        ownership and retry it before polling another worker result; never rollback committed AppState
+        or drop, rebuild, or substitute the graph
+      - a candidate may change only the selected Patch InstrumentConfig delta and resulting instrument
+        scalar layout named by StructuralEditIntent while keeping PatchIds, order, capacities, every PatchOutput,
+        the complete MixerState, ordered PostEffectConfigs, effect scalar layouts, and device configuration
+        exact; retain the source layout until acknowledgement and adopt the target layout only after collection
+      - collect returned graphs on control or worker ownership where destructors are allowed
+      - never mutate AppState, fabricate an acknowledgement, publish a partial graph, or substitute another
+        graph after failure
+      - correlate request id, StructuralEditIntent, and source/target revisions with EngineSelectionStatus
+        but never mutate AppState or store the status itself
+    contributesTo:
+      prepared_engine_rack: enforces the one-in-flight graph replacement protocol on the non-real-time
+        side
+      asynchronous_engine_selection: owns staged retry and layout adoption without becoming a second state
+        reducer
+  AudioRenderer:
+    purpose: swap complete prepared graphs at block boundaries, consume ready commands and compatible
+      parameters, render instruments, process ordered Patch effects, route them through sixteen tracks,
+      then mix prepared global effects
+    uses:
+    - AudioBoundary
+    - StructuralGraphBoundary
+    - AudioObservation
+    - PreparedGraph
+    - PreparedEngineRack
+    - PreparedPostEffectRack
+    - MixObservation
+    - PatchEffectObservation
+    operations:
+      fromPrepared:
+        input:
+          initialGraph: PreparedGraph
+        output:
+          result: Result<AudioRenderer, AudioError>
+      render:
+        input:
+          interleavedStereo: '&mut [f32]'
+        output: {}
+    meta:
+      rules:
+      - construction receives one completely prepared initial graph before the callback starts and never
+        prepares an engine, Patch effect, mixer/global effect, route, or buffer itself
+      - at the start of a render block, if no prior retired graph occupies the bounded callback retirement
+        slot, take at most one prepared replacement, swap the complete graph, activate its initial parameters,
+        and publish the active revision
+      - every engine or preset replacement follows the identical bounded swap path; it may reset voices
+        and global-effect tails and makes no seamless migration claim
+      - move the replaced graph into the dedicated return queue; if that queue is full, retain it in the
+        one preallocated callback retirement slot and retry on later blocks without taking another replacement
+        or destroying it
+      - publish retiredRevision only after the return queue owns the old graph; control does not submit
+        another structure until that acknowledgement is observed and collected
+      - render drains only currently available AudioCommands, reads one latest ParameterSnapshot compatible
+        with the active graph revision, PatchIds, stable effect slots, and instrument/effect scalar layouts,
+        gives each targeted dispatch and per-Patch render only its matching RtPatchParameters, processes
+        each configured stem once through PreparedPostEffectRack using matching RtPostEffectParameters,
+        then passes processed stems, PatchOutput values, and all sixteen track parameter sets to MixEngine
+      - the callback signal order is engine rack, PatchAudioBlock, ordered post-effect rack, Patch trim,
+        fixed track accumulation, track level/pan, pre-gate meter, mute/solo gate, track sends, and global
+        mix; neither MixEngine nor a renderer capability branch implements Chorus
+      - render divides an oversized interleaved stereo callback into complete consecutive blocks of at
+        most PreparedGraph.maxFrames and renders every complete device frame without a silently cleared
+        tail
+      - an unknown PatchMidi identity leaves every prepared instrument unchanged and is preserved as one
+        fixed-size routing failure in the same injected AudioObservation path
+      - one engine-managed SoundFont synthesizer per SoundFont Patch plus every Patch-local Braids FFI
+        bank, sixteen-voice bank iteration, 24-sample internal rendering, per-note envelopes, and 2:1
+        conversion remain inside the same no-allocation callback contract
+      - PatchId and Patch index remain aligned from AudioCommand through synthesis, effect processing,
+        PatchOutput, and track accumulation; a combined engine master buffer must never be treated as
+        one Patch's input
+      - after rendering each block, combine PatchEffectObservation, MixEngine's MixObservation, and bounded
+        command/active-note counters into one AudioObservationSnapshot tagged with the consumed ParameterSnapshot
+        generation
+      - the active-note observer is prepared outside the callback, has explicit Patch, channel, and note
+        bounds, saturates counters on overflow, and never controls or substitutes prepared instrument
+        state
+      - audio observations never change rendering, synth state, mix state, event coverage, or acceptance
+        results and never call a control-side serializer or logger
+      - render never allocates, deallocates, locks, blocks, performs I/O, logs, formats strings, grows
+        a collection, panics, unwinds, or destroys owned state
+    contributesTo:
+      prepared_engine_rack: owns block-boundary graph activation and bounded retirement retry
+      asynchronous_engine_selection: activates the complete committed candidate without inspecting engine
+        identity
+      soundfont_preset_selection: activates the exact prepared preset candidate without strings, label
+        lookup, or a second transport
+      soundfont_audio: joins the SoundFont and global mixer into the callback
+      braids_engine: joins the pinned Braids renderer through the same matching Patch projection and rack
+      per_voice_envelope: delivers common ADSR values to independent note voices without adding a post-stem
+        processor
+      static_patch_effect: processes the matching Patch stem through the prepared effect rack before mix
+        and publishes bounded causal measurements
+      sixteen_track_mixer_routing: routes identity-preserving stems through the fixed track bank and publishes
+        bounded per-track meters
+      live_observable_demo: publishes measured callback consequences for the live scene without changing
+        the render path
+      realtime_execution: owns the hard real-time render operation

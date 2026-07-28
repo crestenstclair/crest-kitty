@@ -1,0 +1,465 @@
+adapters:
+  ChorusCapability:
+    implements: EffectCapabilityProvider
+    layer: infrastructure
+    profile:
+      kind: in_process
+      medium: effect_descriptor
+      system: Chorus
+    meta:
+      rules:
+      - provide EffectCapabilityId effect.chorus, label Chorus, the chorus semantic accent, and exactly
+        one section containing chorus.amount then chorus.depth
+      - declare Amount and Depth as finite Continuous Scalar ScalarEdit parameters in 0..=1 with default
+        0.5, fine step 0.01, coarse step 0.1, stable formatter metadata, and no asset requirement
+      - create a descriptor-ordered PostEffectConfig for the supplied stable EffectSlotId without reading
+        files, constructing native state, or selecting another effect
+      - return typed errors for every invalid identity or assignment and own no prepared processor, C++
+        value, delay memory, Patch mutation, focus, or renderer behavior
+    contributesTo:
+      static_patch_effect: owns the product-facing Chorus schema independently from pinned native preparation
+      schema_driven_patch_page: supplies generic Amount and Depth PATCH rows without hard-coded projector
+        logic
+  ChorusPreparer:
+    implements: EffectPreparer
+    layer: infrastructure
+    profile:
+      kind: in_process
+      medium: opaque-cpp-ffi
+      system: Mutable Instruments Rings Chorus
+    meta:
+      framework: pinned C++ DSP + Rust RAII adapter
+      rules:
+      - compile only the audited MIT-licensed Chorus/FxEngine/resource subset pinned at pichenettes/eurorack@08460a69a7e1f7a81c5a2abcc7189c9a6b7208d4
+        and stmlib@e3bd7c9cc00e4364166f9905c0509b6ffd0535ec behind one opaque extern-C wrapper with exceptions
+        and RTTI disabled
+      - prepare a distinct fully initialized Chorus instance, 2048-sample 16-bit external delay buffer,
+        LFO state, and bounded stereo scratch needs for every configured Patch slot outside the callback
+      - accept exactly 48000 Hz for this first admission and reject every unsupported rate or malformed
+        scalar layout without bypass, alternate effect, or silent pass-through
+      - interpret exactly descriptor-ordered Amount then Depth and process the matching Patch's interleaved
+        stereo stem in place with bounded arithmetic
+      - construct and destroy all native/owned state only outside callback ownership and cross no allocation,
+        destruction, lock, block, I/O, log, format, panic, exception, or unwind path during processing
+    contributesTo:
+      static_patch_effect: adapts the pinned upstream Chorus to the generic prepared effect boundary
+      realtime_execution: keeps native effect state bounded, prepared, and callback safe
+  CorridorsMidiEventSource:
+    implements: MidiEventSource
+    layer: infrastructure
+    profile:
+      kind: device_input
+      medium: standard-midi-file
+    meta:
+      framework: midly
+      rules:
+      - expect exactly ./midi/Corridors of Time - Chrono Trigger.mid and fail clearly when it is missing
+        or malformed
+      - parse the complete SMF and build private elapsed-time test events in prepare; no file access occurs
+        after start
+      - track bank-select MSB/LSB and program changes, treat MIDI channel 10 as percussion, and attach
+        each sounding note pair to its stable instrument identity
+      - create one InstrumentPart per identity in first-sounding order and assign part N to unique MidiChannel
+        N; return a clear prepare error rather than reuse a channel if the fixture contains more than
+        16 sounding identities
+      - target every emitted message at its InstrumentPart/Patch and rewrite its channel to assignedChannel
+      - start at elapsed zero automatically, run once, and stop at end; do not expose transport, seeking,
+        looping, recording, editing, or public sequence types
+    contributesTo:
+      automatic_test_midi: implements the fixed automatic Corridors of Time test input
+      soundfont_audio: provides the bank/program/percussion identity used to configure every Patch
+      soundfont_preset_selection: provides normalized numeric source identities for exact catalog resolution
+        without supplying display names
+  EframeGraphicalWindow:
+    implements: AppWindow
+    layer: infrastructure
+    profile:
+      kind: ui
+      surfaces:
+      - keyboard
+      - context_line
+      - identity_header
+      - main_workspace
+      - utility_or_inspector
+      - footer
+    meta:
+      framework: eframe/egui + egui_extras
+      rules:
+      - render GraphicalShellProjection and its embedded SemanticGraphicalViewModel as one structural
+        composition containing the context/status line, identity header, central context workspace, persistent
+        Utility or Inspector side region, and footer; PATCH and MIXER remain reducer-owned projections
+        and no region is an adapter-owned tab or context
+      - when MIXER is visible, render T00 through T0F from the canonical semantic model and pair each
+        track only with the same MixerTrackId entry from the latest fixed AudioObservationSnapshot; a
+        missing or stale observation renders a zero/stale meter state and never changes canonical values
+        or focus
+      - at 1920x1080 use the authored 48 px context line, 72 px identity header, 64 px footer, and approximately
+        1500:420 workspace split; at 1280x800 retain every band and side region with controlled vertical
+        density, at least 320 px for Utility/Inspector, bounded proportional widths, and no overlap or
+        hidden required label
+      - use egui panels and matching-version egui_extras layout utilities; image/SVG loaders are available
+        for later graphical assets, but this phase adds no waveform, Sample capability, browser, component
+        library, or alternate GUI runtime
+      - render the semantic surfaces, focused path, Navigate/Adjust state, status, typed errors, and valid-action
+        footer from the embedded model; retain TextProjection only as read-only diagnostic content and
+        never use it to infer focus or actions
+      - use only a small private Phase 1 shell palette and type setup sufficient to distinguish structural
+        bands; do not define the reusable Crest token/component API reserved for Phase 4
+      - normalize egui key presses, releases, and focus loss into WindowInput and delegate every 1/2/W/S/A/D/K
+        decision to KeyboardInputTranslator
+      - do not retain a second private keyboard state machine or duplicate the translator in tests
+      - key handling emits SemanticActions only and never mutates view focus, mode, return path, Patch
+        values, AppState, snapshots, event logs, or audio
+      - the focused SemanticControlViewModel receives the only focus/adjust treatment, side SurfaceRoot
+        receives surface focus, and labels/hints come from GraphicalShellProjection; let the reducer alone
+        interpret every semantic action
+      - the headless adapter contract drives real egui RawInput through an egui Context and EframeGraphicalApplication.update
+        with the production on_input callback wired to AppLoop.dispatchAction, then runs the next frame
+        from AppLoop.currentGraphicalShell; capturing a callback without applying it is not acceptance
+        evidence
+      - the next frame must prove the event-log record, accepted generation, FocusPath, mode, return path,
+        valid actions, shell context/status/identity/footer, selected diagnostic value, every unrelated
+        value, SemanticGraphicalViewModel, GraphicalShellProjection and TextProjection hashes, and selected-line
+        scroll target all reflect that same dispatched GUI action
+      - the graphical shell acceptance renders 1920x1080 and 1280x800 frames and inspects production-recorded
+        region rectangles plus egui output for exact visible labels, containment, ordering, non-overlap,
+        and persistent side-region identity; calling only a layout helper or rendering an unrelated supplied
+        projection is insufficient
+      - in every live mode including --demo-live-sixteen-track-mixer-routing, invoke the injected tick
+        without blocking, then render only the newest AppLoop.currentGraphicalShell projection plus injected
+        fixed AudioObservationSnapshot; the adapter never receives LiveDemoScene, LiveDemoReport, mutable
+        AppState, mixer buffers, or a device owner
+      - schedule the next idle repaint after 16 ms instead of requesting an immediate perpetual repaint;
+        native input and window events may wake the event loop sooner
+      - when the injected tick returns false after a completed live report, send a viewport-close command
+        immediately and do not request another projection or repaint
+      - also send a viewport-close command when the injected tick returns false for an already-retained
+        fatal runtime failure
+    contributesTo:
+      graphical_application_shell: implements the authored structural shell and responsive desktop/Steam
+        Deck composition
+      one_way_parameter_control: implements the passive graphical screen and exact keyboard vocabulary
+      sixteen_track_mixer_routing: paints fixed track controls and meter observations without UI-owned
+        values
+      schema_driven_patch_page: renders PATCH and MIXER projections without owning their page state or
+        schema
+      soundfont_preset_selection: renders exact authored preset labels and generic structural lifecycle
+        state without owning catalog or selection behavior
+      static_patch_effect: renders the read-only Chorus identity and generic editable Amount/Depth rows
+        without owning effect state or schema
+      observable_demo_scene: shares its production input translator with the deterministic scene
+      live_observable_demo: renders each accepted live generation and closes on the owner's completed-report
+        tick
+      semantic_graphical_view_model: renders the canonical multi-layout model and emits only its semantic
+        actions
+  CpalAudioOutput:
+    implements: AudioOutput
+    layer: infrastructure
+    profile:
+      kind: device_output
+      medium: stereo-pcm
+    meta:
+      framework: cpal
+      rules:
+      - select the default PCM output, prefer 48 kHz when supported, validate at least two channels and
+        a bounded render capacity, and return the negotiated owner without starting it
+      - accept an already valid 48 kHz default before querying optional supported ranges; if that query
+        fails for a nonpreferred device, retain a valid reported default and fail only when neither source
+        yields a valid PCM configuration
+      - start only that negotiated device after compatible graph preparation and never pass sample-rate
+        data into the render callback
+      - use a direct callback fast path for native stereo f32; otherwise render into fixed-capacity stereo
+        scratch storage, map left and right to device channels 1 and 2, and write silence to surplus device
+        channels
+      - the callback performs no pacing, allocation, locking, I/O, logging, format construction, or deallocation
+      - convert sample formats with bounded arithmetic when the device is not f32
+      - map every post-start CPAL ErrorKind to fixed-size AudioDeviceRuntimeError and invoke only the
+        bounded injected status callback
+    contributesTo:
+      realtime_execution: implements the physical low-latency stereo output
+      live_observable_demo: keeps the real device callback running while the visible scene advances
+  GlobalReverbDelay:
+    implements: GlobalEffectsProcessor
+    layer: infrastructure
+    profile:
+      kind: in_process
+    meta:
+      rules:
+      - implement exactly one modest algorithmic stereo reverb and one stereo feedback delay
+      - allocate all delay lines and ring buffers only in prepare
+      - process has no locks, allocation, I/O, logging, or destruction
+    contributesTo:
+      global_mix: implements the one shared reverb and one shared delay
+  HiDefSoundFontAsset:
+    layer: infrastructure
+    profile:
+      kind: in_process
+      medium: sf2
+      system: HiDef.sf2
+    meta:
+      framework: rustysynth
+      rules:
+      - open and parse exactly ./sf2/HiDef.sf2 once on control ownership before registry freeze, fixture
+        installation, graph preparation, or audio startup
+      - from that one parse build SoundFontPresetCatalog plus a separate immutable numeric PreparedSoundFontBank
+        containing copied PCM, prepared regions, loop metadata, and SoundFontPresetId addresses
+      - drop the raw rustysynth SoundFont and every parser/name-bearing structure before returning the
+        numeric bank to any preparer that can create callback-owned instruments
+      - give the catalog to HiDefSoundFontCapability and the catalog plus numeric bank to HiDefSoundFontPreparer
+        through composition-root construction; neither reparses the asset
+      - return typed asset, metadata, allocation, sample, region, empty-catalog, or coordinate failures
+        without a partial provider, preparer, catalog, bank, synthesized label, alternate asset, or fallback
+        engine
+    contributesTo:
+      soundfont_preset_selection: discovers exact selectable names and numeric order once before descriptor
+        freeze
+      soundfont_audio: prepares the shared numeric sample/zone bank without retaining raw SF2 metadata
+      realtime_execution: keeps file parsing, strings, allocation, and raw asset destruction outside callback
+        ownership
+  HiDefSoundFontCapability:
+    implements: InstrumentCapabilityProvider
+    layer: infrastructure
+    profile:
+      kind: in_process
+      medium: capability_descriptor
+      system: HiDef.sf2
+    meta:
+      framework: rust
+      rules:
+      - provide the SoundFont descriptor with CapabilityId instrument.soundfont.hidef, label HiDef SoundFont,
+        a stable semantic instrument accent, EngineManaged voice policy, and the MIDI kinds supported
+        by HiDefSoundFontPreparer
+      - be constructed from the immutable SoundFontPresetCatalog produced by the single shared HiDef asset
+        load; provider methods themselves perform no file I/O or parsing
+      - declare soundfont.preset as one Structural Choice whose ordered ids and exact labels come from
+        the catalog and whose PATCH interaction is StructuralChoice, plus soundfont.file as a required
+        Structural Asset fixed to ./sf2/HiDef.sf2 and ReadOnly on PATCH
+      - use the first bank/program-sorted playable catalog entry as the descriptor default and fail construction
+        if no playable entry exists
+      - create InstrumentConfig from caller-supplied generic assignments and asset references without
+        loading an engine, changing a Patch, decoding a choice label, or inventing a second SoundFont
+        preset model
+      - return a typed error for invalid or unknown values and never substitute a preset, percussion identity,
+        asset, descriptor, or engine
+      - own no InstrumentPreparer, PreparedInstrument, PreparedEngineRack, numeric prepared bank, renderer
+        factory closure, C++/FFI type, structural lifecycle, ADSR, or Patch-page behavior; preparation
+        remains a separate port even when ids and shared catalog provenance match
+    contributesTo:
+      instrument_capability_model: proves SoundFont is one registry entry rather than the universal Patch
+        model
+      asynchronous_engine_selection: builds the exact descriptor-default SoundFont candidate including
+        HiDef.sf2 without fallback
+      soundfont_preset_selection: projects exact authored names over stable numeric-address choice ids
+        and validates adjacent selections
+      prepared_engine_rack: provides the stable capability identity independently matched to the production
+        SoundFont preparer
+      soundfont_audio: preserves one catalog-backed numeric preset identity and HiDef.sf2 reference for
+        the existing renderer
+  BraidsCapability:
+    implements: InstrumentCapabilityProvider
+    layer: infrastructure
+    profile:
+      kind: in_process
+      medium: capability_descriptor
+      system: Mutable Instruments Braids
+    meta:
+      framework: rust
+      rules:
+      - 'provide CapabilityId instrument.braids with FixedPerPatch { voices: 16 } and only the MIDI kinds
+        implemented by BraidsPreparer'
+      - declare braids.model as a Scalar Choice containing the 47 named playable upstream models in stable
+        source order, excluding the question-mark sentinel, and keep it ReadOnly on PATCH
+      - declare braids.timbre and braids.color as finite Scalar Continuous values in 0..=1 with positive
+        fine and coarse steps and keep both ReadOnly on PATCH
+      - create a canonical descriptor-ordered InstrumentConfig without reading files, constructing C++
+        objects, or selecting another capability
+      - return typed errors for missing, duplicate, undeclared, wrong-kind, non-finite, out-of-range,
+        or unknown-choice values and never substitute a model, descriptor, config, or engine
+      - own no InstrumentPreparer, PreparedInstrument, PreparedEngineRack, C++/FFI value, envelope, engine
+        selector, or Patch-page behavior
+    contributesTo:
+      instrument_capability_model: proves a second materially different schema is handled by the same
+        registry/config model
+      asynchronous_engine_selection: builds the exact descriptor-default Braids candidate without cached
+        SoundFont state
+      braids_engine: owns the canonical Model, Timbre, Color, FixedPerPatch(16), and supported-MIDI declaration
+        independently of native preparation
+      prepared_engine_rack: provides the identity independently matched to the Braids preparer
+  HiDefSoundFontPreparer:
+    implements: InstrumentPreparer
+    layer: infrastructure
+    profile:
+      kind: in_process
+      medium: sf2
+      system: HiDef.sf2
+    meta:
+      framework: rustysynth
+      rules:
+      - be constructed from the catalog and numeric PreparedSoundFontBank produced together by the single
+        HiDefSoundFontAsset load; never open, parse, or clone the full SF2 per preparer or Patch
+      - resolve the exact soundfont.preset stable choice id through the immutable catalog, require the
+        fixed soundfont.file assignment, and reject an absent or malformed address without parsing or
+        matching the authored label
+      - prepare exactly one rustysynth-compatible synthesizer for each accepted instrument.soundfont.hidef
+        Patch using the resolved numeric bank, program, derived percussion channel, and fixed asset assignment;
+        all Patch synthesizers share only the numeric immutable bank
+      - inside each prepared instrument use rustysynth's percussion channel for a percussion Patch and
+        a melodic channel for every other Patch, regardless of the Patch's logical assigned channel
+      - the private prepared value implements PreparedInstrument, delegates polyphony to its one Patch-local
+        synthesizer, and applies the Patch VoiceEnvelope independently through an engine-native per-note
+        seam before native voices enter the caller-owned stem
+      - disable rustysynth's built-in reverb and chorus so only the separately declared Patch Chorus and
+        mixer-owned global reverb/delay stages process SoundFont output
+      - the descriptor declares EngineManaged polyphony and Crest does not impose a sixteen-note limit,
+        create a synthesizer per note, or share mutable synthesizer state between Patches; the preparer
+        still declares and proves a finite internal callback-work ceiling
+      - if rustysynth cannot implement the common ADSR independently on overlapping native voices, extend
+        the adapter or replace the backend rather than apply a post-stem envelope, create sixteen synthesizers
+        per Patch, ignore a control, or claim conformance
+      - the PreparedInstrument and its shared bank retain no raw rustysynth SoundFont, String, authored
+        name, catalog, descriptor, InstrumentConfig, or filesystem path
+      - prepared dispatch, all-notes-off, and render use only bounded warmed numeric state and perform
+        no callback allocation, deallocation, locking, blocking, I/O, logging, formatting, panic, unwinding,
+        or destruction
+    contributesTo:
+      instrument_capability_model: prepares the existing renderer from a generic capability config without
+        becoming the Patch model
+      asynchronous_engine_selection: prepares a selected default SoundFont candidate on worker ownership
+      soundfont_preset_selection: resolves the selected catalog id to one numeric address and prepares
+        it without callback metadata
+      prepared_engine_rack: supplies the SoundFont production preparer and capability-neutral per-Patch
+        prepared instruments
+      soundfont_audio: preserves one numeric HiDef.sf2 PCM/zone bank while adapting SoundFont to the generic
+        prepared boundary
+      per_voice_envelope: applies the common envelope through one Patch-local synthesizer's independent
+        native voices
+      realtime_execution: keeps prepared SoundFont operations inside the callback contract
+  BraidsPreparer:
+    implements: InstrumentPreparer
+    layer: infrastructure
+    profile:
+      kind: in_process
+      medium: opaque-cpp-ffi
+      system: Mutable Instruments Braids MacroOscillator
+    meta:
+      framework: pinned C++ DSP + Rust RAII adapter
+      rules:
+      - compile only the audited MIT-licensed DSP subset pinned at pichenettes/eurorack@08460a69a7e1f7a81c5a2abcc7189c9a6b7208d4
+        and stmlib@e3bd7c9cc00e4364166f9905c0509b6ffd0535ec behind one opaque extern-C wrapper with exceptions
+        and RTTI disabled
+      - prepare a distinct bank of exactly sixteen fully initialized MacroOscillator values and matching
+        envelope/voice metadata for every accepted Braids Patch outside the callback
+      - for N admitted Braids Patches own N independent banks and 16 × N voices, including forty-eight
+        voices for three Patches; never share a bank, voice slot, envelope, stealing decision, or capacity
+        globally, and impose no Braids-specific Patch-count limit below the engine-agnostic rack capacity
+      - accept exactly 48000 Hz host rendering, call upstream at 96000 Hz in chunks of at most 24 samples,
+        and perform bounded 2:1 decimation into the caller-owned stereo stem
+      - interpret only the three descriptor-ordered Scalar slots for Model, Timbre, and Color and reject
+        a scalar-layout or model mismatch without fallback
+      - assign idle voices first, steal the oldest deterministically, release matching-key slots, apply
+        velocity and bounded pitch bend, and clear all sixteen slots on all-notes-off
+      - construct and destroy the opaque bank only outside callback ownership; dispatch and render cross
+        no exception, allocation, destruction, lock, blocking, I/O, logging, formatting, panic, or unwind
+        path
+    contributesTo:
+      braids_engine: defers synthesis to the pinned upstream MacroOscillator while adapting it to Crest's
+        bounded contracts
+      asynchronous_engine_selection: prepares a selected default Braids candidate on worker ownership
+      per_voice_envelope: owns one independent oscillator and envelope per Braids note voice
+      prepared_engine_rack: supplies the intentional second production preparer
+      realtime_execution: keeps native DSP work bounded and prepared across the callback boundary
+  LockFreeAudioBoundary:
+    implements: AudioBoundary
+    layer: infrastructure
+    meta:
+      framework: rtrb + triple_buffer
+      rules:
+      - use one rtrb queue for AudioCommand and one triple_buffer for ParameterSnapshot; structural graph
+        ownership is not carried by either transport
+      - keep the control and audio handles separate so callback code cannot call control-only operations
+    contributesTo:
+      one_way_parameter_control: publishes the latest accepted parameters
+      realtime_execution: implements the complete lock-free control/audio boundary
+  LockFreeStructuralGraphBoundary:
+    implements: StructuralGraphBoundary
+    layer: infrastructure
+    meta:
+      framework: rtrb + atomics
+      rules:
+      - preallocate a control-to-audio PreparedGraph ownership queue and a distinct audio-to-control retired
+        PreparedGraph ownership queue before audio starts
+      - use coherent fixed-size atomics for GraphHandoffStatus and never serialize, allocate, block, or
+        log from the callback handle
+      - return ownership intact on queue pressure; never drop a PreparedGraph in push error handling on
+        the callback
+      - keep narrow control and audio handles so only control can publish, collect, and destroy and only
+        audio can take, return, and acknowledge
+      - complete graph ownership return is the only retirement path for replaced engine and effect state
+    contributesTo:
+      prepared_engine_rack: implements the dedicated prepared/retired graph handoff and acknowledgement
+        path
+      asynchronous_engine_selection: preserves candidate and retired ownership under queue pressure
+      realtime_execution: makes structural ownership transfer distinct from discrete commands and scalar
+        snapshots
+  AtomicAudioObservation:
+    implements: AudioObservation
+    layer: infrastructure
+    profile:
+      kind: in_process
+      medium: latest-value-atomics
+    meta:
+      rules:
+      - store all floating measurements as their f32 bit patterns and use a sequence protocol or equivalent
+        bounded atomic publication so the control side never combines fields from different snapshots
+      - the audio-side handle can only publish and the control-side handle can only read; neither handle
+        exposes serialization, formatting, reset, wait, or blocking APIs
+      - publishing overwrites the previous observation without allocation or backpressure and never touches
+        AudioCommand or ParameterSnapshot storage
+    contributesTo:
+      live_observable_demo: implements the bounded callback-to-control observation seam used by live checkpoints
+      realtime_execution: keeps meters and health data out of the event and parameter transports
+  ThreadedGraphPreparationWorker:
+    implements: GraphPreparationWorker
+    layer: infrastructure
+    profile:
+      kind: in_process
+      medium: standard-library-thread-and-bounded-channels
+    meta:
+      rules:
+      - own one dedicated standard-library thread with one-slot request and result transports; no async
+        runtime is added
+      - use only the injected immutable registry, ordered preparers, PreparedGraphBuilder, negotiated
+        AudioDeviceConfig, StructuralEditIntent, and the already provider-validated candidate in GraphPreparationRequest
+      - revalidate the candidate config and exact Patch/layout correlation before invoking preparers;
+        never call a provider twice or reconstruct a different candidate inside the worker
+      - preserve exact request correlation, return one typed failure without fallback, and never call
+        AppState.apply, publish a graph, render audio, or mutate a report
+      - return all unconsumed ownership to the control-side shutdown path after the audio stream has stopped
+    contributesTo:
+      asynchronous_engine_selection: implements production off-callback structural preparation without
+        adding an async runtime
+      soundfont_preset_selection: uses the same production thread and correlation for preset preparation
+  DeterministicGraphPreparationWorker:
+    implements: GraphPreparationWorker
+    layer: infrastructure
+    profile:
+      kind: test_double
+      medium: manual-step-same-thread
+    meta:
+      rules:
+      - trySubmit stores the same capacity-one GraphPreparationRequest and advance performs exactly one
+        deterministic unit of work only when the scene asks
+      - the composed healthy path receives a request created by the real DescriptorDefaultConfigFactory
+        engine-default or structural-choice operation and production provider, then calls the production
+        preparers and PreparedGraphBuilder; it does not return a fake PreparedGraph
+      - one declared controlled mode returns a typed EngineSelectionFailure at the worker seam without
+        editing AppState, EventLog, DemoSceneReport, or audio measurements
+      - logical outputs contain no thread timing, wall clock, pointer, or nondeterministic ordering so
+        two fresh scene runs are byte-identical
+    contributesTo:
+      asynchronous_engine_selection: makes the asynchronous lifecycle deterministically controllable without
+        weakening production preparation
+      soundfont_preset_selection: makes preset pending, success, failure, and acknowledgement deterministic
+        through production preparation
+      observable_demo_scene: lets the demo prove pending, completion, failure, and acknowledgement at
+        explicit steps

@@ -1,0 +1,664 @@
+context: Synth
+purpose: capability-polymorphic Patch identity, off-thread instrument preparation, and bounded prepared
+  rendering
+ubiquitousLanguage:
+  CapabilityId: a stable namespaced identifier for one installed instrument implementation
+  EffectCapabilityId: a stable namespaced identity for one installed Patch post-effect implementation
+  EffectSlotId: a stable Patch-local semantic identity for one ordered effect instance
+  EffectCapabilityDescriptor: the immutable control-side parameter schema supplied by one installed effect
+    capability
+  ParameterId: a stable namespaced identifier for one capability-owned parameter
+  CapabilityDescriptor: the immutable control-side schema supplied by one installed instrument capability
+  ParameterSpec: the canonical immutable parameter schema shared by installed instrument and effect capabilities
+  InstrumentConfig: one Patch's capability identity, parameter values, and asset references
+  Patch: one playable instrument configuration plus its ordered Patch-local post effects, identified by
+    stable capability/config values
+  PostEffectConfig: one Patch-owned effect slot identity, capability identity, values, and asset references
+  SoundFontInstrument: the MIDI fixture's source bank, program, and percussion request before catalog
+    resolution
+  SoundFontPresetId: the stable SF2 wBank/wPreset playback address; authored name is presentation only
+  SoundFontPresetCatalog: the immutable control-side ordered entries derived from the fixed SF2 parse
+valueObjects:
+  CapabilityId:
+    description: a stable control-side identity for one installed instrument capability
+    from: String
+    invariants:
+    - the value is nonempty ASCII lowercase kebab-case segments separated by dots
+    - the value is stable across serialization versions and never contains a display label, filesystem
+      path, pointer, or registry index
+    contributesTo:
+      instrument_capability_model: keeps Patch configuration, descriptors, projections, and providers
+        joined by one semantic identity
+  EffectCapabilityId:
+    description: a stable control-side identity for one installed Patch effect capability
+    from: String
+    invariants:
+    - the value is nonempty ASCII lowercase kebab-case segments separated by dots
+    - the value is stable across serialization and never contains a label, path, pointer, registry index,
+      PatchId, or slot position
+    contributesTo:
+      static_patch_effect: joins effect descriptor, config, provider, preparer, prepared instance, projections,
+        and proof without processor-specific branching
+  EffectSlotId:
+    description: a stable Patch-local identity for one ordered effect instance
+    from: u16
+    invariants:
+    - zero is invalid and identities are unique within one Patch
+    - the value remains stable across projection and structural engine/preset replacement and is never
+      a widget or vector index
+    contributesTo:
+      static_patch_effect: keeps focus, scalar projection, prepared state, and observations attached to
+        the same semantic slot
+  EffectCapabilityDescriptor:
+    description: one immutable installed effect schema without instrument-only voice or MIDI metadata
+    state:
+      id: EffectCapabilityId
+      label: String
+      semanticAccent: stable semantic token id
+      sections: 'Vec<{id, label, parameters: Vec<ParameterSpec>}>'
+      assetRequirements: 'Vec<{parameterId: ParameterId, required: bool}>'
+    invariants:
+    - id, section ids, ParameterIds, choice ids, and asset requirements are unique and descriptor order
+      is stable
+    - parameters reuse the canonical ParameterSpec and at most eight are Scalar for one fixed RtPostEffectParameters
+      slot
+    - the descriptor contains no voice policy, MIDI semantics, engine factory, prepared processor, FFI
+      object, delay buffer, closure, UI state, or callback owner
+    - the current effect.chorus descriptor contains exactly Amount then Depth as finite Continuous Scalar
+      ScalarEdit parameters in 0..=1 with declared defaults and positive fine/coarse steps
+    contributesTo:
+      static_patch_effect: is the single schema source for Chorus config, PATCH rows, validation, scalar
+        layout, and coverage
+      schema_driven_patch_page: supplies the visible Chorus identity and generic editable effect rows
+  ParameterId:
+    description: a stable capability-scoped identity for one parameter
+    from: String
+    invariants:
+    - the value is nonempty ASCII lowercase kebab-case segments separated by dots
+    - the value is unique within its CapabilityDescriptor and is never a display label or positional widget
+      index
+    contributesTo:
+      instrument_capability_model: lets reducers, projections, tests, and later views address parameters
+        without engine-specific field matching
+  AssetReference:
+    description: a stable control-side reference to an instrument asset rather than decoded runtime data
+    state:
+      kind:
+      - SoundFont
+      - Sample
+      - Other
+      locator: String
+    invariants:
+    - locator is nonempty and deterministic for serialization
+    - the value contains no decoded PCM, parser, file handle, device handle, engine instance, callback
+      reference, or destructor-bearing prepared state
+    contributesTo:
+      instrument_capability_model: keeps asset identity in canonical control state without leaking prepared
+        audio state
+  ParameterValue:
+    description: the canonical tagged value accepted for a capability parameter
+    state:
+      kind:
+      - Continuous
+      - Stepped
+      - Choice
+      - Toggle
+      value:
+      - f64
+      - i64
+      - String
+      - bool
+    invariants:
+    - kind determines exactly one matching value representation
+    - continuous values are finite
+    - choice values are stable option ids rather than display labels
+    - the value contains no engine object, closure, UI widget, path, buffer, or dynamically typed escape
+      hatch
+    contributesTo:
+      instrument_capability_model: provides one canonical value union shared by every instrument descriptor
+        and config
+  ParameterAssignment:
+    description: one capability parameter identity paired with its canonical value
+    state:
+      parameterId: ParameterId
+      value: ParameterValue
+    invariants:
+    - parameterId occurs at most once within one InstrumentConfig
+    contributesTo:
+      instrument_capability_model: stores engine-specific values without adding engine-specific fields
+        to Patch
+  ParameterSpec:
+    description: the immutable schema and adjustment contract for one capability parameter
+    state:
+      id: ParameterId
+      label: String
+      kind:
+      - Continuous
+      - Stepped
+      - Choice
+      - Toggle
+      - Asset
+      update:
+      - Scalar
+      - Structural
+      patchInteraction:
+      - ReadOnly
+      - ScalarEdit
+      - StructuralChoice
+      defaultValue:
+      - ParameterValue
+      - AssetReference
+      range: Option<{minimum, maximum}>
+      choices: Vec<{id, label}>
+      fineStep: Option<f64>
+      coarseStep: Option<f64>
+      unit: Option<String>
+      formatter: stable formatter id
+      enabledWhen: Option<declarative ParameterId/value predicate>
+      visibleWhen: Option<declarative ParameterId/value predicate>
+    invariants:
+    - id is unique within the owning CapabilityDescriptor
+    - defaultValue matches kind and satisfies the declared range or choice set
+    - continuous and stepped parameters have finite ordered bounds and positive fine/coarse steps
+    - choice ids are unique and stable; labels are presentation only
+    - Asset and every value that changes preparation topology use Structural update
+    - ScalarEdit is valid only for a non-Asset Scalar parameter with finite descriptor-owned adjustment
+      semantics; StructuralChoice is valid only for a non-Asset Structural Choice with at least two choices
+    - dependency predicates reference earlier parameters in the same descriptor and contain no callbacks
+      or engine code
+    contributesTo:
+      instrument_capability_model: defines the schema the control path validates
+      schema_driven_patch_page: defines each PATCH row's stable identity, presentation, value kind, update
+        class, bounds, and dependencies
+      soundfont_preset_selection: declares whether one capability-owned structural Choice joins the PATCH
+        focus/edit surface without a capability branch
+      static_patch_effect: lets effect descriptors expose PATCH-editable scalar controls without processor-specific
+        field types
+  CapabilityDescriptor:
+    description: one immutable installed instrument schema with preparation and event metadata
+    state:
+      id: CapabilityId
+      label: String
+      semanticAccent: stable semantic token id
+      sections: 'Vec<{id, label, parameters: Vec<ParameterSpec>}>'
+      assetRequirements: 'Vec<{parameterId: ParameterId, required: bool}>'
+      voicePolicy:
+      - 'FixedPerPatch { voices: u16 }'
+      - EngineManaged
+      supportedMidiKinds: Vec<MidiMessageKind>
+    invariants:
+    - id, section ids, ParameterIds, choice ids, and asset requirements are unique before any set conversion
+    - section and parameter order is stable and is the only order consumed by serialization, text projection,
+      coverage, and later views
+    - FixedPerPatch has a nonzero voice count newly owned by every prepared Patch; EngineManaged delegates
+      allocation to one Patch-local engine instance whose preparer still proves a finite real-time safety
+      ceiling
+    - voice policy never describes an engine-global pool and no Patch borrows, consumes, or reduces another
+      Patch's capacity
+    - voice policy encodes neither a capability-specific Patch-count limit nor a global voice budget;
+      the engine-agnostic prepared-rack capacity governs concurrent Patch count separately
+    - supportedMidiKinds contains no duplicates and unsupported input is rejected explicitly rather than
+      silently remapped
+    - at most sixteen parameters are classified Scalar so their descriptor-ordered values fit the fixed
+      real-time projection
+    - PATCH-editable parameters are derived only from patchInteraction and descriptor order; installed
+      instrument descriptors in this increment use StructuralChoice or ReadOnly while ScalarEdit is reserved
+      for effect descriptors, and the registry contains no duplicated per-capability PATCH field list
+    - the descriptor contains immutable control metadata only and owns no engine, renderer, factory closure,
+      decoded asset, buffer, lock, device, or callback state
+    contributesTo:
+      instrument_capability_model: is the single schema source for installed instrument configuration
+        and projection
+      schema_driven_patch_page: supplies the active engine label, ordered sections, and generic parameter
+        rows
+      asynchronous_engine_selection: supplies the ordered defaults and required asset references for a
+        new target config
+      soundfont_preset_selection: supplies the ordered authored-name preset choices and their explicit
+        structural PATCH interaction
+  InstrumentConfig:
+    description: one Patch's validated capability identity, values, and stable asset references
+    state:
+      capabilityId: CapabilityId
+      values: Vec<ParameterAssignment>
+      assetReferences: 'Vec<{parameterId: ParameterId, reference: AssetReference}>'
+    invariants:
+    - capabilityId resolves to exactly one installed CapabilityDescriptor
+    - values and assetReferences contain every required descriptor parameter exactly once, contain no
+      undeclared parameter, and match kind, range, choices, and dependency rules
+    - values and assetReferences preserve descriptor order for deterministic serialization but behavior
+      addresses them only by ParameterId
+    - the config contains no fallback capability, engine instance, decoded asset, prepared renderer, UI
+      state, or callback-owned data
+    contributesTo:
+      instrument_capability_model: removes SoundFont-specific shape from the Patch aggregate
+      soundfont_audio: carries the current SoundFont preset and asset through a generic Patch-owned contract
+      schema_driven_patch_page: supplies the active values and asset references rendered against the descriptor
+      asynchronous_engine_selection: is the only candidate configuration committed when a prepared target
+        succeeds
+      soundfont_preset_selection: carries one stable preset Choice id plus the fixed SoundFont asset without
+        duplicating bank/program/percussion assignments
+  CapabilityRegistry:
+    description: the immutable ordered control-side registry of installed instrument descriptors
+    state:
+      descriptors: Vec<CapabilityDescriptor>
+    invariants:
+    - CapabilityIds are unique and descriptor order is stable
+    - lookup and InstrumentConfig validation use CapabilityId and ParameterId rather than label or position
+    - an unknown, duplicate, unavailable, or invalid capability produces a typed error; no descriptor
+      or config is silently substituted
+    - the current production composition installs exactly the HiDef SoundFont and Braids descriptors in
+      stable order; PATCH projects them as adjacent nonwrapping engine choices, permits one prepared replacement
+      at a time, and never layers or falls back
+    - the registry contains descriptors only; InstrumentPreparer registration, PreparedInstrument ownership,
+      PreparedEngineRack, and structural graph handoff remain behind their separate application and real-time
+      ports
+    contributesTo:
+      instrument_capability_model: makes the installed instrument schema explicit and deterministic without
+        coupling AppState to an adapter
+      schema_driven_patch_page: supplies the complete ordered engine-choice projection without placeholders
+      asynchronous_engine_selection: defines deterministic adjacent choice order and validates every committed
+        candidate
+      soundfont_preset_selection: freezes the catalog-backed SoundFont choices used by config validation,
+        projection, and reducer selection
+  PostEffectConfig:
+    description: one validated Patch-owned post-effect instance configuration
+    state:
+      slotId: EffectSlotId
+      capabilityId: EffectCapabilityId
+      values: Vec<ParameterAssignment>
+      assetReferences: 'Vec<{parameterId: ParameterId, reference: AssetReference}>'
+    invariants:
+    - capabilityId resolves to exactly one installed EffectCapabilityDescriptor
+    - values and assetReferences match every required descriptor field exactly once in descriptor order
+      and contain no undeclared, wrong-kind, non-finite, out-of-range, or dependency-invalid assignment
+    - the config contains no bypass, wet/dry duplicate, processor object, descriptor copy, prepared state,
+      buffer, UI state, or fallback capability
+    contributesTo:
+      static_patch_effect: stores one canonical effect instance independently from engine and mixer state
+      asynchronous_engine_selection: remains byte-exact across instrument and preset replacement candidates
+  EffectCapabilityRegistry:
+    description: the immutable ordered registry of installed Patch effect descriptors
+    state:
+      descriptors: Vec<EffectCapabilityDescriptor>
+    invariants:
+    - EffectCapabilityIds are unique and descriptor order is stable
+    - lookup and PostEffectConfig validation use stable ids rather than labels or positions
+    - unknown, duplicate, invalid, missing-provider, or missing-preparer cases are typed and never bypass
+      or substitute an effect
+    - the current production composition installs exactly effect.chorus and exposes no effect choice surface
+    contributesTo:
+      static_patch_effect: freezes the one installed effect schema before Patch installation and graph
+        preparation
+  SoundFontInstrument:
+    description: the source instrument request derived from a MIDI fixture part before resolving the fixed
+      SoundFont catalog
+    state:
+      bank: u16
+      program: u8
+      percussion: bool
+    invariants:
+    - program is in 0..=127
+    - percussion identity remains distinct from a melodic request with the same numeric bank and program
+    - the SoundFont fixture edge normalizes the value to one SoundFontPresetId and requires an exact catalog
+      match before Patch installation; it never becomes a second stored preset identity
+    contributesTo:
+      soundfont_audio: selects the correct HiDef.sf2 instrument for a Patch
+      soundfont_preset_selection: resolves fixture requests to exact catalog choice ids without name matching
+        or fallback
+      automatic_test_midi: preserves the instrument identity discovered in the MIDI fixture
+  SoundFontPresetId:
+    description: one canonical numeric SoundFont preset identity with stable generic-choice encoding
+    state:
+      bank: u16
+      program: u8
+      choiceId: sf2.bank-<bank>.program-<program>
+    invariants:
+    - program is in 0..=127 and bank is the exact SF2 wBank value used for lookup
+    - choiceId is a reversible canonical decimal encoding with no name, ordinal, registry index, or filesystem
+      path
+    - bank 128 identifies conventional SF2 percussion; percussion is derived for engine-channel configuration
+      and is not a second config assignment
+    contributesTo:
+      soundfont_preset_selection: keeps choice identity stable when an authored label changes or duplicates
+        another label
+      soundfont_audio: supplies the exact numeric bank/program address consumed during off-callback preparation
+  SoundFontPresetCatalogEntry:
+    description: one effective playable preset's identity, authored name, and source diagnostic position
+    state:
+      id: SoundFontPresetId
+      name: String
+      sourceOrdinal: usize
+    invariants:
+    - name is the exact nonempty achPresetName content before its first NUL, with case and authored spaces
+      preserved
+    - name is never used for lookup or identity and duplicate names at distinct numeric addresses are
+      preserved
+    - sourceOrdinal is diagnostic only and never determines normal display order
+    contributesTo:
+      soundfont_preset_selection: joins exact SF2 presentation to one numeric choice identity
+  SoundFontPresetCatalog:
+    description: the immutable control-side collection shared by the HiDef provider and preparer
+    state:
+      entries: Vec<SoundFontPresetCatalogEntry>
+      coordinateCollisions: 'Vec<{id: SoundFontPresetId, firstOrdinal, shadowedOrdinal}>'
+    invariants:
+    - construction occurs exactly once from the fixed parsed SF2 outside the callback and fails if there
+      is no playable entry or an effective entry has an invalid program or empty authored name
+    - an entry is playable only when its preset resolves at least one valid prepared sample region
+    - entries are sorted by numeric bank then numeric program; the original phdr order and label collation
+      never define normal ordering
+    - duplicate numeric coordinates retain the first playable SF2 record as the sole selectable entry
+      and record each shadowed coordinate collision without renaming or substituting it
+    - lookup supports stable choice id and normalized MIDI fixture identity and returns a typed missing-preset
+      error without nearest-neighbor or default fallback
+    - the catalog contains strings and never crosses into PreparedGraph, PreparedInstrument, ParameterSnapshot,
+      AudioCommand, or callback observation ownership
+    contributesTo:
+      soundfont_preset_selection: is the single source for descriptor choices, fixture address validation,
+        selected labels, and preparer address lookup
+      instrument_capability_model: hydrates one immutable descriptor before registry freeze without adding
+        asset I/O to the provider port
+  VoiceEnvelope:
+    description: the canonical Patch-owned envelope applied independently inside every note voice
+    state:
+      attackMilliseconds: f32
+      decayMilliseconds: f32
+      sustain: f32
+      releaseMilliseconds: f32
+      surfaceDescriptor: four typed stable ids with presentation labels, units, bounds, and fine/coarse
+        steps
+    invariants:
+    - all values are finite; Attack, Decay, and Release are in 0..=10000 milliseconds and Sustain is in
+      0..=1
+    - the descriptor enumerates each field exactly once, supplies its stable presentation label and milliseconds-or-unitless
+      unit, and is shared by reducer, projection, demos, and prepared engines
+    - Attack, Decay, and Sustain are latched at note-on and Release is latched at note-off independently
+      for each voice
+    - zero-time stages transition safely with bounded work and a post-Patch-stem gain envelope is nonconforming
+    contributesTo:
+      per_voice_envelope: defines one common envelope contract for every admitted engine
+      one_way_parameter_control: adds four schema-derived Patch values to the canonical PATCH semantic
+        adjustment path
+      schema_driven_patch_page: supplies the four canonical focusable/editable ADSR rows without creating
+        UI-owned envelope state
+aggregates:
+  Patch:
+    root: true
+    purpose: own one instrument capability config, ordered post-effect configs, assigned MIDI channel,
+      identity, common voice envelope, and Patch output route plus trim
+    state:
+      id: PatchId
+      name: String
+      instrument: InstrumentConfig
+      postEffects: Vec<PostEffectConfig>
+      channel: MidiChannel
+      envelope: VoiceEnvelope
+      output: PatchOutput
+    invariants:
+    - id is stable for the process lifetime
+    - instrument capability and configuration are validated against the installed CapabilityRegistry before
+      Patch construction
+    - postEffects preserve declared order, contain unique stable EffectSlotIds, validate against the immutable
+      EffectCapabilityRegistry, and have current capacity zero or one
+    - the production fixture configures exactly one effect.chorus slot on its first Patch and no slot
+      on every other Patch; the aggregate contains no placeholder, bypass, selector, or fallback effect
+    - descriptor-classified Scalar values may change through the canonical reducer; engine and descriptor-declared
+      structural-choice edits atomically replace the complete InstrumentConfig only after one correlated
+      candidate is prepared
+    - channel is assigned by the input adapter and is in 0..=15
+    - PatchOutput, VoiceEnvelope, and active descriptor-classified instrument/effect values remain Patch-owned
+      while mixer tracks and their controls remain separate canonical state
+    - Patch contains no SoundFont-only or Chorus-specific field, engine/effect object, descriptor copy,
+      prepared renderer, decoded asset, UI state, or fallback configuration
+    - Patch contains no track level, pan, mute, solo, send, meter, mixer scratch, or duplicate MixerState
+    contributesTo:
+      instrument_capability_model: makes one canonical Patch aggregate support capability-owned instrument
+        schemas
+      soundfont_audio: binds the current playable Patch to the registered HiDef SoundFont capability
+      braids_engine: binds the same generic Patch aggregate to the registered Braids capability
+      one_way_parameter_control: is the canonical owner of Patch-local values edited through PATCH
+      sixteen_track_mixer_routing: owns only the validated destination and pre-track trim for this Patch
+      schema_driven_patch_page: supplies stable Patch identity, MIDI channel, active config, and envelope
+        to the focused page
+      asynchronous_engine_selection: retains Patch identity, MIDI channel, envelope, and mixer routing
+        while replacing only its prepared InstrumentConfig
+      soundfont_preset_selection: retains every Patch field while replacing only the preset assignment
+        inside its validated config
+      static_patch_effect: owns the canonical ordered effect configs independently from prepared DSP and
+        mixer state
+ports:
+  EffectCapabilityProvider:
+    direction: outbound
+    contract:
+      descriptor: () -> EffectCapabilityDescriptor
+      createConfig: '(slotId: EffectSlotId, values: &[ParameterAssignment], assetReferences: &[{parameterId:
+        ParameterId, reference: AssetReference}]) -> Result<PostEffectConfig, EffectCapabilityError>'
+    consumes:
+    - EffectCapabilityDescriptor
+    - PostEffectConfig
+    - ParameterAssignment
+    - AssetReference
+    invariants:
+    - operations run only on control or worker ownership and are deterministic
+    - the port contains no process, audio-buffer, graph, device, UI, file-I/O, engine, or fallback operation
+    contributesTo:
+      static_patch_effect: supplies effect schema/config without defining Patch or prepared DSP
+  InstrumentCapabilityProvider:
+    direction: outbound
+    contract:
+      descriptor: () -> CapabilityDescriptor
+      createConfig: '(values: &[ParameterAssignment], assetReferences: &[{parameterId: ParameterId, reference:
+        AssetReference}]) -> Result<InstrumentConfig, CapabilityError>'
+    consumes:
+    - CapabilityDescriptor
+    - InstrumentConfig
+    - ParameterAssignment
+    - AssetReference
+    invariants:
+    - provider operations run on control or worker ownership before Patch installation or off-callback
+      candidate preparation
+    - descriptor and config creation are deterministic and return typed errors without fallback
+    - the port contains no render, dispatch, audio-buffer, device, UI, or file-I/O operation
+    contributesTo:
+      instrument_capability_model: lets a concrete engine adapter supply schema/config data without defining
+        Patch
+      asynchronous_engine_selection: validates descriptor-default candidates without owning selection
+        or mutation
+      soundfont_preset_selection: validates catalog-backed preset assignments without owning SF2 parsing
+        or rendering
+  PreparedInstrument:
+    direction: outbound
+    contract:
+      patchId: () -> PatchId
+      dispatch: (MidiMessage, &RtPatchParameters) -> Result<(), PreparedInstrumentError>
+      render: '(&mut [f32], frameCount: usize, &RtPatchParameters)'
+      allNotesOff: ()
+    consumes:
+    - MidiMessage
+    - PatchId
+    invariants:
+    - the port is object-safe and contains only callback-safe operations over one already prepared Patch
+      instrument
+    - patchId is fixed at preparation and the rack, not the implementation, selects the caller-owned stereo
+      stem
+    - the supplied RtPatchParameters exactly matches this Patch and the immutable graph-revision scalar
+      layout prepared for this implementation
+    - dispatch and allNotesOff have bounded work and return only fixed-size typed status
+    - render fills only the supplied interleaved stereo stem for at most its prepared maximum frame count
+    - dispatch, allNotesOff, and render perform no allocation, deallocation, locking, blocking, I/O, logging,
+      formatting, panic, unwinding, or destruction
+    - dynamic dispatch may occur once per targeted message or once per Patch render block, never in an
+      inner sample loop
+    contributesTo:
+      prepared_engine_rack: gives the rack one capability-neutral callback contract per Patch
+      realtime_execution: keeps capability implementation details outside the hard-real-time caller
+  InstrumentPreparer:
+    direction: outbound
+    contract:
+      capabilityId: () -> CapabilityId
+      prepare: '(&Patch, sampleRate: f32, maxFrames: usize) -> Result<Box<dyn PreparedInstrument>, InstrumentPreparationError>'
+    consumes:
+    - Patch
+    - CapabilityId
+    - PreparedInstrument
+    invariants:
+    - all preparation runs outside the audio callback and may perform validated asset I/O, parsing, allocation,
+      and warmup
+    - capabilityId is stable and exactly matches the InstrumentConfig identities this preparer accepts
+    - prepare rejects an unsupported capability, invalid config, unsupported sample rate or frame capacity,
+      asset failure, and voice-capacity failure with typed errors
+    - prepare never selects another capability, config, asset, preset, voice limit, or renderer as fallback
+    - a successful result has finished every allocation and capacity decision before ownership can cross
+      the structural boundary
+    contributesTo:
+      instrument_capability_model: joins a validated capability config to its separate preparation port
+        without putting a factory in Patch
+      prepared_engine_rack: builds callback-ready instruments behind one generic preparation contract
+  PreparedPostEffect:
+    direction: outbound
+    contract:
+      patchId: () -> PatchId
+      slotId: () -> EffectSlotId
+      process: '(&mut [f32], frameCount: usize, &RtPostEffectParameters) -> Result<(), PreparedEffectError>'
+    consumes:
+    - PatchId
+    - EffectSlotId
+    - RtPostEffectParameters
+    invariants:
+    - the port is object-safe and contains only bounded callback operations over one fully prepared Patch-local
+      instance
+    - process mutates only the supplied matching interleaved stereo stem for at most the prepared maximum
+      frames
+    - dynamic dispatch occurs at most once per configured slot per block and never inside the inner sample
+      loop
+    - process performs no allocation, deallocation, locking, blocking, I/O, logging, formatting, panic,
+      exception, unwind, or destruction
+    contributesTo:
+      static_patch_effect: gives the effect rack one processor-neutral callback contract
+      realtime_execution: keeps effect implementation details outside the renderer
+  EffectPreparer:
+    direction: outbound
+    contract:
+      capabilityId: () -> EffectCapabilityId
+      prepare: '(patchId: PatchId, config: &PostEffectConfig, sampleRate: f32, maxFrames: usize) -> Result<Box<dyn
+        PreparedPostEffect>, EffectPreparationError>'
+    consumes:
+    - PatchId
+    - PostEffectConfig
+    - PreparedPostEffect
+    invariants:
+    - preparation and every allocation, source validation, buffer construction, and warmup run outside
+      the callback
+    - capabilityId exactly matches accepted configs and unsupported rate, capacity, source, config, or
+      allocation fails with a typed error
+    - a successful result has finished every allocation and capacity decision and no failure selects bypass,
+      a null effect, or another processor
+    contributesTo:
+      static_patch_effect: separates effect configuration from prepared callback ownership
+applicationServices:
+  DescriptorDefaultConfigFactory:
+    purpose: construct one exact provider-validated structural target config before graph preparation
+    uses:
+    - CapabilityRegistry
+    - CapabilityDescriptor
+    - InstrumentConfig
+    - InstrumentCapabilityProvider
+    operations:
+      create:
+        input:
+          capabilityId: CapabilityId
+        output:
+          result: Result<InstrumentConfig, CapabilityError>
+      replaceStructuralChoice:
+        input:
+          source: InstrumentConfig
+          parameterId: ParameterId
+          choiceId: String
+        output:
+          result: Result<InstrumentConfig, CapabilityError>
+    meta:
+      rules:
+      - resolve exactly one descriptor and identity-matched provider, split every ordered ParameterSpec.defaultValue
+        into generic values and asset references, call the existing provider createConfig operation, then
+        revalidate the result through CapabilityRegistry
+      - replaceStructuralChoice requires the source descriptor to mark exactly that parameter Structural,
+        Choice, and StructuralChoice for PATCH, replaces exactly its assignment with one declared choice
+        id, preserves every other value and asset byte-for-byte, calls the identity-matched provider,
+        and revalidates the complete canonical config
+      - the required SoundFont default asset is the descriptor-declared ./sf2/HiDef.sf2 reference and
+        the default Braids config contains exactly its descriptor defaults
+      - run only outside the audio callback and return a typed error for unknown ids, missing defaults
+        or assets, provider mismatch, or invalid output without fallback
+      - own no Patch mutation, inactive-engine cache, prepared object, graph, UI state, file I/O, SoundFont/Braids
+        branch, or renderer factory
+    contributesTo:
+      instrument_capability_model: turns the existing descriptor defaults into one validated generic config
+      asynchronous_engine_selection: defines the target config without engine-specific selection logic
+        or cached inactive values
+      soundfont_preset_selection: builds the adjacent preset candidate as one exact generic assignment
+        replacement
+  PreparedEngineRackBuilder:
+    purpose: build one bounded capability-neutral prepared instrument slot for every accepted Patch outside
+      the callback
+    uses:
+    - Patch
+    - CapabilityRegistry
+    - InstrumentPreparer
+    - PreparedEngineRack
+    operations:
+      build:
+        input:
+          patches: '&[Patch]'
+          registry: '&CapabilityRegistry'
+          preparers: '&[Box<dyn InstrumentPreparer>]'
+          sampleRate: f32
+          maxFrames: usize
+        output:
+          result: Result<PreparedEngineRack, RackPreparationError>
+    meta:
+      rules:
+      - resolve every Patch InstrumentConfig through the immutable CapabilityRegistry and exactly one
+        matching InstrumentPreparer by CapabilityId
+      - reject duplicate PatchIds, duplicate preparers, missing or extra capability preparation, capacity
+        overflow, invalid audio format, or any preparer/config disagreement before constructing a rack
+      - preserve accepted Patch order and assign one unique slot and output stem to every Patch
+      - return no partial rack and never substitute a preparer, instrument, config, asset, or slot after
+        any failure
+      - the current production composition registers exactly the HiDef SoundFont and Braids preparers
+        and prepares alternating fixture Patches without a capability branch in the rack
+    contributesTo:
+      prepared_engine_rack: constructs the bounded rack from canonical Patch configs and registered preparation
+        ports
+      asynchronous_engine_selection: rebuilds the bounded rack from the exact candidate Patch set without
+        engine-specific branching
+  PreparedPostEffectRackBuilder:
+    purpose: build the fixed-capacity ordered prepared post-effect slots for every accepted Patch outside
+      the callback
+    uses:
+    - Patch
+    - EffectCapabilityRegistry
+    - EffectPreparer
+    - PreparedPostEffectRack
+    operations:
+      build:
+        input:
+          patches: '&[Patch]'
+          registry: '&EffectCapabilityRegistry'
+          preparers: '&[Box<dyn EffectPreparer>]'
+          sampleRate: f32
+          maxFrames: usize
+        output:
+          result: Result<PreparedPostEffectRack, EffectRackPreparationError>
+    meta:
+      rules:
+      - preserve canonical Patch and ordered PostEffectConfig order and require at most one stable slot
+        per Patch in this increment
+      - resolve every config through exactly one descriptor and identity-matched preparer and validate
+        the returned PatchId and EffectSlotId
+      - fail atomically for duplicate ids, missing or extra registrations, capacity, sample-rate, config,
+        or preparation errors and never publish a partial rack or bypass
+    contributesTo:
+      static_patch_effect: constructs one capability-neutral prepared effect rack from canonical Patch
+        configs
+      prepared_engine_rack: joins effect preparation to the complete graph builder without changing engine
+        rack ownership

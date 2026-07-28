@@ -1,0 +1,207 @@
+evidence:
+  capability_model_contract:
+    kind: behavioral
+    description: the production registry, two providers, Patch aggregate, reducer installation path, serializer,
+      and projector agree on the exact SoundFont and Braids schemas and reject invalid or unknown configs
+      without fallback
+    validations:
+    - capability_schema
+    - schema_surface
+    - test
+  engine_selection_workflow:
+    kind: behavioral
+    description: the named acceptance target and exhaustive demo prove the complete correlated two-direction
+      engine-selection lifecycle through production providers, reducer, worker port, graph handoff, renderer,
+      observation, and off-callback collection
+    validations:
+    - engine_selection_workflow
+    - demo_scene
+    - test
+    witnesses:
+    - witness.engine_selection_workflow
+  graphical_application_shell_contract:
+    kind: behavioral
+    description: the canonical shell projection, eframe/egui adapter, headless region witness, production
+      live target, physical audio lifecycle, and complete teardown agree on one passive graphical application
+      shell
+    validations:
+    - graphical_application_shell
+    - egui_context
+    - live_demo
+    - test
+    witnesses:
+    - witness.graphical_application_shell
+  patch_adsr_editing_contract:
+    kind: behavioral
+    description: production keyboard translation, AppState, PATCH projections, fixed scalar transport,
+      SoundFont and Braids renderers, and both observable scenes agree on the four canonical focused-Patch
+      ADSR edits without a second state or structural path
+    validations:
+    - validation.patch_page_projection
+    - per_voice_envelope
+    - demo_scene
+    - live_demo
+    - test
+    witnesses:
+    - witness.per_voice_envelope
+    - witness.exhaustive_demo_scene
+  prepared_engine_rack_contract:
+    kind: behavioral
+    description: the production preparation path and heterogeneous test rack prove exact CapabilityId
+      matching, isolated per-Patch dispatch/rendering, complete block-boundary graph swap, one-in-flight
+      acknowledgement, queue-pressure retention, and control-side destruction with no callback allocation
+      or drop
+    validations:
+    - validation.prepared_engine_rack
+    - test
+  running_synth:
+    kind: behavioral
+    description: the real fixed MIDI path prepares alternating SoundFont and Braids Patches through the
+      generic rack and produces independently routed non-silent stems without callback allocation or destruction
+    validations:
+    - smoke
+    - validation.prepared_engine_rack
+    - braids_engine
+    - test
+    witnesses:
+    - witness.running_synth
+  control_path:
+    kind: behavioral
+    description: keyboard-equivalent MIXER track and PATCH output/value edits change only their canonical
+      selected values and routed audio contributions, focus-only navigation is audio-neutral, boundary
+      no-ops remain nonfatal, and sustained fifteen-Patch MIDI dispatch stays within its measured responsiveness
+      ceiling
+    validations:
+    - smoke
+    - validation.patch_page_projection
+    - control_dispatch_performance
+    - sixteen_track_mixer_routing
+    - test
+    witnesses:
+    - witness.control_path
+  exhaustive_demo_scene:
+    kind: behavioral
+    description: the schema-derived current GUI/event/state/audio surface is exhaustively exercised with
+      exact projection values, faithful causal audio comparisons, a lossless journal, and a complete state
+      tree
+    validations:
+    - demo_scene
+    - schema_surface
+    - egui_context
+    - test
+    witnesses:
+    - witness.exhaustive_demo_scene
+  mutation_resistance:
+    kind: behavioral
+    description: independent production-seam mutants for dropped adjustment, cross-track parameter leakage,
+      Patch MIDI misrouting, StateTree leaf omission, dry-to-wet bypass, and zero renderer output are
+      each rejected by a typed engine-executed witness
+    validations:
+    - mutation_harness
+    - test
+    witnesses:
+    - witness.dropped_adjustment_mutant
+    - witness.cross_track_parameter_leak_mutant
+    - witness.patch_misroute_mutant
+    - witness.omitted_state_tree_leaf_mutant
+    - witness.dry_to_wet_bypass_mutant
+    - witness.zero_renderer_mutant
+  live_demo_contract:
+    kind: behavioral
+    description: the paced autonomous orchestration is verified against the production reducer, worker
+      port, structural coordinator, responsive generation-only projections, event log, render publication,
+      two acknowledged audible engine directions, bounded audio observations, mapped-input isolation,
+      and successful bounded shutdown without requiring a native CI window or device
+    validations:
+    - live_demo
+    - control_dispatch_performance
+    - test
+  braids_engine_contract:
+    kind: behavioral
+    description: the pinned native adapter, FixedPerPatch(16) descriptor, 16 × N scaling across N admitted
+      Braids Patches, exact sample-rate policy, mixed routing, scalar effects, lifecycle, and timing are
+      verified through production preparation/render seams
+    validations:
+    - braids_engine
+    - validation.prepared_engine_rack
+    - test
+  per_voice_envelope_contract:
+    kind: behavioral
+    description: the canonical four-field envelope projects and edits exactly through PATCH without becoming
+      mixer-track state, then independently controls overlapping SoundFont and Braids note voices
+    validations:
+    - per_voice_envelope
+    - validation.patch_page_projection
+    - validation.prepared_engine_rack
+    - test
+  patch_page_contract:
+    kind: behavioral
+    description: the production input translator, reducer, serializer, context projector, graphical eframe
+      adapter with retained diagnostic, and audio boundary prove exact two-context selection, descriptor-derived
+      instrument/effect rows, dynamic Engine-plus-ADSR-plus-structural-choice-plus-effect-scalar focus,
+      canonical ADSR/effect edits, and reducer-owned structural status
+    validations:
+    - validation.patch_page_projection
+    - static_patch_effect
+    - per_voice_envelope
+    - soundfont_preset_selection
+    - schema_surface
+    - egui_context
+    - engine_selection_workflow
+    - test
+  semantic_graphical_view_model_contract:
+    kind: behavioral
+    description: the canonical focus/action types, reducer, descriptor-driven projector, passive eframe
+      shell, headless recovery proof, cumulative physical live scene, and teardown agree on one semantic
+      graphical model
+    validations:
+    - validation.semantic_graphical_view_model
+    - graphical_application_shell
+    - validation.patch_page_projection
+    - schema_surface
+    - egui_context
+    - demo_scene
+    - live_demo
+    - test
+    witnesses:
+    - witness.semantic_graphical_view_model
+  sixteen_track_mixer_routing_contract:
+    kind: behavioral
+    description: the fixed MixerState, Patch output route, reducer, semantic projection, snapshots, preallocated
+      MixEngine, headless target, and physical live scene agree on one fallback-free sixteen-track mixer
+    validations:
+    - sixteen_track_mixer_routing
+    - validation.semantic_graphical_view_model
+    - demo_scene
+    - live_demo
+    - test
+    witnesses:
+    - witness.sixteen_track_mixer_routing
+  soundfont_preset_selection_contract:
+    kind: behavioral
+    description: the real SF2 catalog, descriptor, dynamic PATCH focus, reducer, worker, graph handoff,
+      and renderer agree on exact authored-name preset identity and audible fallback-free replacement
+    validations:
+    - soundfont_preset_selection
+    - capability_schema
+    - validation.patch_page_projection
+    - engine_selection_workflow
+    - demo_scene
+    - live_demo
+    - test
+    witnesses:
+    - witness.soundfont_preset_selection
+  static_patch_effect_contract:
+    kind: behavioral
+    description: the canonical Patch config, effect registry/provider/preparer, PATCH reducer/projections,
+      fixed scalar transport, prepared effect rack, production renderer, mixer, and both demos agree on
+      one audible fallback-free Chorus insert
+    validations:
+    - static_patch_effect
+    - validation.patch_page_projection
+    - validation.prepared_engine_rack
+    - demo_scene
+    - live_demo
+    - test
+    witnesses:
+    - witness.static_patch_effect

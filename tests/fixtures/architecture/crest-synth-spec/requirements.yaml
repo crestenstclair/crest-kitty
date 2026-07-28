@@ -1,0 +1,1006 @@
+requirements:
+  canonical_semantic_focus_contract:
+    kind: functional
+    description: InteractionState owns exactly one active FocusPath plus remembered root paths, InteractionMode,
+      and an optional ReturnPath; paths use TopLevelContext, SurfaceId, stable Patch/capability/control
+      identities, and no vector index or widget identity, while PATCH/MIXER remain the only top-level
+      contexts and Phase 2 admits only Navigate and Adjust as reachable modes
+    goals:
+    - use_semantic_graphical_view_model
+    capabilities:
+    - semantic_graphical_view_model
+    - one_way_parameter_control
+  canonical_sixteen_track_bank:
+    kind: functional
+    description: AppState SHALL own one MixerState containing exactly sixteen persistent tracks identified
+      by MixerTrackId 0 through 15; every track SHALL own Level, Pan, Mute, Solo, ReverbSend, and DelaySend
+      while Patch installation, count, order, route, and capability schema SHALL NOT create, remove, reorder,
+      or reset tracks
+    goals:
+    - route_patches_through_sixteen_tracks
+    capabilities:
+    - sixteen_track_mixer_routing
+  descriptor_default_engine_config:
+    kind: functional
+    description: An engine request chooses the adjacent nonwrapping installed CapabilityId and constructs
+      its InstrumentConfig from the target descriptor's ordered typed defaults and required default asset
+      references through the identity-matched provider; it never translates the prior engine config, caches
+      inactive configs, branches on SoundFont/Braids, or substitutes a missing value
+    goals:
+    - select_patch_engine
+    capabilities:
+    - instrument_capability_model
+    - asynchronous_engine_selection
+  descriptor_driven_graphical_projection:
+    kind: functional
+    description: StateProjector derives one immutable SemanticGraphicalViewModel from the accepted AppState
+      generation; PATCH controls come from PatchControlId plus instrument/effect/output descriptors, MIXER
+      always contains sixteen stable MixerTrackId columns with track-owned controls plus distinct globals,
+      side surfaces use canonical Patch Utility and Mixer Inspector models, and status/errors come from
+      typed runtime lifecycle data without engine, effect, adapter, or layout branches
+    goals:
+    - use_semantic_graphical_view_model
+    capabilities:
+    - semantic_graphical_view_model
+    - instrument_capability_model
+    - static_patch_effect
+    - schema_driven_patch_page
+  effect_capability_contract:
+    kind: nonfunctional
+    description: Effects use stable EffectCapabilityId and EffectSlotId values, a separate immutable EffectCapabilityDescriptor/registry/provider/preparer
+      family, and the canonical ParameterSpec, ParameterAssignment, ParameterValue, and AssetReference
+      types; effect descriptors contain no instrument voice policy or MIDI semantics, and missing, duplicate,
+      mismatched, invalid, or unavailable registrations fail explicitly without bypass or fallback
+    goals:
+    - shape_patch_with_effect
+    capabilities:
+    - static_patch_effect
+    - instrument_capability_model
+  exact_valid_action_contract:
+    kind: nonfunctional
+    description: Each projected focus exposes one ordered duplicate-free set of SemanticActions that AppState
+      would accept in that exact context, surface, mode, bounds, dependency, and structural status; unavailable
+      directions and modes are absent, footer hints derive only from this set, and action availability
+      never mutates canonical state or predicts worker success
+    goals:
+    - use_semantic_graphical_view_model
+    capabilities:
+    - semantic_graphical_view_model
+    - one_way_parameter_control
+    - asynchronous_engine_selection
+  deterministic_focus_recovery:
+    kind: nonfunctional
+    description: Responsive layout never changes semantic focus; after a committed schema/dependency change,
+      the reducer retains the exact stable target when valid or searches the prior surface order outward
+      for the nearest surviving visible enabled sibling with next-before-previous tie breaking, applies
+      the same rule to remembered and return paths, and never lets a projector or widget repair focus
+    goals:
+    - use_semantic_graphical_view_model
+    capabilities:
+    - semantic_graphical_view_model
+    - instrument_capability_model
+    - schema_driven_patch_page
+  fixed_patch_effect_topology:
+    kind: functional
+    description: Each Patch owns an ordered PostEffectConfig list with current capacity zero or one; the
+      first fixture Patch contains effect.chorus and other fixture Patches contain none, and callback
+      signal order is PreparedEngineRack to PatchAudioBlock to PreparedPostEffectRack to MixEngine with
+      no selector, bypass, reordering, arbitrary edge, feedback route, or placeholder slot
+    goals:
+    - shape_patch_with_effect
+    - play_test_song
+    capabilities:
+    - static_patch_effect
+    - prepared_engine_rack
+    - global_mix
+  canonical_patch_effect_control:
+    kind: functional
+    description: PATCH appends descriptor-ordered ScalarEdit effect parameters after Engine, common ADSR,
+      and instrument StructuralChoice rows; Edit+Left/Right applies fine decrement/increment and Edit+Down/Up
+      applies coarse decrement/increment through AppState.apply, while effect identity remains visible
+      and read-only and accepted edits publish only the fixed latest scalar snapshot
+    goals:
+    - shape_patch_with_effect
+    capabilities:
+    - static_patch_effect
+    - schema_driven_patch_page
+    - one_way_parameter_control
+  passive_semantic_action_boundary:
+    kind: nonfunctional
+    description: KeyboardInputTranslator and future passive components emit only the closed SemanticAction
+      union; AppLoop converts user actions to AppEvents before AppState.apply, system and MIDI events
+      retain their existing AppEvent entry, and no view, eframe adapter, component, demo, or input adapter
+      mutates focus, mode, return path, session, runtime, graph, or audio state directly
+    goals:
+    - use_semantic_graphical_view_model
+    capabilities:
+    - semantic_graphical_view_model
+    - one_way_parameter_control
+    - graphical_application_shell
+  patch_adsr_focus_surface:
+    kind: functional
+    description: PATCH Main exposes one reducer-owned nonwrapping focused-Patch order whose base is Engine,
+      Attack, Decay, Sustain, Release from PatchControlId plus the canonical VoiceEnvelope descriptor
+      and whose suffix is the active instrument descriptor's StructuralChoice controls followed by ordered
+      effect ScalarEdit controls; bare Up/Down moves one row, Right enters persistent Utility with an
+      exact return path, Left on Main and endpoint navigation are typed unchanged rejections, and exactly
+      one semantic target is focused
+    goals:
+    - edit_patch_envelope
+    capabilities:
+    - schema_driven_patch_page
+    - one_way_parameter_control
+  canonical_patch_adsr_adjustment:
+    kind: functional
+    description: On a focused ADSR row, Edit+Left/Right applies the existing descriptor's fine decrement/increment
+      and Edit+Down/Up applies its coarse decrement/increment through AppState.apply; the reducer reuses
+      VoiceEnvelopeParameter and VoiceEnvelope.withValue and changes exactly the focused Patch field without
+      exposing Patch envelopes as mixer-track controls
+    goals:
+    - edit_patch_envelope
+    capabilities:
+    - schema_driven_patch_page
+    - one_way_parameter_control
+    - per_voice_envelope
+  patch_output_route_and_trim:
+    kind: functional
+    description: Every Patch SHALL own exactly one validated PatchOutput containing MixerTrackId and trimGainDb
+      and SHALL own no track level, pan, mute, solo, send, or meter; multiple Patches MAY share one track,
+      and PATCH Utility SHALL expose trim plus output track through SemanticAction, AppEvent, and AppState.apply
+      without UI-owned state
+    goals:
+    - route_patches_through_sixteen_tracks
+    capabilities:
+    - sixteen_track_mixer_routing
+  fixed_realtime_track_routing:
+    kind: nonfunctional
+    description: ParameterSnapshot SHALL carry each active PatchId with fixed PatchOutput plus exactly
+      sixteen fixed track parameter entries, and AudioObservationSnapshot SHALL carry exactly sixteen
+      numeric pre-gate meters; MixEngine SHALL use preallocated track scratch, apply Patch trim before
+      accumulation and track controls after accumulation, and perform no callback allocation, deallocation,
+      locking, blocking, I/O, logging, formatting, panic, unwind, or destruction
+    goals:
+    - route_patches_through_sixteen_tracks
+    capabilities:
+    - sixteen_track_mixer_routing
+  pinned_chorus_adapter:
+    kind: functional
+    description: The first processor is the MIT-licensed Mutable Instruments Rings Chorus pinned at pichenettes/eurorack@08460a69a7e1f7a81c5a2abcc7189c9a6b7208d4
+      and stmlib@e3bd7c9cc00e4364166f9905c0509b6ffd0535ec, vendored as the audited minimal source/table/header
+      subset with hashes and provenance, exposed to the product only as Chorus with scalar Amount and
+      Depth, prepared with independent external delay/LFO state, and admitted initially only at exactly
+      48 kHz
+    goals:
+    - shape_patch_with_effect
+    capabilities:
+    - static_patch_effect
+  patch_effect_realtime_safety:
+    kind: nonfunctional
+    description: Every Chorus instance, delay buffer, LFO state, effect rack slot, scalar layout, stereo
+      scratch requirement, and observation field is fully prepared off callback; processing is bounded
+      and performs no allocation, deallocation, collection growth, locking, blocking, I/O, logging, formatting,
+      panic, exception, unwind, or destruction, and complete graph retirement destroys effect state only
+      on control or worker ownership
+    goals:
+    - shape_patch_with_effect
+    - play_test_song
+    capabilities:
+    - static_patch_effect
+    - realtime_execution
+    - prepared_engine_rack
+  patch_effect_behavioral_proof:
+    kind: functional
+    description: A named production-path target plus both demos prove exact source/license hashes, descriptor/config
+      validation, PATCH focus and fine/coarse edits, scalar-only publication, engine-effect-mix order,
+      target-only audible difference, stereo side energy, zero-input bounded behavior, independent instances
+      and tails, structural preservation, unsupported-rate and missing-registration failures, finite output,
+      zero fallback, callback safety, and render-time admission
+    goals:
+    - shape_patch_with_effect
+    - observe_synth
+    - observe_live_synth
+    capabilities:
+    - static_patch_effect
+    - observable_demo_scene
+    - live_observable_demo
+    - realtime_execution
+  production_two_engines:
+    kind: functional
+    description: The production application installs exactly the HiDef SoundFont and pinned Braids capabilities/preparers,
+      alternates fixture Patches between them, and never layers or substitutes one for the other
+    goals:
+    - play_test_song
+    capabilities:
+    - soundfont_audio
+    - braids_engine
+    - instrument_capability_model
+    - prepared_engine_rack
+  polymorphic_voice_envelopes:
+    kind: functional
+    description: Every admitted Braids Patch independently adds exactly sixteen voices with no Braids-specific
+      Patch-count or global voice budget, every SoundFont Patch owns one engine-managed synthesizer without
+      an artificial sixteen-note cap, and both apply canonical configurable Patch ADSR independently before
+      native note voices enter the Patch stem
+    goals:
+    - play_test_song
+    - control_synth
+    capabilities:
+    - soundfont_audio
+    - braids_engine
+    - per_voice_envelope
+  prepared_instrument_boundary:
+    kind: nonfunctional
+    description: Each Patch is prepared outside the callback through exactly one CapabilityId-matched
+      InstrumentPreparer into an object-safe PreparedInstrument; callback dispatch, all-notes-off, and
+      rendering are bounded and capability-neutral, with dynamic dispatch outside inner sample loops
+    goals:
+    - play_test_song
+    - control_synth
+    capabilities:
+    - prepared_engine_rack
+    - realtime_execution
+  reducer_owned_engine_selection:
+    kind: nonfunctional
+    description: Edit+Left/Right remains the existing semantic Adjust event; only AppState.apply may accept
+      the focused PATCH engine-row request or the correlated prepared, failed, and activation outcomes,
+      and every accepted lifecycle transition commits before projection or external effects
+    goals:
+    - select_patch_engine
+    capabilities:
+    - asynchronous_engine_selection
+    - one_way_parameter_control
+    - schema_driven_patch_page
+  one_in_flight_structural_work:
+    kind: nonfunctional
+    description: Exactly one engine or descriptor-owned structural-choice request is Preparing or Activating
+      application-wide; another structural request is a typed unchanged rejection, while MIDI, context
+      selection, focus navigation, and valid scalar edits from MIXER or PATCH ADSR continue through the
+      normal reducer path
+    goals:
+    - select_patch_engine
+    - select_soundfont_preset
+    capabilities:
+    - asynchronous_engine_selection
+    - soundfont_preset_selection
+    - one_way_parameter_control
+  atomic_prepared_activation:
+    kind: nonfunctional
+    description: A capacity-one off-callback worker builds one complete candidate graph; a correlated
+      success commits only the selected instrument config, preserves every Patch PostEffectConfig and
+      effect scalar layout, reprojects the exact committed target-revision snapshot, publishes the complete
+      graph, swaps at a block boundary, and retires the prior graph off callback; active voices and effect
+      tails may reset
+    goals:
+    - select_patch_engine
+    capabilities:
+    - asynchronous_engine_selection
+    - prepared_engine_rack
+    - realtime_execution
+  correlated_structural_outcomes:
+    kind: nonfunctional
+    description: Monotonic request id, PatchId, StructuralEditIntent, source and target CapabilityIds,
+      source and target GraphRevisions, candidate config and permitted delta, Patch order, layout, and
+      acknowledgement must all agree; failure is visible and accepted, while early, duplicate, stale,
+      or mismatched results are typed unchanged rejections and every rejected candidate is destroyed off
+      callback
+    goals:
+    - select_patch_engine
+    - select_soundfont_preset
+    capabilities:
+    - asynchronous_engine_selection
+    - prepared_engine_rack
+  retryable_structural_publication:
+    kind: nonfunctional
+    description: If structural publication is full after candidate commit, control retains exactly one
+      staged complete graph, remains Activating, and retries without rollback, drop, fallback, or a second
+      structural request; Ready requires active plus retired acknowledgement and explicit control-side
+      collection
+    goals:
+    - select_patch_engine
+    capabilities:
+    - asynchronous_engine_selection
+    - realtime_execution
+  engine_selection_demo_proof:
+    kind: functional
+    description: The deterministic production-path demo proves SoundFont to Braids to descriptor-default
+      SoundFont, pending old-engine audio, busy and stale rejection, controlled preparation failure, target-only
+      config mutation, compatible scalar snapshots, block-boundary swaps, off-callback retirement, finite
+      targeted output, zero callback allocation or destruction, and byte-identical logical evidence across
+      two fresh runs
+    goals:
+    - select_patch_engine
+    - observe_synth
+    capabilities:
+    - asynchronous_engine_selection
+    - observable_demo_scene
+    - realtime_execution
+  live_engine_selection_proof:
+    kind: functional
+    description: The paced physical-device demo completes SoundFont to Braids to descriptor-default SoundFont
+      for the focused first Patch through semantic events, AppState.apply, the production threaded worker,
+      complete graph handoff, renderer, and control-side acknowledgement; it checkpoints Preparing, Activating,
+      Ready, increasing graph revisions, finite nonzero targeted output, zero callback allocation or destruction,
+      no fallback, and the exact final SoundFont config without injecting controlled failures
+    goals:
+    - observe_live_synth
+    capabilities:
+    - asynchronous_engine_selection
+    - live_observable_demo
+    - realtime_execution
+  scalar_only_patch_adsr_publication:
+    kind: nonfunctional
+    description: An accepted PATCH ADSR edit commits one canonical VoiceEnvelope value, advances one generation,
+      reprojects StateSnapshot, PatchPageProjection, TextProjection, StateTree, and a same-revision fixed
+      ParameterSnapshot, and emits no AudioCommand, preparation request, PreparedGraph, graph publication,
+      or alternate envelope/DSP state
+    goals:
+    - edit_patch_envelope
+    capabilities:
+    - one_way_parameter_control
+    - per_voice_envelope
+    - realtime_execution
+  patch_adsr_structural_coexistence:
+    kind: nonfunctional
+    description: 'PATCH ADSR focus and edits remain valid during Ready, Preparing, Activating, and recoverable
+      Failed structural status for either engine or preset intent: Preparing publishes against the source
+      revision and the candidate refreshes from the latest committed snapshot before publication; Activating
+      publishes against the target revision for exact first-target consumption while the source remains
+      audible under its last compatible snapshot; lifecycle events preserve focus and envelope'
+    goals:
+    - edit_patch_envelope
+    capabilities:
+    - per_voice_envelope
+    - asynchronous_engine_selection
+    - realtime_execution
+  patch_adsr_behavioral_proof:
+    kind: functional
+    description: The named Patch-page and per-voice-envelope targets plus both demos drive all four focused
+      ADSR controls through production input, reducer, projections, fixed snapshots, and both real renderers;
+      they prove exact focus/value coherence, fine/coarse and boundary behavior, target-only audible per-voice
+      consequences, scalar/structural coexistence, zero structural effects, callback safety, and exact
+      restoration or declared final state
+    goals:
+    - edit_patch_envelope
+    capabilities:
+    - schema_driven_patch_page
+    - one_way_parameter_control
+    - per_voice_envelope
+    - observable_demo_scene
+    - live_observable_demo
+    - asynchronous_engine_selection
+    - realtime_execution
+  selected_egui_stack:
+    kind: nonfunctional
+    description: The production desktop UI uses eframe and egui, with the matching egui_extras companion
+      for layout and image/SVG loading; Crest owns the shell, state, semantic behavior, and later component
+      APIs, and no alternate GUI runtime or third-party component system is introduced
+    goals:
+    - use_graphical_shell
+    capabilities:
+    - graphical_application_shell
+  immutable_graphical_shell_projection:
+    kind: nonfunctional
+    description: StateProjector derives one immutable GraphicalShellProjection embedding the exact accepted
+      SemanticGraphicalViewModel plus retained TextProjection; AppWindow receives that projection, the
+      latest fixed numeric AudioObservationSnapshot for meters, and a SemanticAction sink and never receives
+      mutable AppState, graph, engine, mixer buffer, audio buffer, or device ownership
+    goals:
+    - use_graphical_shell
+    capabilities:
+    - graphical_application_shell
+    - one_way_parameter_control
+  authored_shell_composition:
+    kind: functional
+    description: The graphical shell visibly contains the product/context/status line, identity header,
+      main PATCH-or-MIXER workspace, always-present Utility on PATCH or Inspector on MIXER, and current-path/action-hint
+      footer; PATCH and MIXER remain the only top-level contexts and no region becomes a third context
+    goals:
+    - use_graphical_shell
+    capabilities:
+    - graphical_application_shell
+    - schema_driven_patch_page
+  responsive_shell_blockout:
+    kind: nonfunctional
+    description: The same shell projection renders at the authored 1920x1080 desktop viewport and the
+      1280x800 Steam Deck viewport with retained header/footer bands, visible Utility/Inspector, bounded
+      proportional workspace split, non-overlapping labels, and no hidden required region or resolution-specific
+      application state
+    goals:
+    - use_graphical_shell
+    capabilities:
+    - graphical_application_shell
+  passive_graphical_window:
+    kind: nonfunctional
+    description: EframeGraphicalWindow normalizes physical input through KeyboardInputTranslator, emits
+      only SemanticAction, paints only its immutable projection, schedules an idle frame after 16 ms,
+      and owns no context, focus, mode, return path, Patch value, lifecycle, parameter, graph, engine,
+      mixer, or audio state
+    goals:
+    - use_graphical_shell
+    capabilities:
+    - graphical_application_shell
+    - one_way_parameter_control
+  retained_diagnostic_projection:
+    kind: functional
+    description: TextProjection remains a lossless deterministic read-only diagnostic and verification
+      projection from the same accepted generation; SemanticGraphicalViewModel is the interaction contract,
+      and the diagnostic is not a second projector, focus model, valid-action source, or writable UI state
+      copy
+    goals:
+    - use_graphical_shell
+    capabilities:
+    - graphical_application_shell
+    - observable_demo_scene
+  graphical_shell_behavioral_proof:
+    kind: functional
+    description: A named headless egui acceptance target proves exact region identity, non-overlap, responsive
+      geometry, projection-generation coherence, input dispatch, and audio-neutral context switching at
+      both reference viewports; the retained release-mode make demo-live-graphical-shell target proves
+      the real window, fixture, physical audio, visible context sequence, semantic cleanup, resource teardown,
+      and normal parent exit
+    goals:
+    - use_graphical_shell
+    capabilities:
+    - graphical_application_shell
+    - observable_demo_scene
+    - live_observable_demo
+  semantic_view_model_behavioral_proof:
+    kind: functional
+    description: A named headless production-path target proves exact action/event mapping, focus/mode/return/action/status/error
+      projection, descriptor polymorphism, schema recovery, responsive focus invariance, generation coherence,
+      passive egui rendering, and audio neutrality; the retained release-mode make demo-live-semantic-view-model
+      target proves healthy physical traversal, focus recovery, audio continuity, cleanup, and normal
+      exit
+    goals:
+    - use_semantic_graphical_view_model
+    capabilities:
+    - semantic_graphical_view_model
+    - graphical_application_shell
+    - observable_demo_scene
+    - live_observable_demo
+    - realtime_execution
+  sf2_preset_catalog_fidelity:
+    kind: functional
+    description: The single fixed SF2 parse produces one immutable SoundFontPresetCatalog containing every
+      effective playable preset's stable wBank/wPreset identity and exact NUL-terminated achPresetName
+      presentation; selectable entries sort numerically by bank then program rather than raw phdr or alphabetical
+      order, preserve duplicate names, apply SF2 first-record precedence to duplicate coordinates with
+      a typed diagnostic, and never synthesize General MIDI names
+    goals:
+    - select_soundfont_preset
+    capabilities:
+    - soundfont_preset_selection
+    - soundfont_audio
+  catalog_backed_soundfont_schema:
+    kind: functional
+    description: The HiDef descriptor replaces independent bank/program/percussion values with one soundfont.preset
+      Structural Choice whose ids encode numeric SoundFontPresetId values and labels are exact catalog
+      names, retains only the locked required soundfont.file asset, and uses the first sorted playable
+      entry as its default
+    goals:
+    - select_soundfont_preset
+    capabilities:
+    - soundfont_preset_selection
+    - instrument_capability_model
+  descriptor_derived_preset_focus:
+    kind: functional
+    description: PatchControlId represents Capability(ParameterId), and the focused Patch resolver appends
+      visible descriptor parameters classified StructuralChoice after Engine and the canonical ADSR rows;
+      SoundFont therefore exposes one Preset control while Braids exposes none, and the projector, reducer,
+      text shell, schema coverage, and demos consume the same resolver
+    goals:
+    - select_soundfont_preset
+    capabilities:
+    - soundfont_preset_selection
+    - schema_driven_patch_page
+    - one_way_parameter_control
+  correlated_preset_replacement:
+    kind: nonfunctional
+    description: Edit+Left/Right on the focused preset creates one typed ReplaceParameterChoice intent
+      and uses the existing one-in-flight reducer, capacity-one worker, complete graph build, structural
+      handoff, block-boundary activation, and off-callback retirement protocol; the old config/audio remains
+      active through Preparing, only the selected assignment changes on commit, and every failure preserves
+      it without fallback
+    goals:
+    - select_soundfont_preset
+    capabilities:
+    - soundfont_preset_selection
+    - asynchronous_engine_selection
+    - prepared_engine_rack
+  soundfont_metadata_rt_separation:
+    kind: nonfunctional
+    description: The raw parsed SF2 and all authored names remain on control/worker ownership; callback-reachable
+      PreparedSoundFontBank storage contains only immutable numeric PCM, zones, loop data, and preset
+      addresses, and preset replacement adds no callback allocation, destruction, string access, parsing,
+      lookup by label, locking, blocking, I/O, logging, formatting, panic, unwind, or fallback
+    goals:
+    - select_soundfont_preset
+    capabilities:
+    - soundfont_preset_selection
+    - soundfont_audio
+    - realtime_execution
+  soundfont_preset_behavioral_proof:
+    kind: functional
+    description: A named real-SF2 acceptance target plus deterministic and physical demos prove exact
+      catalog names/order, fixture identity resolution, dynamic focus/projection, both adjacent directions
+      and boundaries, pending source audio, target-only config mutation, controlled failure/stale/busy
+      preservation, newer acknowledged revisions, finite distinct target output, zero callback allocation/destruction,
+      exact final restoration, and no fallback
+    goals:
+    - select_soundfont_preset
+    - observe_synth
+    - observe_live_synth
+    capabilities:
+    - soundfont_preset_selection
+    - observable_demo_scene
+    - live_observable_demo
+    - realtime_execution
+  structural_graph_handoff:
+    kind: nonfunctional
+    description: One complete PreparedGraph containing the bounded engine rack, mixer/effect state, routing,
+      stems, and scratch crosses a dedicated bounded ownership queue, swaps only at a render-block boundary,
+      and is correlated by GraphRevision and fixed-size acknowledgement; commands and scalar snapshots
+      use separate transports
+    goals:
+    - play_test_song
+    - control_synth
+    - select_patch_engine
+    - select_soundfont_preset
+    capabilities:
+    - prepared_engine_rack
+    - realtime_execution
+    - asynchronous_engine_selection
+    - soundfont_preset_selection
+  off_callback_graph_retirement:
+    kind: nonfunctional
+    description: A replaced PreparedGraph enters a distinct bounded audio-to-control ownership queue;
+      return pressure retains it in a preallocated callback slot and retries, while destructors run only
+      after explicit control or worker collection and the prior handoff is acknowledged before another
+      publication
+    goals:
+    - play_test_song
+    - control_synth
+    - select_patch_engine
+    - select_soundfont_preset
+    capabilities:
+    - prepared_engine_rack
+    - realtime_execution
+    - asynchronous_engine_selection
+    - soundfont_preset_selection
+  fixed_soundfont:
+    kind: functional
+    description: The SoundFont adapter expects ./sf2/HiDef.sf2 and startup fails clearly when it is absent
+      or invalid
+    goals:
+    - play_test_song
+    capabilities:
+    - soundfont_audio
+  fixed_midi_fixture:
+    kind: functional
+    description: The automatic test module targets ./midi/Corridors of Time - Chrono Trigger.mid
+    goals:
+    - play_test_song
+    capabilities:
+    - automatic_test_midi
+  mixer_global_effects_only:
+    kind: functional
+    description: MixEngine contains exactly one shared reverb and one shared delay fed by post-gate track
+      sends and owns no other processor; the separately prepared upstream Patch effect rack contains the
+      one configured Chorus insert
+    goals:
+    - play_test_song
+    - shape_patch_with_effect
+    capabilities:
+    - global_mix
+    - static_patch_effect
+  hard_realtime_audio:
+    kind: nonfunctional
+    description: The audio callback uses preallocated bounded storage and performs no allocation, deallocation,
+      locks, blocking, I/O, logging, formatting, panic, unwinding, or destruction, including during prepared
+      graph swap and retirement pressure
+    goals:
+    - play_test_song
+    capabilities:
+    - prepared_engine_rack
+    - realtime_execution
+  test_input_is_not_a_sequencer:
+    kind: nonfunctional
+    description: MIDI-file timing is private test-adapter behavior; the domain exposes no sequencer, transport,
+      timeline, song, clip, pattern, recording, editing, or playback-control model
+    goals:
+    - play_test_song
+    capabilities:
+    - automatic_test_midi
+  one_way_loop:
+    kind: nonfunctional
+    description: Every user input becomes one SemanticAction and then one AppEvent while startup, MIDI,
+      worker, and system sources enter as typed AppEvents; AppState.apply commits accepted state before
+      semantic graphical/text projection, serialization, parameter publication, or audio-command effects
+    goals:
+    - control_synth
+    - use_semantic_graphical_view_model
+    capabilities:
+    - one_way_parameter_control
+    - semantic_graphical_view_model
+  responsive_control_projection:
+    kind: nonfunctional
+    description: A fifteen-Patch production AppLoop dispatches 512 MIDI events through reducer, coherent
+      logical projections, journal, and audio publication within 50 ms in the unoptimized acceptance profile;
+      unchanged immutable projection storage is shared and deferred JSON remains byte-identical to eager
+      canonical output
+    goals:
+    - control_synth
+    - observe_live_synth
+    capabilities:
+    - one_way_parameter_control
+    - live_observable_demo
+  basic_text_contexts:
+    kind: functional
+    description: 'TextProjection remains one immutable lossless diagnostic projection at a time: MIXER
+      preserves exactly sixteen track sections plus distinct globals and routed-Patch summaries while
+      PATCH renders the focused schema-derived Patch page and output values; the production AppWindow
+      receives GraphicalShellProjection embedding SemanticGraphicalViewModel, while diagnostics add no
+      third top-level context, focus authority, valid-action source, or writable UI state'
+    goals:
+    - control_synth
+    - inspect_patch
+    - use_graphical_shell
+    - use_semantic_graphical_view_model
+    capabilities:
+    - one_way_parameter_control
+    - schema_driven_patch_page
+    - graphical_application_shell
+    - semantic_graphical_view_model
+  keyboard_controls:
+    kind: functional
+    description: 1 directly selects MIXER, 2 directly selects PATCH, bare W/S emits semantic vertical
+      Navigate, bare A/D emits horizontal Navigate, K down/up emits Adjust/Navigate mode and K plus W/S/A/D
+      emits Adjust; AppLoop maps every normalized SemanticAction to AppEvent before AppState.apply, AppState
+      resolves behavior from FocusPath and mode, and no adapter mutates semantic state directly
+    goals:
+    - control_synth
+    - inspect_patch
+    - edit_patch_envelope
+    - select_soundfont_preset
+    - use_semantic_graphical_view_model
+    capabilities:
+    - one_way_parameter_control
+    - schema_driven_patch_page
+    - soundfont_preset_selection
+    - semantic_graphical_view_model
+  track_owned_semantic_mixer:
+    kind: functional
+    description: MIXER SHALL always project all sixteen tracks independently from Patches, use MixerTrackId
+      plus MixerTrackParameter for stable focus, preserve control row while horizontal navigation changes
+      tracks, expose track sends and routed-Patch summary in MixerInspector, and keep global controls
+      distinct from the sixteen tracks; PatchId plus any Patch-owned editable target SHALL NOT define
+      a mixer column
+    goals:
+    - route_patches_through_sixteen_tracks
+    capabilities:
+    - sixteen_track_mixer_routing
+  sixteen_track_mixer_behavioral_proof:
+    kind: functional
+    description: A named assertion-bearing production-path target and retained physical live target SHALL
+      prove exact sixteen-track state and projection, shared-track summing, Patch reroute and trim isolation,
+      every track parameter class, mute-wins and any-solo semantics, post-gate sends, pre-gate meters
+      including muted input, empty tracks, invalid-route rejection, fixed snapshot equality, callback
+      safety, responsive stable focus, finite physical audio, and complete teardown
+    goals:
+    - route_patches_through_sixteen_tracks
+    capabilities:
+    - sixteen_track_mixer_routing
+  two_top_level_contexts:
+    kind: functional
+    description: PATCH and MIXER are the only top-level contexts; the existing diagnostic view is the
+      transitional MIXER projection and PATCH owns one semantic Engine-plus-ADSR-plus-instrument-structural-plus-effect-scalar
+      focus surface, so the basic interface introduces no third context
+    goals:
+    - inspect_patch
+    - select_patch_engine
+    - edit_patch_envelope
+    - select_soundfont_preset
+    - shape_patch_with_effect
+    capabilities:
+    - schema_driven_patch_page
+    - static_patch_effect
+  semantic_context_selection:
+    kind: nonfunctional
+    description: Digit 1 and Digit 2 normalize to WindowInput, translate to SemanticAction::SelectContext(MIXER|PATCH),
+      map to AppEvent, reduce only through AppState.apply, restore the destination remembered FocusPath
+      in Navigate mode, and project from committed InteractionState; window, test, and view adapters own
+      no context state
+    goals:
+    - inspect_patch
+    - use_semantic_graphical_view_model
+    capabilities:
+    - one_way_parameter_control
+    - schema_driven_patch_page
+    - semantic_graphical_view_model
+  descriptor_driven_patch_projection:
+    kind: functional
+    description: PATCH projects the focused PatchId, name, MIDI channel, active/requested structural target,
+      lifecycle status/failure/revision, installed engine and parameter choices, canonical ADSR, and every
+      active ParameterSpec/value/asset in descriptor order; Engine, the four ADSR rows, and descriptor-declared
+      StructuralChoice rows have stable focus identities, every other capability row remains read-only,
+      and no SoundFont/Braids field list or capability-id branch exists
+    goals:
+    - inspect_patch
+    - select_patch_engine
+    - edit_patch_envelope
+    - select_soundfont_preset
+    capabilities:
+    - instrument_capability_model
+    - schema_driven_patch_page
+    - asynchronous_engine_selection
+    - per_voice_envelope
+    - soundfont_preset_selection
+  stable_patch_focus:
+    kind: nonfunctional
+    description: InteractionState owns PATCH focus as a stable PatchMain FocusPath separately from the
+      remembered semantic MIXER path; installation initializes it deterministically to the first Patch
+      Engine, context switches retain it, and a missing or stale target is repaired only by the reducer's
+      deterministic descriptor sibling rule before projection, never by a view or vector index
+    goals:
+    - inspect_patch
+    - use_semantic_graphical_view_model
+    capabilities:
+    - schema_driven_patch_page
+    - semantic_graphical_view_model
+  projection_only_context_switch:
+    kind: nonfunctional
+    description: Selecting PATCH or MIXER changes only reducer-owned interaction context and the generation-coherent
+      serialization/view projection; Patch/config/envelope/output, all sixteen track values, globals,
+      ParameterSnapshot values, PreparedGraph revision and ownership, MIDI routing, audio commands, and
+      rendered behavior remain unchanged
+    goals:
+    - inspect_patch
+    capabilities:
+    - one_way_parameter_control
+    - schema_driven_patch_page
+    - realtime_execution
+  generic_instrument_config:
+    kind: functional
+    description: Patch owns one InstrumentConfig containing a CapabilityId, ordered typed parameter assignments,
+      and stable asset references; Patch contains no SoundFont-only fields, engine instance, descriptor
+      copy, prepared state, or fallback config
+    goals:
+    - control_synth
+    capabilities:
+    - instrument_capability_model
+  descriptor_owned_instrument_schema:
+    kind: nonfunctional
+    description: Each installed InstrumentCapabilityProvider supplies one immutable CapabilityDescriptor
+      whose ordered ParameterSpecs define ids, labels, kinds, Scalar or Structural update class, defaults,
+      bounds or choices, dependencies, asset needs, FixedPerPatch or EngineManaged voice policy, and supported
+      MIDI kinds; serialization, projection, validation, and coverage consume that schema
+    goals:
+    - control_synth
+    capabilities:
+    - instrument_capability_model
+  explicit_capability_failure:
+    kind: nonfunctional
+    description: Unknown or duplicate capability ids and missing, duplicate, undeclared, wrong-kind, dependency-invalid,
+      or out-of-range assignments fail with typed errors; no capability, descriptor, parameter, asset,
+      preset, or engine is silently substituted
+    goals:
+    - control_synth
+    capabilities:
+    - instrument_capability_model
+  evolvable_boundaries:
+    kind: nonfunctional
+    description: Instrument and effect capability metadata, their separate off-thread preparation and
+      capability-neutral prepared rendering boundaries, MIDI input, audio output, passive graphical rendering
+      over the host-neutral semantic model, retained diagnostic projection, discrete commands, scalar
+      snapshots, and structural graph ownership are expressed as replaceable ports
+    goals:
+    - control_synth
+    - shape_patch_with_effect
+    - use_graphical_shell
+    - use_semantic_graphical_view_model
+    capabilities:
+    - instrument_capability_model
+    - static_patch_effect
+    - prepared_engine_rack
+    - one_way_parameter_control
+    - graphical_application_shell
+    - semantic_graphical_view_model
+    - realtime_execution
+  deterministic_demo_scene:
+    kind: functional
+    description: A headless demo scene drives the same normalized 1/2/W/S/A/D/K input translator and production
+      AppLoop as EframeGraphicalWindow, with deterministic checkpoints and no native window or physical
+      audio device
+    goals:
+    - observe_synth
+    capabilities:
+    - observable_demo_scene
+    - schema_driven_patch_page
+    - graphical_application_shell
+  llm_readable_trace:
+    kind: functional
+    description: Observation mode emits one deterministic JSON CREST_EVENT_LOG, one CREST_STATE_TREE,
+      and one CREST_OBSERVATION summary with stable schema versions, explicit coverage gaps, and no opaque
+      debug strings
+    goals:
+    - observe_synth
+    capabilities:
+    - observable_demo_scene
+  exhaustive_current_surface:
+    kind: nonfunctional
+    description: The demo and table-driven tests cover every declared AppEvent variant and direction,
+      every supported MidiMessage kind, every current editable Patch parameter, Patch output field, all
+      six parameter classes on every one of sixteen tracks, all seven global parameters, every serialized
+      state/projection property, accepted and rejected outcomes, and measured downstream effects
+    goals:
+    - observe_synth
+    capabilities:
+    - observable_demo_scene
+  schema_derived_surface:
+    kind: nonfunctional
+    description: The exhaustive expected set is derived from the production WindowInput descriptor, installed
+      capability and parameter descriptors, typed semantic/mixer descriptors, and serialized leaf discovery,
+      then compared for exact set equality with both missing and unexpected empty; hand-maintained duplicate
+      string lists cannot define their own passing coverage universe
+    goals:
+    - observe_synth
+    capabilities:
+    - observable_demo_scene
+    - instrument_capability_model
+  faithful_audio_observation:
+    kind: nonfunctional
+    description: Audio proof uses only the reverb and delay inputs supplied through GlobalEffectsProcessor,
+      establishes nonzero sends before wet-parameter comparisons, isolates each comparison from effect-tail
+      evolution, and restores every edited value and send exactly to its captured baseline
+    goals:
+    - observe_synth
+    capabilities:
+    - observable_demo_scene
+    - global_mix
+  egui_context_verification:
+    kind: functional
+    description: A headless egui Context processes real egui key/focus events through EframeGraphicalApplication
+      update with its callback wired to AppLoop, then proves the next frame, EventLog, accepted state,
+      exact GraphicalShellProjection and retained TextProjection values, region geometry, and scroll target
+      all reflect that event without opening a native window
+    goals:
+    - observe_synth
+    - use_graphical_shell
+    capabilities:
+    - observable_demo_scene
+    - one_way_parameter_control
+    - graphical_application_shell
+  seam_mutation_falsifiability:
+    kind: nonfunctional
+    description: Six isolated verification-only mutants—dropped adjustment, cross-track parameter leak,
+      PatchId MIDI misroute, omitted StateTree leaf, dry-to-wet bypass, and zeroed renderer output—must
+      each falsify its own typed witness without manufacturing coverage gaps or altering a completed report
+    goals:
+    - observe_synth
+    capabilities:
+    - observable_demo_scene
+  separate_live_demo:
+    kind: functional
+    description: make demo-live-graphical-shell retains the Phase 1 optimized physical witness; make demo-live-semantic-view-model
+      invokes the newest bounded release scene in the normal eframe window and CPAL stream, emits completed
+      semantic/shell/lifecycle evidence, closes, and returns; make demo-live aliases that cumulative Phase
+      2 scene and make demo retains its exact headless command and behavior
+    goals:
+    - observe_live_synth
+    - use_graphical_shell
+    - use_semantic_graphical_view_model
+    capabilities:
+    - live_observable_demo
+    - graphical_application_shell
+    - semantic_graphical_view_model
+  bounded_live_progress:
+    kind: nonfunctional
+    description: The autonomous live command announces its input-isolated bounded lifecycle before device
+      startup, accepts a valid preferred default device configuration without requiring optional range
+      enumeration, and turns ten seconds without a runner milestone or 120 seconds total into a typed
+      stage-specific failure followed by window close, semantic cleanup, stream release, off-callback
+      structural shutdown, and nonzero exit
+    goals:
+    - observe_live_synth
+    capabilities:
+    - live_observable_demo
+    - realtime_execution
+  paced_production_path:
+    kind: nonfunctional
+    description: The live scene advances incrementally on control-side window ticks, dispatches autonomous
+      actions only as AppEvents through AppLoop, lets the owning tick nonblockingly advance the production
+      worker and structural coordinator, ignores mapped semantic window input for the duration of the
+      autonomous scene, and never mutates UI, AppState, engine, mixer, graph, or audio state directly
+    goals:
+    - observe_live_synth
+    capabilities:
+    - live_observable_demo
+    - one_way_parameter_control
+    - asynchronous_engine_selection
+  live_current_surface:
+    kind: functional
+    description: The expected live scalar coverage set is frozen from production Patch, PatchOutput, MixerTrackParameter,
+      and GlobalParameters descriptors plus installed Patch and fixed MixerTrack identities; every Patch-owned
+      scalar, both output fields, all six track parameter classes across the sixteen-track bank, and every
+      global instance is causally exercised through normal semantic paths with exact-generation audible
+      or toggle evidence, while the separate ordered structural-transition set retains one adjacent authored-name
+      SoundFont preset selection plus SoundFont-to-Braids and Braids-to-descriptor-default-SoundFont for
+      the focused first Patch
+    goals:
+    - observe_live_synth
+    - select_soundfont_preset
+    - shape_patch_with_effect
+    capabilities:
+    - live_observable_demo
+    - global_mix
+    - per_voice_envelope
+    - braids_engine
+    - static_patch_effect
+    - asynchronous_engine_selection
+    - soundfont_preset_selection
+  canonical_live_projection:
+    kind: nonfunctional
+    description: The visible frame, EventRecord, StateTree, SemanticGraphicalViewModel, GraphicalShellProjection,
+      retained TextProjection, ParameterSnapshot, structural intent/status, and active graph revision
+      at each live checkpoint all derive from the same accepted AppState generation and correlated structural
+      status; the live runner has no UI-owned, worker-owned, graph-owned, or engine-owned state copy
+    goals:
+    - observe_live_synth
+    - select_soundfont_preset
+    - use_graphical_shell
+    - use_semantic_graphical_view_model
+    capabilities:
+    - live_observable_demo
+    - one_way_parameter_control
+    - graphical_application_shell
+    - semantic_graphical_view_model
+    - asynchronous_engine_selection
+    - soundfont_preset_selection
+  bounded_audio_observation:
+    kind: nonfunctional
+    description: The callback publishes only fixed-size numeric AudioObservationSnapshots through a lock-free
+      latest-value transport; it never logs, formats, allocates, locks, blocks, performs I/O, or destroys
+      state, and the control side correlates observations by parameter generation and monotonically increasing
+      block sequence
+    goals:
+    - observe_live_synth
+    capabilities:
+    - live_observable_demo
+    - realtime_execution
+  live_demo_completion:
+    kind: functional
+    description: The live runner retains the complete final EventLog for typed verification and emits
+      structured checkpoints plus a compact lossless EventLog summary, StateTree, exact scalar and structural-transition
+      coverage, and human-readable summary; completion requires an acknowledged audible preset transition,
+      both acknowledged audible engine directions, and descriptor-default SoundFont Ready before semantic
+      all-notes-off, zero active notes, one close request, physical stream release, and success
+    goals:
+    - observe_live_synth
+    - select_soundfont_preset
+    capabilities:
+    - live_observable_demo
+    - asynchronous_engine_selection
+    - soundfont_preset_selection
+  headless_demo_preserved:
+    kind: nonfunctional
+    description: 'Both demos route the focused Patch''s four ADSR coverage instances and SoundFont preset
+      control through PATCH while retaining the complete production structural lifecycle: make demo keeps
+      exhaustive catalog/order, boundary, busy/failure/stale, scalar/structural coexistence, schema, controlled-negative,
+      and two-run deterministic proof, while make demo-live keeps paced visible and physical-audio preset
+      plus engine success through the threaded worker; every prior reducer, projection, DSP, real-time,
+      mutation, scalar-live, and teardown gate remains required'
+    goals:
+    - observe_live_synth
+    - select_patch_engine
+    - edit_patch_envelope
+    - select_soundfont_preset
+    capabilities:
+    - live_observable_demo
+    - observable_demo_scene
+    - schema_driven_patch_page
+    - asynchronous_engine_selection
+    - soundfont_preset_selection
+    - instrument_capability_model
+    - prepared_engine_rack
+    - braids_engine
+    - per_voice_envelope

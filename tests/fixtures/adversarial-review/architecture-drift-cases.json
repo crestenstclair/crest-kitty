@@ -1,0 +1,167 @@
+{
+  "version": "1.0",
+  "languageNeutral": true,
+  "cases": [
+    {
+      "id": "composition-internal-selection-blocking",
+      "pair": "composition-internal-selection",
+      "guard": "composition-root-and-dependency-direction",
+      "dialect": "neutral-trace-v1",
+      "outcome": "blocking",
+      "expectedFinding": "BLOCKING_EVERGREEN_VIOLATION",
+      "authority": { "cuePath": "project.relationships.outputPort", "classification": "EVERGREEN_INVARIANT", "premise": "The composition owner selects and supplies the output adapter." },
+      "productionTrace": ["composition owner starts application without supplying the port", "application service selects concrete output adapter", "service sends through internally selected adapter"],
+      "contradiction": "Production concrete selection occurs inside the service even though evaluated architecture assigns it to the composition owner.",
+      "witness": { "kind": "production-composition-mismatch", "injection": "supply a rejecting substitute at the declared port", "assertions": ["substitute rejection must be observed", "internally selected adapter must remain unused"], "observed": "substitute is never called and the internal adapter reports success" },
+      "repairDirection": "Move concrete selection to the declared composition owner and consume the supplied port."
+    },
+    {
+      "id": "composition-internal-selection-conforming",
+      "pair": "composition-internal-selection",
+      "guard": "composition-root-and-dependency-direction",
+      "dialect": "neutral-trace-v1",
+      "outcome": "conforming",
+      "authority": { "cuePath": "project.relationships.outputPort", "classification": "EVERGREEN_INVARIANT", "premise": "The composition owner selects and supplies the output adapter." },
+      "productionTrace": ["composition owner selects adapter", "composition owner supplies port", "application service consumes supplied port"],
+      "witness": { "kind": "production-composition-mismatch", "injection": "supply a rejecting substitute at the declared port", "assertions": ["typed rejection reaches the declared caller", "default adapter remains unused"], "observed": "typed rejection reaches the caller and the default adapter is unused" }
+    },
+    {
+      "id": "composition-test-only-port-blocking",
+      "pair": "composition-test-only-port",
+      "guard": "composition-root-and-dependency-direction",
+      "dialect": "neutral-trace-v1",
+      "outcome": "blocking",
+      "expectedFinding": "BLOCKING_CURRENT_VIOLATION",
+      "authority": { "cuePath": "project.resources.delivery.validations.portWitness", "classification": "CURRENT_SLICE", "premise": "Production delivery must enter through the declared delivery port." },
+      "productionTrace": ["test harness supplies delivery port", "production composition creates service without port", "production path calls concrete delivery boundary directly"],
+      "contradiction": "The declared port is exercised only by tests while production bypasses it.",
+      "witness": { "kind": "production-composition-substitution", "injection": "supply a recording delivery port to production composition", "assertions": ["recording port receives the request"], "observed": "recording port receives no request" },
+      "repairDirection": "Wire the declared port through production composition and test that exact seam."
+    },
+    {
+      "id": "composition-test-only-port-conforming",
+      "pair": "composition-test-only-port",
+      "guard": "composition-root-and-dependency-direction",
+      "dialect": "neutral-trace-v1",
+      "outcome": "conforming",
+      "authority": { "cuePath": "project.resources.delivery.validations.portWitness", "classification": "CURRENT_SLICE", "premise": "Production delivery must enter through the declared delivery port." },
+      "productionTrace": ["production composition receives delivery port", "application service consumes supplied port", "delivery response returns through production caller"],
+      "witness": { "kind": "production-composition-substitution", "injection": "supply a recording delivery port to production composition", "assertions": ["recording port receives the request", "no concrete boundary is selected elsewhere"], "observed": "recording port receives the request and no bypass occurs" }
+    },
+    {
+      "id": "negotiation-default-first-blocking",
+      "pair": "negotiation-default-first",
+      "guard": "negotiation-before-preparation",
+      "dialect": "neutral-sequence-v1",
+      "outcome": "blocking",
+      "expectedFinding": "BLOCKING_CURRENT_VIOLATION",
+      "authority": { "cuePath": "project.invariants.runtimeFormat", "classification": "CURRENT_SLICE", "premise": "Prepared state must match the negotiated runtime format." },
+      "productionTrace": ["prepare artifact for requested default A", "negotiate supported actual B", "start processing with artifact A"],
+      "contradiction": "Preparation precedes negotiation and the actual supported value is ignored.",
+      "witness": { "kind": "supported-non-default", "injection": "negotiate supported value B", "assertions": ["prepared contract equals B before start"], "observed": "prepared contract remains A when processing starts" },
+      "repairDirection": "Negotiate and validate the actual value before preparing complete compatible state."
+    },
+    {
+      "id": "negotiation-default-first-conforming",
+      "pair": "negotiation-default-first",
+      "guard": "negotiation-before-preparation",
+      "dialect": "neutral-sequence-v1",
+      "outcome": "conforming",
+      "authority": { "cuePath": "project.invariants.runtimeFormat", "classification": "CURRENT_SLICE", "premise": "Prepared state must match the negotiated runtime format." },
+      "productionTrace": ["negotiate supported actual B", "validate B", "prepare complete artifact B", "start processing", "check later values against B"],
+      "witness": { "kind": "supported-non-default", "injection": "negotiate supported value B", "assertions": ["prepared contract equals B before start", "later values are checked against B"], "observed": "artifact B is complete before start and later checks use B" }
+    },
+    {
+      "id": "negotiation-capacity-loss-blocking",
+      "pair": "negotiation-capacity-loss",
+      "guard": "negotiation-before-preparation",
+      "dialect": "neutral-sequence-v1",
+      "outcome": "blocking",
+      "expectedFinding": "BLOCKING_EVERGREEN_VIOLATION",
+      "authority": { "cuePath": "project.invariants.capacity", "classification": "EVERGREEN_INVARIANT", "premise": "All accepted work fits prepared capacity or fails visibly before start." },
+      "productionTrace": ["negotiate capacity 4", "prepare capacity 4", "accept 5 work items", "silently truncate item 5", "report success"],
+      "contradiction": "Work beyond prepared capacity is silently truncated and converted to success.",
+      "witness": { "kind": "capacity-boundary", "injection": "submit capacity plus one work items", "assertions": ["all work is preserved or startup fails visibly", "no padding or truncation occurs"], "observed": "last item is omitted and success is reported" },
+      "repairDirection": "Reject unsupported capacity before processing or prepare complete capacity without loss."
+    },
+    {
+      "id": "negotiation-capacity-loss-conforming",
+      "pair": "negotiation-capacity-loss",
+      "guard": "negotiation-before-preparation",
+      "dialect": "neutral-sequence-v1",
+      "outcome": "conforming",
+      "authority": { "cuePath": "project.invariants.capacity", "classification": "EVERGREEN_INVARIANT", "premise": "All accepted work fits prepared capacity or fails visibly before start." },
+      "productionTrace": ["negotiate capacity 4", "validate requested work count 5", "reject unsupported count before preparation", "processing never starts"],
+      "witness": { "kind": "capacity-boundary", "injection": "submit capacity plus one work items", "assertions": ["visible capacity error occurs before start", "no work is truncated or padded"], "observed": "visible capacity error occurs before start and no work is processed" }
+    },
+    {
+      "id": "async-post-start-ignored-blocking",
+      "pair": "async-post-start-ignored",
+      "guard": "asynchronous-runtime-failure",
+      "dialect": "neutral-trace-v1",
+      "outcome": "blocking",
+      "expectedFinding": "BLOCKING_CURRENT_VIOLATION",
+      "authority": { "cuePath": "project.relationships.runtimeFailure", "classification": "CURRENT_SLICE", "premise": "Post-start failure reaches the bounded operator-visible status path." },
+      "productionTrace": ["startup succeeds", "background work fails", "failure callback discards error", "status remains success"],
+      "contradiction": "A post-start failure is discarded before the declared observation boundary.",
+      "witness": { "kind": "post-start-negative", "injection": "fail background work after startup succeeds", "assertions": ["bounded failure status reaches operator boundary"], "observed": "no status transition or error observation occurs" },
+      "repairDirection": "Route every asynchronous error entry point into the declared bounded observation or recovery path."
+    },
+    {
+      "id": "async-post-start-ignored-conforming",
+      "pair": "async-post-start-ignored",
+      "guard": "asynchronous-runtime-failure",
+      "dialect": "neutral-trace-v1",
+      "outcome": "conforming",
+      "authority": { "cuePath": "project.relationships.runtimeFailure", "classification": "CURRENT_SLICE", "premise": "Post-start failure reaches the bounded operator-visible status path." },
+      "productionTrace": ["startup succeeds", "background work fails", "failure enters bounded status channel", "operator boundary observes failed state"],
+      "witness": { "kind": "post-start-negative", "injection": "fail background work after startup succeeds", "assertions": ["exact failed state reaches operator boundary", "success is withdrawn"], "observed": "operator boundary observes the exact failed state and success is withdrawn" }
+    },
+    {
+      "id": "observability-caller-discards-blocking",
+      "pair": "observability-caller-discards",
+      "guard": "end-to-end-failure-observability",
+      "dialect": "neutral-sequence-v1",
+      "outcome": "blocking",
+      "expectedFinding": "BLOCKING_EVERGREEN_VIOLATION",
+      "authority": { "cuePath": "project.invariants.typedFailure", "classification": "EVERGREEN_INVARIANT", "premise": "Typed rejection is observable through every production caller." },
+      "productionTrace": ["component returns typed rejection", "production caller converts rejection to unused false", "outer caller reports ordinary success"],
+      "contradiction": "A production caller erases the typed failure before the declared observation boundary.",
+      "witness": { "kind": "production-seam-negative", "injection": "provoke typed rejection through production entry", "assertions": ["forbidden mutation does not occur", "typed failure reaches status counter"], "observed": "mutation is absent but status counter is unchanged and success is returned" },
+      "repairDirection": "Propagate or record the typed failure through every production caller to the declared boundary."
+    },
+    {
+      "id": "observability-caller-discards-conforming",
+      "pair": "observability-caller-discards",
+      "guard": "end-to-end-failure-observability",
+      "dialect": "neutral-sequence-v1",
+      "outcome": "conforming",
+      "authority": { "cuePath": "project.invariants.typedFailure", "classification": "EVERGREEN_INVARIANT", "premise": "Typed rejection is observable through every production caller." },
+      "productionTrace": ["component returns typed rejection", "production caller preserves rejection", "outer boundary records exact status and increments failure counter"],
+      "witness": { "kind": "production-seam-negative", "injection": "provoke typed rejection through production entry", "assertions": ["forbidden mutation does not occur", "typed failure reaches status counter"], "observed": "mutation is absent and the exact failure status and counter are observed" }
+    },
+    {
+      "id": "observability-nonmutation-only-blocking",
+      "pair": "observability-nonmutation-only",
+      "guard": "end-to-end-failure-observability",
+      "dialect": "neutral-sequence-v1",
+      "outcome": "blocking",
+      "expectedFinding": "BLOCKING_REQUIRED_PROOF_GAP",
+      "authority": { "cuePath": "project.acceptance.failureWitness", "classification": "CURRENT_SLICE", "premise": "Failure witness independently proves non-mutation and visible failure observation." },
+      "productionTrace": ["production entry provokes rejection", "witness checks storage is unchanged", "witness omits status and counter checks"],
+      "contradiction": "The required observation half of the witness is missing even though non-mutation is proven.",
+      "witness": { "kind": "production-seam-negative", "injection": "provoke rejection through production entry", "assertions": ["forbidden mutation does not occur"], "observed": "storage is unchanged; no error, status, state, or counter evidence is collected" },
+      "repairDirection": "Add an independent assertion for the declared failure observation without weakening non-mutation proof."
+    },
+    {
+      "id": "observability-nonmutation-only-conforming",
+      "pair": "observability-nonmutation-only",
+      "guard": "end-to-end-failure-observability",
+      "dialect": "neutral-sequence-v1",
+      "outcome": "conforming",
+      "authority": { "cuePath": "project.acceptance.failureWitness", "classification": "CURRENT_SLICE", "premise": "Failure witness independently proves non-mutation and visible failure observation." },
+      "productionTrace": ["production entry provokes rejection", "witness checks storage is unchanged", "witness separately checks exact failed status and counter"],
+      "witness": { "kind": "production-seam-negative", "injection": "provoke rejection through production entry", "assertions": ["forbidden mutation does not occur", "exact failed status and counter are observed"], "observed": "storage is unchanged and the exact failed status and counter are independently observed" }
+    }
+  ]
+}
