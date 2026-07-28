@@ -1,6 +1,6 @@
 # Working Plan: Port CrestOpenSpec Additions to crest-kitty
 
-Date: 2026-07-28 (rev 2 — CUE retired; terse-YAML architecture spec approved)
+Date: 2026-07-28 (rev 3 — Phases 0-5 complete on branch port/crestopenspec-gates; crest-synth cut over and 26/26 validations passing through the ported engine. Open: crest-kitty dogfood spec (needs owner intent) and CI enforcement once it exists.)
 Source: `~/workspace/CrestOpenSpec` (fork of Fission-AI/OpenSpec, merge-base `19d4171`)
 Feature inventory: `~/workspace/CrestOpenSpec/docs/crest-fork-features.md`
 Format reference (normative example): `~/workspace/crest-synth/spec-terse/` + its README
@@ -119,110 +119,110 @@ execute anything.
 ## Phases and checklist
 
 ### Phase 0 — Groundwork
-- [ ] Copy porting-spec artifacts into `research/` in crest-kitty: both generic
+- [x] Copy porting-spec artifacts into `research/` in crest-kitty: both generic
       prompts, diagnostic-code inventory, report schema (`types.ts`),
       `EXECUTION_ACCEPTANCE_CONTRACT`, interpretation contract,
       `architecture-drift-cases.json`, `spec-terse/README.md`
-- [ ] Freeze the canonical `project` JSON shape as a fixture: check in
+- [x] Freeze the canonical `project` JSON shape as a fixture: check in
       crest-synth's evaluated JSON (`crest-cue-bridge` output) as the loader's
       golden expansion target
-- [ ] Wire the existing-but-unemitted `TestEvidenceCaptured` proof event from
+- [x] Wire the existing-but-unemitted `TestEvidenceCaptured` proof event from
       `pre_review_gate`/`baseline` runs
-- [ ] Create missions in kitty-specs (one per phase 1–4)
+- [x] Create missions in kitty-specs (one per phase 1–4)
 
 ### Phase 1 — Architecture spec loader (~1.5 WP-weeks)
-- [ ] `architecture/models.py`: pydantic models for every section (project,
+- [x] `architecture/models.py`: pydantic models for every section (project,
       actors, goals, capabilities+acceptance, requirements, context resources,
       adapters, assets/assetKinds, validations incl. defaults, witnesses,
       evidence, invariants); union-list semantics for `state:`/`from:`
-- [ ] `architecture/loader.py`: read `architecture.root` from config (default
+- [x] `architecture/loader.py`: read `architecture.root` from config (default
       `.kittify/architecture`), glob recursively, duplicate-key-detecting YAML
       parse, merge into one namespace; absent dir → `None`; any diagnostic →
       fail closed
-- [ ] `architecture/refs.py`: canonical-ID derivation, suffix resolution with
+- [x] `architecture/refs.py`: canonical-ID derivation, suffix resolution with
       field-typed scoping, defaults expansion → emit the canonical `project`
       dict; **golden test: expansion of the converted crest-synth spec is
       deep-equal to the checked-in CUE-bridge JSON fixture**
-- [ ] `architecture/relationships.py`: port canonical ID scheme + relation
+- [x] `architecture/relationships.py`: port canonical ID scheme + relation
       verbs + deterministic sort from `cue-architecture.ts`
-- [ ] `architecture/contract.py`: interpretation-contract prose rewritten for
+- [x] `architecture/contract.py`: interpretation-contract prose rewritten for
       the YAML format (semantic model unchanged)
-- [ ] `spec-kitty doctor architecture`: validate + report diagnostics; happy
+- [x] `spec-kitty doctor architecture`: validate + report diagnostics; happy
       path prints resource/relationship counts
-- [ ] Tests: loader (absent/valid/ambiguous-ref/dup-key/unresolved-ref),
+- [x] Tests: loader (absent/valid/ambiguous-ref/dup-key/unresolved-ref),
       relationship determinism; architectural ratchet baseline updates
 
 ### Phase 2 — Context injection + planning summary (~0.5 WP-week)
-- [ ] Inject architecture block (contract + file list + relationship counts)
+- [x] Inject architecture block (contract + file list + relationship counts)
       into `spec-kitty context` output
-- [ ] Inject into `plan`/`implement` mission-step prompts (source under
+- [x] Inject into `plan`/`implement` mission-step prompts (source under
       `src/doctrine/missions/mission-steps/`, never generated copies)
-- [ ] Planning-summary: dense-summary + reconciliation guidance in the `plan`
+- [x] Planning-summary: dense-summary + reconciliation guidance in the `plan`
       prompt; `gates_core.py` check that a reconciliation summary exists when
       an architecture spec exists
-- [ ] Regenerate skills (`spec-kitty doctor skills --fix`)
+- [x] Regenerate skills (`spec-kitty doctor skills --fix`)
 
 ### Phase 3 — Deterministic acceptance gates (~2 WP-weeks)
-- [ ] `acceptance/inventory.py`: port declaration parsing (project checks with
+- [x] `acceptance/inventory.py`: port declaration parsing (project checks with
       exactly-one resolution; attached validations with explicit scope +
       applicability; command/cwd/limits/assertions validation) — every
       malformation fails closed before execution; keep CrestOpenSpec
       diagnostic-code names verbatim
-- [ ] Applicability: gate armed iff `completion.projectChecks` present (even
+- [x] Applicability: gate armed iff `completion.projectChecks` present (even
       `[]`) or any validation carries `proof`
-- [ ] `configured_command.py`: argv-list mode, per-stream byte caps, timeout
+- [x] `configured_command.py`: argv-list mode, per-stream byte caps, timeout
       cap, cwd-inside-root canonicalization; env never serialized
-- [ ] `acceptance/assertions.py`: 5 assertion types, registry, fail-closed
-- [ ] `acceptance/test_evidence.py`: provider registry; `structured-json-v1`;
+- [x] `acceptance/assertions.py`: 5 assertion types, registry, fail-closed
+- [x] `acceptance/test_evidence.py`: provider registry; `structured-json-v1`;
       core-enforced rules (`executed >= minimumExecuted >= 1`, zero failed,
       count consistency, deep-equal selector); JUnit provider
-- [ ] `accept` pipeline: architecture gate → inventory → strict validation →
+- [x] `accept` pipeline: architecture gate → inventory → strict validation →
       sequential execution; exit 0 iff pass; `--json` single versioned report
       with `semanticReview: not_evaluated`
-- [ ] Non-execution boundary tests (context/status/lint/archive execute
+- [x] Non-execution boundary tests (context/status/lint/archive execute
       nothing) + archive guard **AM-6**
-- [ ] Port fixture-project generator scenario matrix (`create-project.mjs`)
+- [x] Port fixture-project generator scenario matrix (`create-project.mjs`)
 
 ### Phase 4 — Runtime lifecycle acceptance (~2 WP-weeks)
-- [ ] `runtime_lifecycle/session.py`: bounded + persistent lifecycles, six
+- [x] `runtime_lifecycle/session.py`: bounded + persistent lifecycles, six
       timeout budgets, ordered markers, failure stages
-- [ ] `runtime_lifecycle/process_tree.py` on psutil; test that an unrelated
+- [x] `runtime_lifecycle/process_tree.py` on psutil; test that an unrelated
       same-named process survives cleanup
-- [ ] `runtime_lifecycle/launcher.py`: pipe + PTY via `script(1)`;
+- [x] `runtime_lifecycle/launcher.py`: pipe + PTY via `script(1)`;
       PTY-unavailable → proof gap, never silent downgrade
-- [ ] Host capabilities (`process`, `stdio:pipe`, `platform:<os>` only) →
+- [x] Host capabilities (`process`, `stdio:pipe`, `platform:<os>` only) →
       anything else is `BLOCKING_REQUIRED_PROOF_GAP`
-- [ ] `runtime_lifecycle/interactions.py`: `process-json-v1` window/session/
+- [x] `runtime_lifecycle/interactions.py`: `process-json-v1` window/session/
       assertion semantics; reject evidence predating invocation
-- [ ] Inventory runtime-declaration parsing + diagnostics
-- [ ] `RuntimeEvidenceCaptured` proof event + `proof_type: "runtime_lifecycle"`
-- [ ] Port runtime fixtures incl. `success-hang` →
+- [x] Inventory runtime-declaration parsing + diagnostics
+- [x] `RuntimeEvidenceCaptured` proof event + `proof_type: "runtime_lifecycle"`
+- [x] Port runtime fixtures incl. `success-hang` →
       `success_reported_but_process_resident`
 
 ### Phase 5 — Prompt/workflow enforcement (~1 WP-week)
-- [ ] Shared constant with `EXECUTION_ACCEPTANCE_CONTRACT` + 9 guard IDs
-- [ ] Embed in `accept` + `review` prompts; `spk-gate-accept` extended; new
+- [x] Shared constant with `EXECUTION_ACCEPTANCE_CONTRACT` + 9 guard IDs
+- [x] Embed in `accept` + `review` prompts; `spk-gate-accept` extended; new
       `spk-gate-archive` (approval-only, no acceptance rerun, no runtime
       sessions)
-- [ ] `accept` step contract declares the deterministic gate as `quality_gate`
-- [ ] Parity tests + drift-case fixture matrix
-- [ ] Runbook update (`spec-kitty-mission-workflow.md` Phase 5 wording)
+- [x] `accept` step contract declares the deterministic gate as `quality_gate`
+- [x] Parity tests + drift-case fixture matrix
+- [x] Runbook update (`spec-kitty-mission-workflow.md` Phase 5 wording)
 
 ### Phase 6 — crest-synth cutover + dogfood
-- [ ] Regenerate `spec-terse/` from current CUE (converters:
+- [x] Regenerate `spec-terse/` from current CUE (converters:
       `scripts/convert_cue_spec_to_yaml.py` → `convert_spec_to_terse.py`) and
       move it to `crest-synth/.kittify/architecture/`
-- [ ] Validate with `spec-kitty doctor architecture`; run
+- [x] Validate with `spec-kitty doctor architecture`; run
       `spec-kitty accept --deterministic-only` against the real validations
-- [ ] Retire `crest-synth/spec/*.cue` (git history preserves it); keep the
+- [x] Retire `crest-synth/spec/*.cue` (git history preserves it); keep the
       converters until the first successful accepted mission
 - [ ] Author crest-kitty's **own** `.kittify/architecture/` spec so the gates
       dogfood in this repo (CrestOpenSpec never did — known gap)
 - [ ] CI: deterministic acceptance as `[ENFORCED]` in `ci-quality.yml` once
       the dogfood spec exists
-- [ ] Docs: port `docs/acceptance.md` with YAML worked examples (keep the
+- [x] Docs: port `docs/acceptance.md` with YAML worked examples (keep the
       "green process, zero tests executed, fails acceptance" example)
-- [ ] Cleanup in CrestOpenSpec: archive `add-adversarial-acceptance-gates`
+- [x] Cleanup in CrestOpenSpec: archive `add-adversarial-acceptance-gates`
       (53/53 done, unsynced); remove committed `tmp/refactoring-review.md`
 
 ## Risks / gotchas
