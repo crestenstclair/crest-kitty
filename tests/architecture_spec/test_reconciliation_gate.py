@@ -4,10 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from specify_cli.acceptance.gates_core import (
-    ARCHITECTURE_RECONCILIATION_HEADING,
-    _check_architecture_reconciliation,
-)
+from specify_cli.acceptance import _check_architecture_reconciliation
+from specify_cli.acceptance.gates_core import ARCHITECTURE_RECONCILIATION_HEADING
 
 pytestmark = pytest.mark.unit
 

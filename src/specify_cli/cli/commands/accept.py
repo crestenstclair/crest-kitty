@@ -654,7 +654,9 @@ def accept(
             run_deterministic_step,
         )
 
-        feature_dir = primary_feature_dir_for_mission(repo_root, mission_slug)
+        feature_dir = primary_feature_dir_for_mission(
+            repo_root, _canonicalize_primary_read_handle(repo_root, mission_slug)
+        )
         det_report = run_deterministic_step(
             repo_root, mission_slug, feature_dir, record=not (diagnose or no_commit)
         )
@@ -763,7 +765,9 @@ def accept(
         run_deterministic_step,
     )
 
-    det_feature_dir = primary_feature_dir_for_mission(repo_root, mission_slug)
+    det_feature_dir = primary_feature_dir_for_mission(
+        repo_root, _canonicalize_primary_read_handle(repo_root, mission_slug)
+    )
     det_report = run_deterministic_step(
         repo_root, mission_slug, det_feature_dir, record=not no_commit
     )

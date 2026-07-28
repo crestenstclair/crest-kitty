@@ -52,12 +52,14 @@ from specify_cli.upgrade.pre30_guard import check_pre30_layout
 from .gates_core import (
     AcceptanceCheckDiagnostic,
     _changed_workflow_files,  # noqa: F401 -- re-export consumed by test_acceptance_regressions.py
-    _check_architecture_reconciliation,
     _check_lane_gates,
     _check_workflow_run_evidence,
+    _evaluate_architecture_reconciliation,
     _find_unchecked_tasks,
     _normalized_unchecked_tasks,
 )
+
+
 from .summary_core import (
     WorkPackageState,
     _build_recommended_fix_order,
@@ -65,6 +67,38 @@ from .summary_core import (
     build_work_package_state,
     evaluate_path_conventions,
 )
+
+def _check_architecture_reconciliation(
+    repo_root: Path,
+    feature_dir: Path,
+    activity_issues: list[str],
+) -> None:
+    """I/O wrapper for the pure ``_evaluate_architecture_reconciliation`` core.
+
+    Loads the architecture spec and the mission's ``plan.md`` (ordinary reads;
+    never executes declared validations) and appends the pure verdict, if any.
+    The architecture loader is imported deferred so tests can monkeypatch
+    ``specify_cli.architecture.load_architecture``.
+    """
+    from specify_cli import architecture as architecture_module
+
+    try:
+        loaded = architecture_module.load_architecture(repo_root)
+    except architecture_module.ArchitectureSpecError as error:
+        state, detail = "invalid", "; ".join(d.render() for d in error.diagnostics[:3])
+    else:
+        state, detail = ("absent", "") if loaded is None else ("present", "")
+
+    plan_text = ""
+    if state == "present":
+        try:
+            plan_text = (feature_dir / "plan.md").read_text(encoding="utf-8")
+        except OSError:
+            plan_text = ""
+    issue = _evaluate_architecture_reconciliation(state, detail, plan_text)
+    if issue is not None:
+        activity_issues.append(issue)
+
 
 logger = logging.getLogger(__name__)
 

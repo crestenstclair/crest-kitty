@@ -16,6 +16,7 @@ from pathlib import Path
 
 from specify_cli.acceptance.deterministic.model import AcceptanceScope
 from specify_cli.acceptance.deterministic.service import AcceptanceReport, AcceptanceService
+from specify_cli.acceptance.execution_contract import ARCHITECTURE_DRIFT_GUARD_IDS
 from specify_cli.cli.console import console
 from specify_cli.missions._archive import DETERMINISTIC_ACCEPTANCE_FILE
 
@@ -65,4 +66,9 @@ def print_deterministic_success(report: AcceptanceReport) -> None:
         f"({gate.get('executed', 0)} checks: {gate.get('declaredProjectChecks', 0)} project, "
         f"{gate.get('applicableAttachedTests', 0)} attached tests, "
         f"{gate.get('applicableAttachedRuntimeSessions', 0)} runtime sessions)"
+    )
+    console.print(
+        "[yellow]Semantic layer still required:[/yellow] apply the execution-acceptance "
+        f"contract in the accept prompt ({len(ARCHITECTURE_DRIFT_GUARD_IDS)} architecture-drift "
+        "guards) before reporting acceptance complete."
     )

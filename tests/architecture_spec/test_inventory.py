@@ -66,8 +66,8 @@ def test_crest_synth_golden_inventory(tmp_path: Path) -> None:
     inventory = resolve_validation_inventory(project, str(tmp_path), PROJECT_SCOPE)
     assert inventory.declared is True
     assert not inventory.diagnostics
-    assert inventory.project_check_reference_count == 26
-    assert len(inventory.checks) == 26
+    assert inventory.project_check_reference_count == 26  # golden-count: cardinality-is-contract
+    assert len(inventory.checks) == 26  # golden-count: cardinality-is-contract
     # crest-synth's attached validations carry no proof, so none are binding.
     assert inventory.applicable_attached_test_count == 0
     assert inventory.applicable_attached_runtime_session_count == 0

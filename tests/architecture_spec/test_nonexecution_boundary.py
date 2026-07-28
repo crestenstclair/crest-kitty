@@ -15,7 +15,7 @@ import pytest
 
 from specify_cli.acceptance.deterministic.model import AcceptanceScope
 from specify_cli.acceptance.deterministic.service import AcceptanceService
-from specify_cli.acceptance.gates_core import _check_architecture_reconciliation
+from specify_cli.acceptance import _check_architecture_reconciliation
 from specify_cli.architecture import load_architecture, render_architecture_context
 from specify_cli.cli.commands._architecture_doctor import run_architecture_doctor
 from specify_cli.missions._archive import resolve_deterministic_acceptance

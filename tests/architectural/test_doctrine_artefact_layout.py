@@ -77,7 +77,9 @@ _ALLOWLIST: frozenset[str] = frozenset()
 
 #: Exact number of shipped built-in step contracts. Pinned rather than floored so a silent
 #: loss fails; bump deliberately with a note when a contract is genuinely added.
-_EXPECTED_STEP_CONTRACT_COUNT = 17
+#: 17 -> 18: accept.step-contract.yaml (port/crestopenspec-gates — readiness ->
+#: deterministic gate -> adversarial review -> finalize).
+_EXPECTED_STEP_CONTRACT_COUNT = 18
 
 
 def _is_legal_artefact_path(relative: Path, kind: ArtifactKind) -> bool:

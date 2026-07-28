@@ -644,51 +644,36 @@ def _check_workflow_run_evidence(
 ARCHITECTURE_RECONCILIATION_HEADING = "## Architecture Reconciliation"
 
 
-def _check_architecture_reconciliation(
-    repo_root: Path,
-    feature_dir: Path,
-    activity_issues: list[str],
-) -> None:
-    """Fail closed on an invalid architecture spec; require plan reconciliation.
+def _evaluate_architecture_reconciliation(
+    spec_state: str,
+    spec_detail: str,
+    plan_text: str,
+) -> str | None:
+    """Pure AM/plan-reconciliation verdict; the I/O wrapper lives in
+    ``acceptance.__init__`` (this module stays a pure core — trio seam rule).
 
-    When the project declares an architecture spec (``.kittify/architecture``),
-    planning is incomplete until the mission's ``plan.md`` records how the
-    change was reconciled against it (an ``## Architecture Reconciliation``
-    section). An invalid spec blocks acceptance outright — the gate must not
-    silently pass on a model that could not be evaluated. Ordinary read: this
-    never executes declared validations.
-
-    The architecture loader is imported deferred, mirroring this module's
-    documented monkeypatch-visibility discipline (tests patch
-    ``specify_cli.architecture.load_architecture``).
+    ``spec_state`` is ``"absent"`` (no architecture spec — not applicable),
+    ``"invalid"`` (loader failed; ``spec_detail`` carries diagnostics), or
+    ``"present"``. Returns the blocking issue string, or ``None`` when clean.
+    An invalid spec blocks acceptance outright — the gate must not silently
+    pass on a model that could not be evaluated.
     """
-    from specify_cli import architecture as architecture_module
-
-    try:
-        loaded = architecture_module.load_architecture(repo_root)
-    except architecture_module.ArchitectureSpecError as error:
-        first = "; ".join(d.render() for d in error.diagnostics[:3])
-        activity_issues.append(
+    if spec_state == "absent":
+        return None
+    if spec_state == "invalid":
+        return (
             "Architecture spec is invalid and blocks acceptance (fail-closed): "
-            + first
+            + spec_detail
             + ". Repair the spec (see `spec-kitty doctor architecture`)."
         )
-        return
-    if loaded is None:
-        return
-
-    plan_path = feature_dir / "plan.md"
-    try:
-        plan_text = plan_path.read_text(encoding="utf-8")
-    except OSError:
-        plan_text = ""
     if ARCHITECTURE_RECONCILIATION_HEADING.casefold() not in plan_text.casefold():
-        activity_issues.append(
+        return (
             "Architecture reconciliation required: this project declares an "
             "architecture spec, so plan.md must contain an "
             f"'{ARCHITECTURE_RECONCILIATION_HEADING}' section recording the "
             "affected canonical IDs and any spec edits made during planning."
         )
+    return None
 
 
 __all__: list[str] = []

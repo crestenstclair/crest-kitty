@@ -13,7 +13,7 @@ from specify_cli.acceptance.execution_contract import (
     EXECUTION_ACCEPTANCE_CONTRACT,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.docs_scoped]
+pytestmark = pytest.mark.unit
 
 REPO = Path(__file__).parents[2]
 STEPS = REPO / "src" / "doctrine" / "missions" / "mission-steps" / "software-dev"
@@ -36,7 +36,7 @@ def test_contract_embedded_verbatim(step: str) -> None:
 
 
 def test_all_guard_ids_present_in_contract() -> None:
-    assert len(ARCHITECTURE_DRIFT_GUARD_IDS) == 9
+    assert len(ARCHITECTURE_DRIFT_GUARD_IDS) == 9  # golden-count: cardinality-is-contract
     for guard_id in ARCHITECTURE_DRIFT_GUARD_IDS:
         assert f"#### {guard_id}" in EXECUTION_ACCEPTANCE_CONTRACT
 
