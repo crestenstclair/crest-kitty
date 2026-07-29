@@ -3,12 +3,12 @@
 Spec Kitty's acceptance has two deliberately separate layers:
 
 1. **Deterministic acceptance** — core CLI code with an enforceable exit
-   status. It evaluates the project's architecture spec, resolves every
+   status. It evaluates the project's crest-spec, resolves every
    declared validation fail-closed, executes them under strict process
    bounds, and emits one versioned JSON report.
 2. **Adversarial semantic review** — the agent workflow embedded in the
    `accept` and `review` mission-step prompts (obligation ledger,
-   evidence-complete findings, nine architecture-drift guards; see
+   evidence-complete findings, nine crest-spec drift guards; see
    `specify_cli.acceptance.execution_contract`).
 
 Both must pass before a mission is accepted. Archive later consumes the
@@ -17,7 +17,7 @@ recorded verdict (guard AM-6) and never re-runs either layer.
 ## When the gate is armed
 
 Deterministic acceptance applies only when the project opts in through its
-architecture spec (`.kittify/architecture/`, see
+crest-spec (`.kittify/crest-spec/`, see
 `research/crestopenspec-port/spec-format-README.md` for the format):
 
 - the spec's `completion.projectChecks` is present (even as `[]`), **or**
@@ -34,7 +34,7 @@ ID from `completion.projectChecks` (exactly-one resolution — missing,
 duplicate, or ambiguous references fail closed):
 
 ```yaml
-# .kittify/architecture/proof/validations.yaml
+# .kittify/crest-spec/proof/validations.yaml
 defaults:
   workingDirectory: .
   limits: {timeoutMs: 300000, stdoutBytes: 8388608, stderrBytes: 8388608}
@@ -104,11 +104,11 @@ implicit skip.
   acceptance on any gate failure.
 - `spec-kitty accept --mission <handle> --deterministic-only [--json]` — just
   the deterministic engine and its report.
-- `spec-kitty doctor architecture` / `spec-kitty context architecture` —
+- `spec-kitty crest-spec doctor` / `spec-kitty crest-spec context` —
   ordinary reads: validate and render the spec, never execute validations.
 - `spec-kitty archive create` — refuses a merged mission without a recorded
   passing verdict (AM-6) and executes nothing.
 
 The explicit-execution boundary is tested
-(`tests/architecture_spec/test_nonexecution_boundary.py`): only accept
+(`tests/crest_spec/test_nonexecution_boundary.py`): only accept
 executes declared commands; every other surface is a read.

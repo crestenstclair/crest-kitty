@@ -291,7 +291,7 @@ Treat semantic review and deterministic acceptance as separate, mandatory layers
 
 ### 1. Establish authority and applicability
 
-Read the final evaluated architecture-spec context (`spec-kitty context architecture`) before interpreting the mission spec, plan, tasks, implementation, or tests. Rebuild the obligation ledger and architecture-conformance matrix after the final implementation task from that evaluated spec and the final implementation diff, even when implementation began with every checkbox complete. Build an obligation ledger for every relevant architecture declaration, relationship, layer, boundary, resource, asset, validation, witness, requirement, and task. Classify each item exactly as:
+Read the final evaluated crest-spec context (`spec-kitty crest-spec context`) before interpreting the mission spec, plan, tasks, implementation, or tests. Rebuild the obligation ledger and crest-spec conformance matrix after the final implementation task from that evaluated spec and the final implementation diff, even when implementation began with every checkbox complete. Build an obligation ledger for every relevant architecture declaration, relationship, layer, boundary, resource, asset, validation, witness, requirement, and task. Classify each item exactly as:
 
 - `CURRENT_SLICE`: required by this change now.
 - `EVERGREEN_INVARIANT`: required in every phase, including this change.
@@ -306,7 +306,7 @@ Classify semantic findings as `BLOCKING_CURRENT_VIOLATION`, `BLOCKING_EVERGREEN_
 
 Every blocker must include all of the following:
 
-1. the exact evaluated architecture-spec or current mission-artifact authority citation;
+1. the exact evaluated crest-spec or current mission-artifact authority citation;
 2. applicability classification and rationale;
 3. production implementation evidence with concrete paths or runtime trace;
 4. a falsifiable contradiction or precisely missing required proof;
@@ -316,7 +316,7 @@ Every blocker must include all of the following:
 
 Keyword searches, name similarity, architectural suspicion, a success string, missing future functionality, or lack of investigation are not proof. Do not turn uncertainty into a blocker. Prefer production execution and controlled negative witnesses over mocks that bypass the production seam or tests that only construct a component.
 
-### 3. Build the architecture-conformance matrix
+### 3. Build the crest-spec conformance matrix
 
 For every `CURRENT_SLICE` obligation and `EVERGREEN_INVARIANT`, map the evaluated declaration to its production composition, runtime behavior, and behavioral witness. Include every applicable port, layer, composition decision, prepared-runtime constraint, failure channel, and validation declaration. Local component correctness is insufficient when production composition drops, bypasses, overwrites, or makes the contract unreachable.
 
@@ -342,7 +342,7 @@ Trace every contractually observable typed status or error through every product
 
 #### validation-declaration-integrity
 
-Build the inventory from `completion.projectChecks` plus test-suite and runtime-session proofs attached to every applicable architecture-spec resource, relationship, capability, invariant, witness, or acceptance asset. Record exact validation identity, declaration location, owner, argument vector, canonical working directory, proof type and role, provider, opaque selector, applicability, boundary, environment, lifecycle, timeout budgets, interaction requirements, and execution provenance. Every applicable declaration is independently binding. A broad suite cannot rehabilitate a targeted validation that selects zero tests, and evidence for a broad or different selector cannot satisfy the targeted declaration. Missing applicability metadata, orphaned evidence references, duplicated identities, ambiguous ownership, and unsupported providers fail closed according to the evaluated schema.
+Build the inventory from `completion.projectChecks` plus test-suite and runtime-session proofs attached to every applicable crest-spec resource, relationship, capability, invariant, witness, or acceptance asset. Record exact validation identity, declaration location, owner, argument vector, canonical working directory, proof type and role, provider, opaque selector, applicability, boundary, environment, lifecycle, timeout budgets, interaction requirements, and execution provenance. Every applicable declaration is independently binding. A broad suite cannot rehabilitate a targeted validation that selects zero tests, and evidence for a broad or different selector cannot satisfy the targeted declaration. Missing applicability metadata, orphaned evidence references, duplicated identities, ambiguous ownership, and unsupported providers fail closed according to the evaluated schema.
 
 #### runtime-boundary-completeness
 
@@ -378,5 +378,5 @@ An unavailable physical/native capability or interaction provider for an applica
 
 ### 5. Decide and report
 
-Report the obligation ledger, architecture-conformance matrix, evidence-complete semantic findings, deterministic acceptance result, and final execution status separately. Put deferred and informational observations in a non-blocking section. Never report the implementation phase complete while any applicable semantic blocker or deterministic gate fails. Repair the implementation or its authoritative artifacts and rerun implement/review; later archive approval does not rerun or override this work.
+Report the obligation ledger, crest-spec conformance matrix, evidence-complete semantic findings, deterministic acceptance result, and final execution status separately. Put deferred and informational observations in a non-blocking section. Never report the implementation phase complete while any applicable semantic blocker or deterministic gate fails. Repair the implementation or its authoritative artifacts and rerun implement/review; later archive approval does not rerun or override this work.
 <!-- execution-acceptance-contract:end -->

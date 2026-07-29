@@ -1,7 +1,7 @@
 """Golden test: the YAML loader's expansion is deep-equal to the CUE bridge.
 
-``tests/fixtures/architecture/crest-synth-spec`` is the crest-synth
-architecture spec converted losslessly from CUE to the terse YAML format;
+``tests/fixtures/crest_spec/crest-synth-spec`` is the crest-synth
+crest-spec converted losslessly from CUE to the terse YAML format;
 ``crest-synth-project.json`` is the concrete ``project`` value the CrestOpenSpec
 CUE bridge evaluated from the original ``spec/*.cue``. Expansion must
 reproduce it exactly — this pins the canonical data model every downstream
@@ -14,9 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from specify_cli.architecture import load_architecture
+from specify_cli.crest_spec import load_crest_spec
 
-FIXTURES = Path(__file__).parents[1] / "fixtures" / "architecture"
+FIXTURES = Path(__file__).parents[1] / "fixtures" / "crest_spec"
 
 pytestmark = pytest.mark.integration
 
@@ -26,14 +26,14 @@ def crest_synth_project_root(tmp_path: Path) -> Path:
     kittify = tmp_path / ".kittify"
     kittify.mkdir()
     (kittify / "config.yaml").write_text(
-        f"architecture:\n  root: {FIXTURES / 'crest-synth-spec'}\n",
+        f"crest_spec:\n  root: {FIXTURES / 'crest-synth-spec'}\n",
         encoding="utf-8",
     )
     return tmp_path
 
 
 def test_expansion_matches_cue_bridge_golden(crest_synth_project_root: Path) -> None:
-    architecture = load_architecture(crest_synth_project_root)
+    architecture = load_crest_spec(crest_synth_project_root)
     assert architecture is not None
 
     expected = json.loads(
@@ -45,8 +45,8 @@ def test_expansion_matches_cue_bridge_golden(crest_synth_project_root: Path) -> 
 def test_relationships_are_deterministic_and_populated(
     crest_synth_project_root: Path,
 ) -> None:
-    first = load_architecture(crest_synth_project_root)
-    second = load_architecture(crest_synth_project_root)
+    first = load_crest_spec(crest_synth_project_root)
+    second = load_crest_spec(crest_synth_project_root)
     assert first is not None and second is not None
     assert first.relationships == second.relationships
     # crest-synth declares 413 resources; the index must be substantial.

@@ -1,13 +1,13 @@
-"""Fail-closed behavior of the architecture spec loader."""
+"""Fail-closed behavior of the crest-spec loader."""
 
 from pathlib import Path
 
 import pytest
 
-from specify_cli.architecture import (
-    ArchitectureSpecError,
-    load_architecture,
-    resolve_architecture_root,
+from specify_cli.crest_spec import (
+    CrestSpecError,
+    load_crest_spec,
+    resolve_crest_spec_root,
 )
 
 pytestmark = pytest.mark.unit
@@ -15,7 +15,7 @@ pytestmark = pytest.mark.unit
 
 def write_spec(root: Path, files: dict[str, str]) -> None:
     for rel, content in files.items():
-        path = root / ".kittify" / "architecture" / rel
+        path = root / ".kittify" / "crest-spec" / rel
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content, encoding="utf-8")
 
@@ -50,12 +50,12 @@ capabilities:
 
 
 def test_absent_spec_directory_is_not_applicable(tmp_path: Path) -> None:
-    assert load_architecture(tmp_path) is None
+    assert load_crest_spec(tmp_path) is None
 
 
 def test_empty_spec_directory_is_not_applicable(tmp_path: Path) -> None:
-    (tmp_path / ".kittify" / "architecture").mkdir(parents=True)
-    assert load_architecture(tmp_path) is None
+    (tmp_path / ".kittify" / "crest-spec").mkdir(parents=True)
+    assert load_crest_spec(tmp_path) is None
 
 
 def test_minimal_spec_expands_and_indexes(tmp_path: Path) -> None:
@@ -67,7 +67,7 @@ def test_minimal_spec_expands_and_indexes(tmp_path: Path) -> None:
             "capabilities.yaml": MINIMAL_CAPABILITIES,
         },
     )
-    architecture = load_architecture(tmp_path)
+    architecture = load_crest_spec(tmp_path)
     assert architecture is not None
     token = architecture.project["contexts"]["Core"]["valueObjects"]["Token"]
     # contributesTo map expands to the canonical list-of-edges form
@@ -91,9 +91,9 @@ def test_duplicate_mapping_key_fails_closed(tmp_path: Path) -> None:
             ),
         },
     )
-    with pytest.raises(ArchitectureSpecError) as excinfo:
-        load_architecture(tmp_path)
-    assert any(d.code == "architecture_duplicate_key" for d in excinfo.value.diagnostics)
+    with pytest.raises(CrestSpecError) as excinfo:
+        load_crest_spec(tmp_path)
+    assert any(d.code == "crest_spec_duplicate_key" for d in excinfo.value.diagnostics)
 
 
 def test_unresolved_typed_reference_fails_closed(tmp_path: Path) -> None:
@@ -109,10 +109,10 @@ def test_unresolved_typed_reference_fails_closed(tmp_path: Path) -> None:
             ),
         },
     )
-    with pytest.raises(ArchitectureSpecError) as excinfo:
-        load_architecture(tmp_path)
+    with pytest.raises(CrestSpecError) as excinfo:
+        load_crest_spec(tmp_path)
     codes = [d.code for d in excinfo.value.diagnostics]
-    assert "architecture_unresolved_reference" in codes
+    assert "crest_spec_unresolved_reference" in codes
 
 
 def test_ambiguous_suffix_reference_fails_closed(tmp_path: Path) -> None:
@@ -129,10 +129,10 @@ def test_ambiguous_suffix_reference_fails_closed(tmp_path: Path) -> None:
             ),
         },
     )
-    with pytest.raises(ArchitectureSpecError) as excinfo:
-        load_architecture(tmp_path)
+    with pytest.raises(CrestSpecError) as excinfo:
+        load_crest_spec(tmp_path)
     ambiguous = [
-        d for d in excinfo.value.diagnostics if d.code == "architecture_ambiguous_reference"
+        d for d in excinfo.value.diagnostics if d.code == "crest_spec_ambiguous_reference"
     ]
     assert ambiguous and "valueObject.Alpha.Token" in ambiguous[0].message
 
@@ -146,9 +146,9 @@ def test_duplicate_canonical_id_fails_closed(tmp_path: Path) -> None:
             "contexts/b.yaml": "context: Core\nvalueObjects:\n  Token: {description: b}\n",
         },
     )
-    with pytest.raises(ArchitectureSpecError) as excinfo:
-        load_architecture(tmp_path)
-    assert any(d.code == "architecture_duplicate_id" for d in excinfo.value.diagnostics)
+    with pytest.raises(CrestSpecError) as excinfo:
+        load_crest_spec(tmp_path)
+    assert any(d.code == "crest_spec_duplicate_id" for d in excinfo.value.diagnostics)
 
 
 def test_unknown_file_fails_closed(tmp_path: Path) -> None:
@@ -159,9 +159,9 @@ def test_unknown_file_fails_closed(tmp_path: Path) -> None:
             "extra-notes.yaml": "notes: hello\n",
         },
     )
-    with pytest.raises(ArchitectureSpecError) as excinfo:
-        load_architecture(tmp_path)
-    assert any(d.code == "architecture_unknown_file" for d in excinfo.value.diagnostics)
+    with pytest.raises(CrestSpecError) as excinfo:
+        load_crest_spec(tmp_path)
+    assert any(d.code == "crest_spec_unknown_file" for d in excinfo.value.diagnostics)
 
 
 def test_configured_root_overrides_default(tmp_path: Path) -> None:
@@ -170,10 +170,34 @@ def test_configured_root_overrides_default(tmp_path: Path) -> None:
     kittify = tmp_path / ".kittify"
     kittify.mkdir()
     (kittify / "config.yaml").write_text(
-        "architecture:\n  root: elsewhere\n", encoding="utf-8"
+        "crest_spec:\n  root: elsewhere\n", encoding="utf-8"
     )
-    assert resolve_architecture_root(tmp_path) == custom
+    assert resolve_crest_spec_root(tmp_path) == custom
     (custom / "project.yaml").write_text(MINIMAL_PROJECT, encoding="utf-8")
-    architecture = load_architecture(tmp_path)
+    architecture = load_crest_spec(tmp_path)
     assert architecture is not None
     assert architecture.project["name"] == "demo"
+
+
+def test_legacy_root_directory_fails_loud(tmp_path: Path) -> None:
+    """Pre-rename ``.kittify/architecture`` is a migration error, never a fallback."""
+    legacy = tmp_path / ".kittify" / "architecture"
+    legacy.mkdir(parents=True)
+    (legacy / "project.yaml").write_text(MINIMAL_PROJECT, encoding="utf-8")
+    with pytest.raises(CrestSpecError) as excinfo:
+        load_crest_spec(tmp_path)
+    codes = [d.code for d in excinfo.value.diagnostics]
+    assert codes == ["crest_spec_legacy_root"]
+    assert "git mv .kittify/architecture .kittify/crest-spec" in excinfo.value.diagnostics[0].message
+
+
+def test_legacy_config_key_fails_loud(tmp_path: Path) -> None:
+    """The retired ``architecture.root`` config key must be renamed, not honored."""
+    kittify = tmp_path / ".kittify"
+    kittify.mkdir()
+    (kittify / "config.yaml").write_text("architecture:\n  root: elsewhere\n", encoding="utf-8")
+    with pytest.raises(CrestSpecError) as excinfo:
+        load_crest_spec(tmp_path)
+    codes = [d.code for d in excinfo.value.diagnostics]
+    assert codes == ["crest_spec_legacy_config"]
+    assert "crest_spec.root" in excinfo.value.diagnostics[0].message

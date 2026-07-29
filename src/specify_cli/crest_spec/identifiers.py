@@ -9,7 +9,7 @@ a fail-closed diagnostic, never a guess.
 
 from __future__ import annotations
 
-from .diagnostics import ArchitectureDiagnostic
+from .diagnostics import CrestSpecDiagnostic
 
 # Terse section name -> canonical ID kind for context resource sections.
 CONTEXT_RESOURCE_KINDS: dict[str, str] = {
@@ -74,7 +74,7 @@ class ReferenceResolver:
 
     def __init__(self, index: IdentifierIndex):
         self._index = index
-        self.diagnostics: list[ArchitectureDiagnostic] = []
+        self.diagnostics: list[CrestSpecDiagnostic] = []
 
     def resolve(self, reference: str, kind: str | None, *, file: str, required: bool) -> str:
         matches = self._index.matches(reference, kind)
@@ -82,8 +82,8 @@ class ReferenceResolver:
             return matches[0]
         if len(matches) > 1:
             self.diagnostics.append(
-                ArchitectureDiagnostic(
-                    code="architecture_ambiguous_reference",
+                CrestSpecDiagnostic(
+                    code="crest_spec_ambiguous_reference",
                     message=(
                         f"reference {reference!r} matches multiple declared IDs: "
                         + ", ".join(matches[:6])
@@ -95,8 +95,8 @@ class ReferenceResolver:
             return reference
         if required:
             self.diagnostics.append(
-                ArchitectureDiagnostic(
-                    code="architecture_unresolved_reference",
+                CrestSpecDiagnostic(
+                    code="crest_spec_unresolved_reference",
                     message=(
                         f"reference {reference!r} does not resolve to any declared "
                         + (f"{kind} ID" if kind else "ID")

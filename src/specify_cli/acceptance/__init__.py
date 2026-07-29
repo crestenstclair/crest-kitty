@@ -54,7 +54,7 @@ from .gates_core import (
     _changed_workflow_files,  # noqa: F401 -- re-export consumed by test_acceptance_regressions.py
     _check_lane_gates,
     _check_workflow_run_evidence,
-    _evaluate_architecture_reconciliation,
+    _evaluate_crest_spec_derivation,
     _find_unchecked_tasks,
     _normalized_unchecked_tasks,
 )
@@ -68,23 +68,23 @@ from .summary_core import (
     evaluate_path_conventions,
 )
 
-def _check_architecture_reconciliation(
+def _check_crest_spec_derivation(
     repo_root: Path,
     feature_dir: Path,
     activity_issues: list[str],
 ) -> None:
-    """I/O wrapper for the pure ``_evaluate_architecture_reconciliation`` core.
+    """I/O wrapper for the pure ``_evaluate_crest_spec_derivation`` core.
 
-    Loads the architecture spec and the mission's ``plan.md`` (ordinary reads;
+    Loads the crest-spec and the mission's ``plan.md`` (ordinary reads;
     never executes declared validations) and appends the pure verdict, if any.
-    The architecture loader is imported deferred so tests can monkeypatch
-    ``specify_cli.architecture.load_architecture``.
+    The crest-spec loader is imported deferred so tests can monkeypatch
+    ``specify_cli.crest_spec.load_crest_spec``.
     """
-    from specify_cli import architecture as architecture_module
+    from specify_cli import crest_spec as crest_spec_module
 
     try:
-        loaded = architecture_module.load_architecture(repo_root)
-    except architecture_module.ArchitectureSpecError as error:
+        loaded = crest_spec_module.load_crest_spec(repo_root)
+    except crest_spec_module.CrestSpecError as error:
         state, detail = "invalid", "; ".join(d.render() for d in error.diagnostics[:3])
     else:
         state, detail = ("absent", "") if loaded is None else ("present", "")
@@ -95,7 +95,7 @@ def _check_architecture_reconciliation(
             plan_text = (feature_dir / "plan.md").read_text(encoding="utf-8")
         except OSError:
             plan_text = ""
-    issue = _evaluate_architecture_reconciliation(state, detail, plan_text)
+    issue = _evaluate_crest_spec_derivation(state, detail, plan_text)
     if issue is not None:
         activity_issues.append(issue)
 
@@ -1066,7 +1066,7 @@ def collect_feature_summary(
         mutate_matrix=mutate_matrix,
     )
     _check_workflow_run_evidence(repo_root, read_feature_dir, branch, activity_issues)
-    _check_architecture_reconciliation(repo_root, read_feature_dir, activity_issues)
+    _check_crest_spec_derivation(repo_root, read_feature_dir, activity_issues)
 
     normalized_unchecked_tasks = _normalized_unchecked_tasks(unchecked_tasks, lanes)
     recommended_fix_order = _build_recommended_fix_order(

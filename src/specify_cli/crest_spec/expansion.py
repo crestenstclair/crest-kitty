@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .diagnostics import ArchitectureDiagnostic
+from .diagnostics import CrestSpecDiagnostic
 from .identifiers import (
     CONTEXT_RESOURCE_KINDS,
     GENERIC_REFERENCE_FIELDS,
@@ -45,13 +45,13 @@ _KNOWN_FILES = frozenset(_TOP_LEVEL_SECTIONS) | {
 }
 
 
-def _malformed(diags: list[ArchitectureDiagnostic], file: str, message: str) -> None:
+def _malformed(diags: list[CrestSpecDiagnostic], file: str, message: str) -> None:
     diags.append(
-        ArchitectureDiagnostic("architecture_malformed_section", message, file=file)
+        CrestSpecDiagnostic("crest_spec_malformed_section", message, file=file)
     )
 
 
-def _section_map(doc: Any, key: str, file: str, diags: list[ArchitectureDiagnostic]) -> dict[str, Any]:
+def _section_map(doc: Any, key: str, file: str, diags: list[CrestSpecDiagnostic]) -> dict[str, Any]:
     value = doc.get(key) if isinstance(doc, dict) else None
     if isinstance(value, dict) and all(isinstance(k, str) for k in value):
         return value
@@ -62,15 +62,15 @@ def _section_map(doc: Any, key: str, file: str, diags: list[ArchitectureDiagnost
 class _Declarations:
     """First pass: declare every canonical ID so references can resolve."""
 
-    def __init__(self, diags: list[ArchitectureDiagnostic]):
+    def __init__(self, diags: list[CrestSpecDiagnostic]):
         self.index = IdentifierIndex()
         self._diags = diags
 
     def declare(self, canonical_id: str, file: str) -> None:
         if not self.index.declare(canonical_id):
             self._diags.append(
-                ArchitectureDiagnostic(
-                    "architecture_duplicate_id",
+                CrestSpecDiagnostic(
+                    "crest_spec_duplicate_id",
                     f"{canonical_id} is declared more than once",
                     file=file,
                 )
@@ -112,14 +112,15 @@ class _Declarations:
 
 
 def collect_identifiers(
-    files: dict[str, Any], diags: list[ArchitectureDiagnostic]
+    files: dict[str, Any], diags: list[CrestSpecDiagnostic]
 ) -> IdentifierIndex:
     declarations = _Declarations(diags)
-    collectors = {
-        "project.yaml": lambda rel, doc: [
+    def _collect_non_goals(rel: str, doc: Any) -> None:
+        for name in _section_map(doc, "nonGoals", rel, diags):
             declarations.declare(f"nonGoal.{name}", rel)
-            for name in _section_map(doc, "nonGoals", rel, diags)
-        ],
+
+    collectors = {
+        "project.yaml": _collect_non_goals,
         "capabilities.yaml": declarations.collect_capabilities,
         "assets.yaml": declarations.collect_assets,
         "proof/validations.yaml": declarations.collect_validations,
@@ -198,7 +199,7 @@ def _expand_section(
     rel: str,
     section: str,
     index: IdentifierIndex,
-    diags: list[ArchitectureDiagnostic],
+    diags: list[CrestSpecDiagnostic],
 ) -> dict[str, Any]:
     doc = files.get(rel)
     if doc is None:
@@ -213,7 +214,7 @@ def _expand_section(
 
 
 def _expand_contexts(
-    files: dict[str, Any], index: IdentifierIndex, diags: list[ArchitectureDiagnostic]
+    files: dict[str, Any], index: IdentifierIndex, diags: list[CrestSpecDiagnostic]
 ) -> dict[str, Any]:
     contexts: dict[str, Any] = {}
     for rel in sorted(files):
@@ -243,7 +244,7 @@ def _expand_validations(
     files: dict[str, Any],
     project: dict[str, Any],
     index: IdentifierIndex,
-    diags: list[ArchitectureDiagnostic],
+    diags: list[CrestSpecDiagnostic],
 ) -> None:
     rel = "proof/validations.yaml"
     doc = files.get(rel)
@@ -277,8 +278,8 @@ def _expand_validations(
         owner = _locate_owner(project, owner_id)
         if owner is None:
             diags.append(
-                ArchitectureDiagnostic(
-                    "architecture_unresolved_reference",
+                CrestSpecDiagnostic(
+                    "crest_spec_unresolved_reference",
                     f"attached validation {name!r} names owner {owner_id!r} "
                     "which is not a declared resource",
                     file=rel,
@@ -306,7 +307,7 @@ def _locate_owner(project: dict[str, Any], owner_id: str) -> dict[str, Any] | No
 
 
 def _expand_capabilities(
-    files: dict[str, Any], index: IdentifierIndex, diags: list[ArchitectureDiagnostic]
+    files: dict[str, Any], index: IdentifierIndex, diags: list[CrestSpecDiagnostic]
 ) -> dict[str, Any]:
     rel = "capabilities.yaml"
     doc = files.get(rel)
@@ -333,7 +334,7 @@ def _expand_project_file(
     files: dict[str, Any],
     project: dict[str, Any],
     index: IdentifierIndex,
-    diags: list[ArchitectureDiagnostic],
+    diags: list[CrestSpecDiagnostic],
 ) -> None:
     rel = "project.yaml"
     doc = files.get(rel)
@@ -352,7 +353,7 @@ def _expand_project_file(
 
 
 def _expand_invariants(
-    files: dict[str, Any], diags: list[ArchitectureDiagnostic]
+    files: dict[str, Any], diags: list[CrestSpecDiagnostic]
 ) -> dict[str, Any]:
     rel = "proof/invariants.yaml"
     doc = files.get(rel)
@@ -372,15 +373,15 @@ def _expand_invariants(
 
 
 def expand_project(
-    files: dict[str, Any], diags: list[ArchitectureDiagnostic]
+    files: dict[str, Any], diags: list[CrestSpecDiagnostic]
 ) -> dict[str, Any]:
     """Expand parsed terse files into the canonical ``project`` mapping."""
     for rel in files:
         if rel not in _KNOWN_FILES and not rel.startswith("contexts/"):
             diags.append(
-                ArchitectureDiagnostic(
-                    "architecture_unknown_file",
-                    f"{rel} is not a recognized architecture spec file",
+                CrestSpecDiagnostic(
+                    "crest_spec_unknown_file",
+                    f"{rel} is not a recognized crest-spec file",
                     file=rel,
                 )
             )

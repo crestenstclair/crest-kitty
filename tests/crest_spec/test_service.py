@@ -30,7 +30,7 @@ completion:
 
 
 def write_spec(root: Path, validations_yaml: str, project_yaml: str = PROJECT_HEADER) -> None:
-    spec = root / ".kittify" / "architecture"
+    spec = root / ".kittify" / "crest-spec"
     spec.mkdir(parents=True, exist_ok=True)
     (spec / "project.yaml").write_text(project_yaml, encoding="utf-8")
     (spec / "proof").mkdir(exist_ok=True)
@@ -50,33 +50,33 @@ projectValidations:
 """
 
 
-def test_no_architecture_spec_not_applicable(tmp_path: Path) -> None:
+def test_no_crest_spec_not_applicable(tmp_path: Path) -> None:
     report = AcceptanceService().run(tmp_path, PROJECT_SCOPE)
     assert report.applicable is False and report.passed is True
-    assert report.gates["architecture"]["status"] == "not_applicable"
+    assert report.gates["crest_spec"]["status"] == "not_applicable"
     assert report.to_dict()["semanticReview"]["status"] == "not_evaluated"
 
 
 def test_invalid_spec_fails_closed(tmp_path: Path) -> None:
-    spec = tmp_path / ".kittify" / "architecture"
+    spec = tmp_path / ".kittify" / "crest-spec"
     spec.mkdir(parents=True)
     (spec / "project.yaml").write_text(PROJECT_HEADER, encoding="utf-8")
     (spec / "goals.yaml").write_text("goals:\n  g:\n    capabilities: [nope]\n", encoding="utf-8")
     report = AcceptanceService().run(tmp_path, PROJECT_SCOPE)
     assert report.applicable is True and report.passed is False
-    assert report.gates["architecture"]["status"] == "failed"
-    assert report.diagnostics[0]["code"] == "architecture_evaluation_failed"
+    assert report.gates["crest_spec"]["status"] == "failed"
+    assert report.diagnostics[0]["code"] == "crest_spec_evaluation_failed"
 
 
 def test_spec_without_executable_validations_not_applicable(tmp_path: Path) -> None:
-    spec = tmp_path / ".kittify" / "architecture"
+    spec = tmp_path / ".kittify" / "crest-spec"
     spec.mkdir(parents=True)
     (spec / "project.yaml").write_text(
         PROJECT_HEADER.replace("  projectChecks: [validation.demo_check]\n", ""), encoding="utf-8"
     )
     report = AcceptanceService().run(tmp_path, PROJECT_SCOPE)
     assert report.applicable is False and report.passed is True
-    assert report.gates["architecture"]["status"] == "passed"
+    assert report.gates["crest_spec"]["status"] == "passed"
     assert report.diagnostics[0]["code"] == "acceptance_not_applicable_no_executable_validations"
 
 

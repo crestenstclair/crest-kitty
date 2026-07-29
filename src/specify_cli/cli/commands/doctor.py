@@ -163,9 +163,11 @@ from ._daemon_doctor import run_orphan_daemons, run_restart_daemon  # noqa: E402
 # reimplementing corpus walking or verification (plan IC-05).
 from ._cutover_doctor import run_cutover_audit  # noqa: E402
 
-# Architecture-spec validation (port/crestopenspec-gates): thin shell below
-# delegates to ``_architecture_doctor.run_architecture_doctor``.
-from ._architecture_doctor import run_architecture_doctor  # noqa: E402
+# Crest-spec validation (port/crest-spec-bedrock): thin shell below delegates
+# to ``_crest_spec_doctor.run_crest_spec_doctor`` — the same runner behind the
+# first-class ``spec-kitty crest-spec doctor``; this entry keeps the doctor hub
+# convention (every project surface is checkable from ``spec-kitty doctor``).
+from ._crest_spec_doctor import run_crest_spec_doctor  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -216,23 +218,23 @@ def skills(
     run_skills_audit(fix, json_output, project_path)
 
 
-@app.command(name="architecture")
-def architecture(
+@app.command(name="crest-spec")
+def crest_spec(
     json_output: Annotated[
         bool,
         typer.Option("--json", help="Machine-readable JSON output"),
     ] = False,
 ) -> None:
-    """Validate the project architecture spec (.kittify/architecture).
+    """Validate the project crest-spec (.kittify/crest-spec).
 
-    Loads and expands the terse YAML architecture spec fail-closed, reporting
-    every diagnostic, and summarizes the resolved model. An absent spec is
-    reported as not-applicable, not an error. Never executes declared
-    validations.
+    Loads and expands the terse YAML crest-spec fail-closed, reporting
+    every diagnostic, and summarizes the resolved model. An absent
+    crest-spec is reported as not-applicable, not an error. Never executes
+    declared validations. Same runner as ``spec-kitty crest-spec doctor``.
 
     Examples:
-        spec-kitty doctor architecture
-        spec-kitty doctor architecture --json
+        spec-kitty doctor crest-spec
+        spec-kitty doctor crest-spec --json
     """
     try:
         project_path = locate_project_root()
@@ -244,7 +246,7 @@ def architecture(
             raise typer.Exit(2) from exc
         console.print(f"[red]Error:[/red] {_NOT_IN_PROJECT_MESSAGE}")
         raise typer.Exit(2) from exc
-    exit_code = run_architecture_doctor(project_path, json_output)
+    exit_code = run_crest_spec_doctor(project_path, json_output)
     if exit_code:
         raise typer.Exit(exit_code)
 

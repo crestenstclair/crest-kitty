@@ -10,7 +10,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-ACCEPTANCE_REPORT_VERSION = "2.0"
+# 3.0: the report's ``architecture`` gate key became ``crest_spec`` and the
+# ``architecture_*`` diagnostic codes became ``crest_spec_*`` (crest-spec
+# bedrock rename). Everything else is shape-identical to 2.0.
+ACCEPTANCE_REPORT_VERSION = "3.0"
 
 ACCEPTANCE_PROOF_ROLES = frozenset(
     {

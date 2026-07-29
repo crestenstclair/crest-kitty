@@ -357,7 +357,7 @@ RUNTIME_PROOF_YAML = """\
 
 
 def write_runtime_spec(root: Path, command: list[str]) -> None:
-    spec = root / ".kittify" / "architecture"
+    spec = root / ".kittify" / "crest-spec"
     spec.mkdir(parents=True, exist_ok=True)
     (spec / "project.yaml").write_text(PROJECT_HEADER, encoding="utf-8")
     (spec / "proof").mkdir(exist_ok=True)

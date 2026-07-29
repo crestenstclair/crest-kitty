@@ -1,4 +1,4 @@
-"""YAML parsing for the architecture spec.
+"""YAML parsing for the crest-spec.
 
 Standard parsers silently keep the last of two duplicate mapping keys; in a
 spec where map position IS identity that would silently drop a resource, so
@@ -8,6 +8,8 @@ duplicate keys are a hard error here.
 from __future__ import annotations
 
 from typing import Any
+
+from collections.abc import Callable
 
 import yaml
 
@@ -23,12 +25,13 @@ class _StrictLoader(yaml.SafeLoader):
 
 
 def _construct_mapping(loader: _StrictLoader, node: yaml.MappingNode) -> dict[Any, Any]:
+    construct: Callable[..., Any] = loader.construct_object
     mapping: dict[Any, Any] = {}
     for key_node, value_node in node.value:
-        key = loader.construct_object(key_node, deep=True)
+        key = construct(key_node, deep=True)
         if key in mapping:
             raise DuplicateKeyError(key, key_node.start_mark)
-        mapping[key] = loader.construct_object(value_node, deep=True)
+        mapping[key] = construct(value_node, deep=True)
     return mapping
 
 

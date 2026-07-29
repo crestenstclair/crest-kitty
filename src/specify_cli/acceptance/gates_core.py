@@ -641,37 +641,40 @@ def _check_workflow_run_evidence(
         )
 
 
-ARCHITECTURE_RECONCILIATION_HEADING = "## Architecture Reconciliation"
+CREST_SPEC_DERIVATION_HEADING = "## Crest-Spec Derivation"
 
 
-def _evaluate_architecture_reconciliation(
+def _evaluate_crest_spec_derivation(
     spec_state: str,
     spec_detail: str,
     plan_text: str,
 ) -> str | None:
-    """Pure AM/plan-reconciliation verdict; the I/O wrapper lives in
+    """Pure crest-spec derivation verdict; the I/O wrapper lives in
     ``acceptance.__init__`` (this module stays a pure core — trio seam rule).
 
-    ``spec_state`` is ``"absent"`` (no architecture spec — not applicable),
+    ``spec_state`` is ``"absent"`` (no crest-spec — not applicable),
     ``"invalid"`` (loader failed; ``spec_detail`` carries diagnostics), or
     ``"present"``. Returns the blocking issue string, or ``None`` when clean.
-    An invalid spec blocks acceptance outright — the gate must not silently
-    pass on a model that could not be evaluated.
+    An invalid crest-spec blocks acceptance outright — the gate must not
+    silently pass on a model that could not be evaluated.
     """
     if spec_state == "absent":
         return None
     if spec_state == "invalid":
         return (
-            "Architecture spec is invalid and blocks acceptance (fail-closed): "
+            "Crest-spec is invalid and blocks acceptance (fail-closed): "
             + spec_detail
-            + ". Repair the spec (see `spec-kitty doctor architecture`)."
+            + ". Repair the crest-spec (see `spec-kitty crest-spec doctor`)."
         )
-    if ARCHITECTURE_RECONCILIATION_HEADING.casefold() not in plan_text.casefold():
+    if CREST_SPEC_DERIVATION_HEADING.casefold() not in plan_text.casefold():
         return (
-            "Architecture reconciliation required: this project declares an "
-            "architecture spec, so plan.md must contain an "
-            f"'{ARCHITECTURE_RECONCILIATION_HEADING}' section recording the "
-            "affected canonical IDs and any spec edits made during planning."
+            "Crest-spec derivation required: this project declares a "
+            "crest-spec, so plan.md must derive from it and contain a "
+            f"'{CREST_SPEC_DERIVATION_HEADING}' section recording which "
+            "canonical resources this mission adds, changes, or retires "
+            "(or 'none — conforms') and which assets therefore produce "
+            "which files. The crest-spec is authored first; the plan derives "
+            "from it — never the reverse."
         )
     return None
 

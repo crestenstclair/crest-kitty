@@ -27,7 +27,7 @@ archive would be a one-command escape from any acceptance failure:
   dangling deferral is still archivable. Deferrals never block archiving here;
   only ``still_present`` does (AM-2).
 * **AM-6 — Recorded acceptance, never re-run.** When the project declares an
-  armed architecture-spec acceptance gate, archiving a *merged* mission
+  armed crest-spec acceptance gate, archiving a *merged* mission
   requires the recorded deterministic-acceptance verdict to be ``passed``.
   Archive-time evaluation is an ordinary read of the recorded report
   (``deterministic-acceptance.json`` in the mission dir) — archiving never
@@ -343,13 +343,13 @@ def resolve_deterministic_acceptance(project_root: Path, feature_dir: Path) -> s
     Deferred imports mirror ``gates_core``'s documented monkeypatch-visibility
     discipline.
     """
-    from specify_cli import architecture as architecture_module
+    from specify_cli import crest_spec as crest_spec_module
     from specify_cli.acceptance.deterministic.inventory import resolve_validation_inventory
     from specify_cli.acceptance.deterministic.model import AcceptanceScope
 
     try:
-        loaded = architecture_module.load_architecture(project_root)
-    except architecture_module.ArchitectureSpecError:
+        loaded = crest_spec_module.load_crest_spec(project_root)
+    except crest_spec_module.CrestSpecError:
         return "invalid-spec"  # cannot prove the gate is unarmed — fail closed
     if loaded is None:
         return None

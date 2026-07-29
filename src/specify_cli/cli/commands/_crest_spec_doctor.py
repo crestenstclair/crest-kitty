@@ -1,7 +1,8 @@
-"""``spec-kitty doctor architecture`` — validate the project architecture spec.
+"""``spec-kitty crest-spec doctor`` — validate the project crest-spec.
 
 Sibling module per the doctor orchestration-shim decomposition (#2059): the
-thin ``@app.command`` shell lives in ``doctor.py``; the logic lives here.
+thin ``@app.command`` shells live in ``crest_spec_cmd.py`` (first-class group)
+and ``doctor.py`` (diagnostics hub); the logic lives here.
 
 Ordinary read: validates and summarizes the spec, never executes declared
 validations.
@@ -11,17 +12,18 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
-from specify_cli.architecture import (
-    ArchitectureSpecError,
-    load_architecture,
-    resolve_architecture_root,
+from specify_cli.crest_spec import (
+    CrestSpecError,
+    load_crest_spec,
+    resolve_crest_spec_root,
 )
 
 from ._doctor_shared import console
 
 
-def _summary_payload(project: dict, relationships: int) -> dict:
+def _summary_payload(project: dict[str, Any], relationships: int) -> dict[str, Any]:
     contexts = project.get("contexts", {})
     resources = sum(
         len(section)
@@ -47,12 +49,12 @@ def _summary_payload(project: dict, relationships: int) -> dict:
     }
 
 
-def run_architecture_doctor(project_root: Path, json_output: bool) -> int:
-    """Validate the architecture spec; returns the intended exit code."""
-    root = resolve_architecture_root(project_root)
+def run_crest_spec_doctor(project_root: Path, json_output: bool) -> int:
+    """Validate the crest-spec; returns the intended exit code."""
+    root = resolve_crest_spec_root(project_root)
     try:
-        architecture = load_architecture(project_root)
-    except ArchitectureSpecError as error:
+        crest_spec = load_crest_spec(project_root)
+    except CrestSpecError as error:
         if json_output:
             console.print_json(
                 json.dumps(
@@ -68,38 +70,38 @@ def run_architecture_doctor(project_root: Path, json_output: bool) -> int:
                 )
             )
         else:
-            console.print(f"[red]Architecture spec at {root} is invalid:[/red]")
+            console.print(f"[red]Crest-spec at {root} is invalid:[/red]")
             for diagnostic in error.diagnostics:
                 console.print(f"  [red]•[/red] {diagnostic.render()}")
         return 1
 
-    if architecture is None:
+    if crest_spec is None:
         if json_output:
             console.print_json(
                 json.dumps({"status": "not_applicable", "root": str(root)}, indent=2)
             )
         else:
             console.print(
-                f"[yellow]No architecture spec found at {root} — architecture-dependent "
+                f"[yellow]No crest-spec found at {root} — crest-spec-dependent "
                 "gates are not applicable.[/yellow]"
             )
         return 0
 
-    payload = _summary_payload(architecture.project, len(architecture.relationships))
+    payload = _summary_payload(crest_spec.project, len(crest_spec.relationships))
     if json_output:
         console.print_json(
             json.dumps(
                 {
                     "status": "ok",
-                    "root": str(architecture.root),
-                    "files": [str(f) for f in architecture.files],
+                    "root": str(crest_spec.root),
+                    "files": [str(f) for f in crest_spec.files],
                     "summary": payload,
                 },
                 indent=2,
             )
         )
     else:
-        console.print(f"[green]Architecture spec OK[/green] ({architecture.root})")
+        console.print(f"[green]Crest-spec OK[/green] ({crest_spec.root})")
         console.print(
             f"  {payload['contexts']} contexts / {payload['contextResources']} resources, "
             f"{payload['goals']} goals, {payload['capabilities']} capabilities, "

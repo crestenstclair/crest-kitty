@@ -2,8 +2,10 @@
 
 Ported from CrestOpenSpec's ``CUE_INTERPRETATION_CONTRACT``; the semantic
 model (intent / architecture / proof) is unchanged, the evaluation section is
-rewritten for the terse YAML spec format, and the artifact-mapping section is
-rewritten for spec-kitty's mission workflow.
+rewritten for the terse YAML crest-spec format, and the artifact-mapping
+section is rewritten for spec-kitty's mission workflow with the derivation
+direction made explicit: the crest-spec is the bedrock and every mission
+artifact derives from it.
 """
 
 # ruff: noqa: E501 — the interpretation contract is agent-facing prose kept as
@@ -13,18 +15,20 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from .loader import Architecture
+from .loader import CrestSpec
 from .relationships import Relationship
 
-ARCHITECTURE_INTERPRETATION_CONTRACT = """How to interpret and use the architecture spec
+CREST_SPEC_INTERPRETATION_CONTRACT = """How to interpret and use the crest-spec
 
-Authority and expansion
-- All listed files form one architecture spec namespace. File boundaries are organization, not scoping; declarations across files are one model.
+Authority and derivation direction
+- The crest-spec is the bedrock: the single source of implementation intent. Planning, work decomposition, code generation, and proof all derive FROM it; it is never reconciled TO other documents after the fact.
+- A mission that adds, changes, or retires system structure BEGINS by editing the crest-spec. If the crest-spec does not declare it, it does not get built. Never edit the crest-spec merely to permit code that was already planned — when product intent (DESIGN.md, visual references) and the crest-spec disagree, that is a decision to make deliberately during crest-spec authoring, before planning.
+- All listed files form one crest-spec namespace. File boundaries are organization, not scoping; declarations across files are one model.
 - Resources are declared as named entries whose canonical dotted ID derives from section, context, and name (for example `valueObject.Control.PatchControlId`). References may use the shortest unique dot-suffix; the rendered project below has every reference expanded to its canonical ID.
-- The rendered project is the concrete result of loader expansion. It is the primary architecture input to planning.
-- The spec is authoritative for architectural intent, boundaries, dependency direction, contracts, invariants, traceability, and verification. Mission artifacts (spec/plan/tasks) use it to constrain their contents.
-- The spec is also the dense, user-facing overview of the architecture. Keep declarations concise and relational; encode the authoritative model and proof instead of copying explanatory Markdown prose.
-- Never silently plan around a conflict with the architecture spec. If the requested change changes architecture, update the listed source files during planning and reload them. Do not defer spec reconciliation to tasks or implementation. Planning is incomplete while the spec and the mission artifacts disagree.
+- The rendered project is the concrete result of loader expansion. It is the primary input to planning.
+- The crest-spec is authoritative for architectural intent, boundaries, dependency direction, contracts, invariants, traceability, and verification. Mission artifacts (spec/plan/tasks) reference its declarations; they never restate them.
+- The crest-spec is also the dense, user-facing overview of the architecture. Keep declarations concise and relational; encode the authoritative model and proof instead of copying explanatory Markdown prose.
+- The loader closes the model under you as you write: undeclared references fail immediately. Author the crest-spec first and lean on that referential integrity — it is faster and safer than discovering the gaps at acceptance.
 
 Intent model
 - `mission` is the whole-project why and must inform every local decision. `nonGoals` are explicit exclusions.
@@ -51,18 +55,19 @@ Resources and relations
 - Parent/containment relations express ownership, not dependency. Do not move behavior across bounded contexts or aggregate boundaries merely for implementation convenience.
 
 Implementation and proof
-- `assets` describe concrete implementation artifacts. Their kind, targets, prompts, profiles, and validations are implementation intent—not another planning database.
+- `assets` describe concrete implementation artifacts. Their kind, targets, prompts, profiles, and validations are the generation layer — the implementation intent work packages are derived from, not another planning database. Anything a work-package prompt would need that is not in the asset is a signal the asset is underspecified: push it into the crest-spec.
 - `meta` is inherited guidance: language/style/rules/prompts/references/examples/avoid plus notes, rationale, framework, review level, mode, and amendments.
 - Invariants are behavioral constraints. Treat them as non-negotiable acceptance/design constraints, not suggestions.
 - `validations` are executable checks. Project validations are whole-system gates; attached validations prove local contracts or declared runtime sessions. Keep reachability, static, in-process behavior, external lifecycle, production composition, environment fidelity, and controlled interaction proof roles explicit.
 - `witnesses` are behavioral proof with a positive command, a controlled negative command, structured observations, and predicates. Evidence links to validations/witnesses. Do not replace measured proof with self-reported success text.
 - A runtime success marker is intermediate evidence, not completion. For applicable external-runtime claims, require a same-boundary runtime-session proof through declared success, teardown, parent exit, owned-resource cleanup, and any milestone-bound critical interaction.
 
-How the spec drives mission artifacts
-- Specify: ground the mission's why and scope in mission, goals, non-goals, capabilities, and requirements. Name the affected canonical IDs.
-- Plan: map the change onto bounded contexts and canonical resources. Show existing and changed relations; obey ports, context maps, layers, and dependency direction. Spec edits belong to planning itself, not a future bookkeeping task.
-- Tasks: sequence implementation assets/resources and validations/witnesses per work package.
-- Implement: build against the rendered model and relevant source files. Treat spec constraints and relationships as the architectural source of truth.
+How the crest-spec drives mission artifacts (derivation, not reconciliation)
+- Specify: ground the mission's why and scope in mission, goals, non-goals, capabilities, and requirements. Reference the affected canonical IDs; never restate what the crest-spec already declares.
+- Crest-spec authoring: for any mission that adds, changes, or retires a resource, edit the crest-spec FIRST — contexts, value objects, aggregates, ports, adapters, assets, capabilities, requirements, evidence, validations, witnesses, invariants — and reload until the model closes. This precedes planning.
+- Plan: derive from the authored crest-spec and record the `## Crest-Spec Derivation` section: which canonical resources this mission adds, changes, or retires, and which assets therefore produce which files. Do NOT produce `data-model.md` or `contracts/` when a crest-spec exists — those are hand-copied, immediately-stale forks of `valueObjects`, `aggregates`, and `ports`; point at the canonical resources instead.
+- Tasks: derive work packages from `assets[]` — each asset's kind, targets, prompts, profile, and attached validations already carry the generation intent; work packages add only mission-specific sequencing and ownership boundaries.
+- Implement: build against the rendered model and relevant source files. Treat crest-spec constraints and relationships as the architectural source of truth.
 - Accept: deterministic acceptance runs the declared project checks and applicable attached validations; adversarial review judges conformance against invariants and relations."""
 
 
@@ -83,21 +88,21 @@ def _render_relationships(relationships: list[Relationship]) -> str:
     )
 
 
-def render_architecture_context(architecture: Architecture) -> str:
-    """Render the expanded spec into the agent-facing project-context channel."""
-    file_list = "\n".join(f"- {path}" for path in architecture.files)
-    rendered_project = json.dumps(_stable_value(architecture.project), indent=2)
-    return f"""Architecture spec (authoritative)
+def render_crest_spec_context(crest_spec: CrestSpec) -> str:
+    """Render the expanded crest-spec into the agent-facing project-context channel."""
+    file_list = "\n".join(f"- {path}" for path in crest_spec.files)
+    rendered_project = json.dumps(_stable_value(crest_spec.project), indent=2)
+    return f"""Crest-spec (authoritative)
 
-{ARCHITECTURE_INTERPRETATION_CONTRACT}
+{CREST_SPEC_INTERPRETATION_CONTRACT}
 
 Source files
-Root: {architecture.root}
+Root: {crest_spec.root}
 Files:
 {file_list}
 
 Resolved relationship index
-{_render_relationships(architecture.relationships)}
+{_render_relationships(crest_spec.relationships)}
 
 Resolved project value
 ```json

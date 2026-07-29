@@ -13,13 +13,13 @@ mission, or all WPs appear complete.
 1. Run `/spec-kitty.accept` or the equivalent CLI command.
 2. Confirm all required WPs are approved or done.
 3. Verify required tests, artifacts, and mission invariants.
-4. When the project declares an architecture spec (`.kittify/architecture`),
+4. When the project declares a crest-spec (`.kittify/crest-spec`),
    accept also runs **deterministic acceptance**: every declared project check
    and applicable attached validation executes, and the versioned report is
    recorded to `<mission>/deterministic-acceptance.json`. Both layers must
    pass — deterministic gates AND the adversarial semantic review embedded in
    the accept prompt (obligation ledger, evidence-complete findings, the nine
-   architecture-drift guards). A green command with zero executed tests, or a
+   crest-spec drift guards). A green command with zero executed tests, or a
    success marker from a still-resident process, is a failure, not a pass.
 5. If accept fails, route to `spk-run-blocked-recovery`.
 6. If accept passes, route to `spk-gate-merge`.

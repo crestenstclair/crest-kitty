@@ -68,7 +68,7 @@ def test_canceled_mission_exempt_from_am6() -> None:
 
 
 def _project_with_armed_spec(tmp_path: Path) -> tuple[Path, Path]:
-    spec = tmp_path / ".kittify" / "architecture"
+    spec = tmp_path / ".kittify" / "crest-spec"
     spec.mkdir(parents=True)
     (spec / "project.yaml").write_text(MINIMAL_PROJECT, encoding="utf-8")
     feature_dir = tmp_path / "kitty-specs" / "demo-mission"
@@ -100,7 +100,7 @@ def test_resolver_reads_recorded_verdict(tmp_path: Path) -> None:
 
 def test_resolver_unarmed_spec_is_none(tmp_path: Path) -> None:
     root, feature_dir = _project_with_armed_spec(tmp_path)
-    (root / ".kittify" / "architecture" / "project.yaml").write_text(
+    (root / ".kittify" / "crest-spec" / "project.yaml").write_text(
         MINIMAL_PROJECT.replace("  projectChecks: []\n", ""), encoding="utf-8"
     )
     assert resolve_deterministic_acceptance(root, feature_dir) is None
@@ -108,7 +108,7 @@ def test_resolver_unarmed_spec_is_none(tmp_path: Path) -> None:
 
 def test_resolver_invalid_spec_fails_closed(tmp_path: Path) -> None:
     root, feature_dir = _project_with_armed_spec(tmp_path)
-    (root / ".kittify" / "architecture" / "goals.yaml").write_text(
+    (root / ".kittify" / "crest-spec" / "goals.yaml").write_text(
         "goals:\n  ship:\n    capabilities: [missing]\n", encoding="utf-8"
     )
     assert resolve_deterministic_acceptance(root, feature_dir) == "invalid-spec"

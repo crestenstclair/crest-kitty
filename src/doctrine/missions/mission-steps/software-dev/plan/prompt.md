@@ -104,28 +104,28 @@ Before asking planning questions or generating artifacts, you must make the bran
 
 ## Architecture Spec Grounding (required when present)
 
-<!-- architecture-spec:start (port/crestopenspec-gates) -->
+<!-- crest-spec:start (port/crestopenspec-gates) -->
 Before composing the plan, run:
 
 ```bash
-spec-kitty context architecture
+spec-kitty crest-spec context
 ```
 
 - If it reports **not applicable**, skip this section entirely.
 - If it fails with diagnostics, STOP: the spec must be repaired (see
-  `spec-kitty doctor architecture`) before planning continues — an invalid
-  architecture spec blocks acceptance (fail-closed).
+  `spec-kitty crest-spec doctor`) before planning continues — an invalid
+  crest-spec blocks acceptance (fail-closed).
 - Otherwise, read the interpretation contract and the resolved project value
   it prints. The spec is authoritative for boundaries, dependency direction,
   contracts, invariants, and traceability. Never silently plan around a
   conflict: if the mission changes architecture, edit the spec source files
-  under `.kittify/architecture/` during planning and re-run the command.
-- `plan.md` MUST include an `## Architecture Reconciliation` section listing:
+  under `.kittify/crest-spec/` during planning and re-run the command.
+- `plan.md` MUST include an `## Crest-Spec Derivation` section listing:
   the affected canonical resource IDs, any spec files edited (or "none —
   conforms"), and which declared validations/witnesses cover the change.
   Acceptance blocks on this section when a spec exists. Keep it a dense
   bullet index, not another prose design document.
-<!-- architecture-spec:end -->
+<!-- crest-spec:end -->
 
 ## Charter Context Bootstrap (required)
 

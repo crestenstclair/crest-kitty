@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from specify_cli.acceptance.execution_contract import (
-    ARCHITECTURE_DRIFT_GUARD_IDS,
+    CREST_SPEC_DRIFT_GUARD_IDS,
     EXECUTION_ACCEPTANCE_CONTRACT,
 )
 
@@ -36,8 +36,8 @@ def test_contract_embedded_verbatim(step: str) -> None:
 
 
 def test_all_guard_ids_present_in_contract() -> None:
-    assert len(ARCHITECTURE_DRIFT_GUARD_IDS) == 9  # golden-count: cardinality-is-contract
-    for guard_id in ARCHITECTURE_DRIFT_GUARD_IDS:
+    assert len(CREST_SPEC_DRIFT_GUARD_IDS) == 9  # golden-count: cardinality-is-contract
+    for guard_id in CREST_SPEC_DRIFT_GUARD_IDS:
         assert f"#### {guard_id}" in EXECUTION_ACCEPTANCE_CONTRACT
 
 
@@ -56,14 +56,14 @@ def test_contract_stays_language_neutral() -> None:
 
 
 def test_drift_case_fixture_matrix_is_complete() -> None:
-    fixture = REPO / "tests" / "fixtures" / "adversarial-review" / "architecture-drift-cases.json"
+    fixture = REPO / "tests" / "fixtures" / "adversarial-review" / "crest-spec-drift-cases.json"
     payload = json.loads(fixture.read_text(encoding="utf-8"))
     assert payload["languageNeutral"] is True
     cases = payload["cases"]
 
     for case in cases:
         assert case["dialect"] in {"neutral-trace-v1", "neutral-sequence-v1"}
-        assert case["guard"] in ARCHITECTURE_DRIFT_GUARD_IDS
+        assert case["guard"] in CREST_SPEC_DRIFT_GUARD_IDS
         assert case["outcome"] in {"blocking", "conforming"}
         assert case["authority"]["classification"] in {"CURRENT_SLICE", "EVERGREEN_INVARIANT"}
         assert case["productionTrace"], f"{case['id']} lacks a production trace"

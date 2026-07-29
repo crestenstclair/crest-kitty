@@ -48,8 +48,10 @@ pytestmark = [pytest.mark.fast]
 # is deterministic regardless of test import order.
 _apply_short_help_options(app)
 
-# --- Frozen contract: the 17 subcommand names (cli-surface-contract.md) -------
-# 16 de-godding names (#2059) + ``contracts`` (#2441, Contract Registry validator).
+# --- Frozen contract: the 19 subcommand names (cli-surface-contract.md) -------
+# 16 de-godding names (#2059) + ``contracts`` (#2441, Contract Registry validator)
+# + ``cutover`` (#2917) + ``crest-spec`` (port/crest-spec-bedrock: the doctor-hub
+# delegate for ``spec-kitty crest-spec doctor``).
 
 FROZEN_SUBCOMMANDS: frozenset[str] = frozenset(
     {
@@ -71,6 +73,7 @@ FROZEN_SUBCOMMANDS: frozenset[str] = frozenset(
         "doctrine",
         "coordination",
         "cutover",
+        "crest-spec",
     }
 )
 
@@ -111,6 +114,7 @@ EXPECTED_OPTIONS: dict[str, dict[str, str]] = {
     "doctrine": {"--json": "flag"},
     "coordination": {"--fix": "flag", "--json": "flag", "--check-staleness": "flag"},
     "cutover": {"--json": "flag"},
+    "crest-spec": {"--json": "flag"},
 }
 
 # Golden ``--help`` snapshots (whitespace-normalized) per subcommand.
@@ -407,6 +411,20 @@ EXPECTED_HELP: dict[str, list[str]] = {
         '--check-staleness Also report coord-branch-vs-target-branch staleness '
         '(Gap-1, FR-008): non-blocking, whether the coord branch is behind or has '
         "diverged from its mission's target_branch.",
+        '--help -h Show this message and exit.',
+    ],
+    'crest-spec': [
+        'Usage: doctor crest-spec [OPTIONS]',
+        'Validate the project crest-spec (.kittify/crest-spec).',
+        'Loads and expands the terse YAML crest-spec fail-closed, reporting',
+        'every diagnostic, and summarizes the resolved model. An absent',
+        'crest-spec is reported as not-applicable, not an error. Never executes',
+        'declared validations. Same runner as ``spec-kitty crest-spec doctor``.',
+        'Examples:',
+        'spec-kitty doctor crest-spec',
+        'spec-kitty doctor crest-spec --json',
+        'Options',
+        '--json Machine-readable JSON output',
         '--help -h Show this message and exit.',
     ],
     'cutover': [

@@ -11,7 +11,7 @@ from specify_cli.acceptance.deterministic.model import AcceptanceScope
 
 pytestmark = pytest.mark.unit
 
-FIXTURES = Path(__file__).parents[1] / "fixtures" / "architecture"
+FIXTURES = Path(__file__).parents[1] / "fixtures" / "crest_spec"
 PROJECT_SCOPE = AcceptanceScope(mode="project")
 
 

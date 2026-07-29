@@ -15,9 +15,9 @@ import pytest
 
 from specify_cli.acceptance.deterministic.model import AcceptanceScope
 from specify_cli.acceptance.deterministic.service import AcceptanceService
-from specify_cli.acceptance import _check_architecture_reconciliation
-from specify_cli.architecture import load_architecture, render_architecture_context
-from specify_cli.cli.commands._architecture_doctor import run_architecture_doctor
+from specify_cli.acceptance import _check_crest_spec_derivation
+from specify_cli.crest_spec import load_crest_spec, render_crest_spec_context
+from specify_cli.cli.commands._crest_spec_doctor import run_crest_spec_doctor
 from specify_cli.missions._archive import resolve_deterministic_acceptance
 
 pytestmark = pytest.mark.integration
@@ -30,7 +30,7 @@ def armed_project(tmp_path: Path) -> tuple[Path, Path, Path]:
     """A project whose single declared check writes a sentinel when executed."""
     sentinel = tmp_path / "EXECUTED"
     command = json.dumps([PY, "-c", f"open({str(sentinel)!r}, 'w').write('ran')"])
-    spec = tmp_path / ".kittify" / "architecture"
+    spec = tmp_path / ".kittify" / "crest-spec"
     (spec / "proof").mkdir(parents=True)
     (spec / "project.yaml").write_text(
         "name: demo\nmission: boundary\nnonGoals: {}\nmeta: {}\nlayers: [domain]\n"
@@ -52,21 +52,21 @@ attachedValidations: {{}}
     )
     feature_dir = tmp_path / "kitty-specs" / "demo-mission"
     feature_dir.mkdir(parents=True)
-    (feature_dir / "plan.md").write_text("## Architecture Reconciliation\n- none\n", encoding="utf-8")
+    (feature_dir / "plan.md").write_text("## Crest-Spec Derivation\n- none\n", encoding="utf-8")
     return tmp_path, feature_dir, sentinel
 
 
 def test_ordinary_reads_execute_nothing(armed_project: tuple[Path, Path, Path]) -> None:
     root, feature_dir, sentinel = armed_project
 
-    architecture = load_architecture(root)
+    architecture = load_crest_spec(root)
     assert architecture is not None
-    render_architecture_context(architecture)
+    render_crest_spec_context(architecture)
 
-    assert run_architecture_doctor(root, json_output=True) == 0
+    assert run_crest_spec_doctor(root, json_output=True) == 0
 
     issues: list[str] = []
-    _check_architecture_reconciliation(root, feature_dir, issues)
+    _check_crest_spec_derivation(root, feature_dir, issues)
     assert issues == []
 
     assert resolve_deterministic_acceptance(root, feature_dir) == "missing"

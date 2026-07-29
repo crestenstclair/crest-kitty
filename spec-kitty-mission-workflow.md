@@ -56,7 +56,7 @@ Run acceptance after the final WP is approved:
 ```
 
 Acceptance checks mission readiness. When the project declares an
-architecture spec (`.kittify/architecture`), accept also runs deterministic
+crest-spec (`.kittify/crest-spec`), accept also runs deterministic
 acceptance — every declared project check and applicable attached validation —
 and records the versioned report to `<mission>/deterministic-acceptance.json`.
 Both layers must pass: the deterministic gates and the adversarial semantic

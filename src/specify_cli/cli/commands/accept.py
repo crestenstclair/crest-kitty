@@ -601,7 +601,7 @@ def accept(
     deterministic_only: bool = typer.Option(
         False,
         "--deterministic-only",
-        help="Run only the deterministic architecture-spec acceptance engine and emit its report.",
+        help="Run only the deterministic crest-spec acceptance engine and emit its report.",
     ),
 ) -> None:
     """Validate mission readiness before merging to main."""
@@ -663,7 +663,7 @@ def accept(
         if json_output:
             print(json.dumps(det_report.to_dict(), indent=2))
         elif not det_report.applicable:
-            console.print("[yellow]Deterministic acceptance not applicable (no armed architecture spec).[/yellow]")
+            console.print("[yellow]Deterministic acceptance not applicable (no armed crest-spec).[/yellow]")
         elif det_report.passed:
             print_deterministic_success(det_report)
         else:

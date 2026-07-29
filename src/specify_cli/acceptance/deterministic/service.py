@@ -3,14 +3,15 @@
 Port of CrestOpenSpec's ``service.ts`` (reference in
 ``research/crestopenspec-port/``), adapted to crest-kitty:
 
-- The architecture gate loads the terse-YAML spec instead of evaluating CUE;
-  the upstream codes ``cue_architecture_evaluation_failed`` /
+- The crest-spec gate loads the terse-YAML crest-spec instead of evaluating
+  CUE; the upstream codes ``cue_architecture_evaluation_failed`` /
   ``acceptance_not_applicable_no_cue`` are renamed
-  ``architecture_evaluation_failed`` / ``acceptance_not_applicable_no_architecture``.
+  ``crest_spec_evaluation_failed`` / ``acceptance_not_applicable_no_crest_spec``.
 - Upstream's strict-OpenSpec gate has no analogue here: mission-artifact
   validation is `spec-kitty accept`'s existing summary machinery, which runs
-  around this engine. The deterministic report carries the ``architecture``
-  and ``validations`` gates only.
+  around this engine. The deterministic report carries the ``crest_spec``
+  and ``validations`` gates only (report version 3.0 renamed the former
+  ``architecture`` gate key).
 - Runtime-session proofs dispatch through ``runtime_session_registry``; the
   default registry registers ``process-lifecycle-v1`` from
   ``specify_cli.acceptance.runtime_lifecycle``. An unknown provider name still
@@ -106,7 +107,7 @@ def _scope_dict(scope: AcceptanceScope) -> dict[str, Any]:
 
 def _gates_skeleton() -> dict[str, Any]:
     return {
-        "architecture": {"status": "not_applicable", "files": [], "diagnostics": []},
+        "crest_spec": {"status": "not_applicable", "files": [], "diagnostics": []},
         "validations": {
             "status": "not_applicable",
             "declaredProjectChecks": 0,
@@ -175,17 +176,17 @@ class AcceptanceService:
     def __init__(
         self,
         *,
-        architecture_loader: Callable[[Path], Any] | None = None,
+        crest_spec_loader: Callable[[Path], Any] | None = None,
         command_runner: Any | None = None,
         assertion_registry: AssertionEvaluatorRegistry | None = None,
         test_evidence_registry: TestEvidenceProviderRegistry | None = None,
         runtime_session_registry: RuntimeSessionRegistry | None = None,
     ) -> None:
-        if architecture_loader is None:
-            from specify_cli.architecture import load_architecture
+        if crest_spec_loader is None:
+            from specify_cli.crest_spec import load_crest_spec
 
-            architecture_loader = load_architecture
-        self._load_architecture = architecture_loader
+            crest_spec_loader = load_crest_spec
+        self._load_crest_spec = crest_spec_loader
         self._runner = command_runner or LocalCommandRunner()
         self._assertions = assertion_registry or create_default_assertion_registry()
         self._test_evidence = test_evidence_registry or create_default_test_evidence_registry()
@@ -205,16 +206,16 @@ class AcceptanceService:
             gates=_gates_skeleton(),
         )
 
-        architecture, stop = self._architecture_gate(project_root, report)
-        if stop or architecture is None:
+        crest_spec, stop = self._crest_spec_gate(project_root, report)
+        if stop or crest_spec is None:
             return report
 
-        resolution = resolve_validation_inventory(architecture.project, str(project_root), scope)
+        resolution = resolve_validation_inventory(crest_spec.project, str(project_root), scope)
         if not resolution.declared:
             diagnostic = AcceptanceDiagnostic(
                 code="acceptance_not_applicable_no_executable_validations",
                 message=(
-                    "The architecture spec declares neither project completion checks nor attached "
+                    "The crest-spec declares neither project completion checks nor attached "
                     "test/runtime validations; executable acceptance gates are not applicable."
                 ),
                 path="project",
@@ -256,28 +257,28 @@ class AcceptanceService:
         report.passed = not failures
         return report
 
-    def _architecture_gate(self, project_root: Path, report: AcceptanceReport) -> tuple[Any, bool]:
-        """Populate the architecture gate.
+    def _crest_spec_gate(self, project_root: Path, report: AcceptanceReport) -> tuple[Any, bool]:
+        """Populate the crest-spec gate.
 
-        Returns ``(architecture, stop)``: ``stop`` is True when the gate failed
+        Returns ``(crest_spec, stop)``: ``stop`` is True when the gate failed
         or reported not-applicable and ``run`` must return the report as-is.
         """
         try:
-            architecture = self._load_architecture(project_root)
+            crest_spec = self._load_crest_spec(project_root)
         except Exception as cause:
             diagnostic = AcceptanceDiagnostic(
-                code="architecture_evaluation_failed", message=str(cause), path=str(project_root)
+                code="crest_spec_evaluation_failed", message=str(cause), path=str(project_root)
             )
-            report.gates["architecture"] = {"status": "failed", "files": [], "diagnostics": [diagnostic.to_dict()]}
+            report.gates["crest_spec"] = {"status": "failed", "files": [], "diagnostics": [diagnostic.to_dict()]}
             report.diagnostics = [diagnostic.to_dict()]
             return None, True
-        if architecture is None:
+        if crest_spec is None:
             diagnostic = AcceptanceDiagnostic(
-                code="acceptance_not_applicable_no_architecture",
-                message="No architecture spec is present; deterministic acceptance gates are not applicable.",
+                code="acceptance_not_applicable_no_crest_spec",
+                message="No crest-spec is present; deterministic acceptance gates are not applicable.",
                 severity="info",
             )
-            report.gates["architecture"] = {
+            report.gates["crest_spec"] = {
                 "status": "not_applicable",
                 "files": [],
                 "diagnostics": [diagnostic.to_dict()],
@@ -286,13 +287,13 @@ class AcceptanceService:
             report.applicable = False
             report.passed = True
             return None, True
-        report.gates["architecture"] = {
+        report.gates["crest_spec"] = {
             "status": "passed",
-            "root": str(architecture.root),
-            "files": [str(f) for f in architecture.files],
+            "root": str(crest_spec.root),
+            "files": [str(f) for f in crest_spec.files],
             "diagnostics": [],
         }
-        return architecture, False
+        return crest_spec, False
 
     def _run_check_process(
         self, check: ResolvedValidation, request: ProcessExecutionRequest
