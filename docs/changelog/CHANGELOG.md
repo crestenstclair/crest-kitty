@@ -17,8 +17,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _The 3.2.6 development cycle is open. Entries land here as missions merge._
 
+### 💥 Breaking
+
+- **The architecture spec is now the crest-spec — the bedrock, by name and by
+  gate (port/crest-spec-bedrock).** The DDD declaration ported from
+  CrestOpenSpec has its name back and its authority inverted: planning,
+  work packages, code, and proof derive FROM the crest-spec; it is never
+  reconciled to other documents after the fact.
+  - Consumer home renamed: `.kittify/architecture/` → `.kittify/crest-spec/`
+    (config key `architecture.root` → `crest_spec.root`). The legacy layout is
+    a fail-loud diagnostic (`crest_spec_legacy_root` /
+    `crest_spec_legacy_config`) with the exact `git mv` remedy — never a
+    silent fallback.
+  - CLI renamed: `spec-kitty crest-spec context` / `spec-kitty crest-spec
+    doctor` (first-class group) replace `spec-kitty context architecture` /
+    `spec-kitty doctor architecture` (`spec-kitty doctor crest-spec` remains
+    as the diagnostics-hub delegate).
+  - Deterministic acceptance report v3.0: gate key `architecture` →
+    `crest_spec`; diagnostic codes `architecture_*` → `crest_spec_*`.
+  - The software-dev workflow gains a mandatory authoring phase:
+    `specify → crest-spec → plan → tasks → implement → review → merge`
+    (`/spec-kitty.crest-spec`), superseding the C-008 byte-locked sequence by
+    operator instruction.
+  - `## Architecture Reconciliation` is retired; `plan.md` records
+    `## Crest-Spec Derivation` (which resources the mission adds/changes/
+    retires and which assets produce which files).
+
 ### ✨ Added
 
+- **Executable crest-spec derivation gates.** Prose is not a control:
+  - Plan entry gate `CREST_SPEC_UNDERIVED` — a mission declaring
+    `crest_spec_impact: structural` cannot advance planning while the
+    crest-spec is untouched.
+  - Implement gate `crest_spec_underived` — a work package whose
+    `owned_files` trace to no declared asset `filePattern` is refused at
+    claim time.
+  - Accept gates `crest_spec_unproven` (behavior added without a declared
+    validation/witness/acceptance proof) and `crest_spec_duplicate_artifacts`
+    (`data-model.md` / `contracts/` are forbidden forks of the canonical
+    resources when a crest-spec exists).
+  - Every mission in a crest-spec project declares `crest_spec_impact` in
+    `meta.json` (`structural` | `predeclared` | `none`) — explicit, never a
+    silent default; doc-fix missions opt out with `none`.
 - **CLI UX: shell autocompletion, a `-h` short-help alias, and alphabetical
   command listing (#2232, #2234, #2235).** Three additive quality-of-life
   improvements to the `spec-kitty` command surface, with no behavior change to

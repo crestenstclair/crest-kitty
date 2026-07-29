@@ -331,7 +331,7 @@ def test_tier_eligible_tier2_requires_evidence_ref() -> None:
     assert tier_eligible(started, _make_completed(evidence_ref=".kittify/evidence/test/")).tier_2 is True
 
 
-@pytest.mark.parametrize("action", ["specify", "plan", "tasks", "merge", "accept"])
+@pytest.mark.parametrize("action", ["specify", "crest-spec", "plan", "tasks", "merge", "accept"])
 def test_tier_eligible_tier3_for_durable_actions(action: str) -> None:
     assert tier_eligible(_make_started(action=action)).tier_3 is True
 
@@ -381,7 +381,7 @@ def test_promote_to_evidence_directory_named_by_invocation_id(tmp_path: Path) ->
 
 
 def test_tier3_actions_contains_expected() -> None:
-    assert {"specify", "plan", "tasks", "merge", "accept"} <= TIER_3_ACTIONS
+    assert {"specify", "crest-spec", "plan", "tasks", "merge", "accept"} <= TIER_3_ACTIONS
 
 
 def test_tier3_actions_excludes_review_and_implement() -> None:

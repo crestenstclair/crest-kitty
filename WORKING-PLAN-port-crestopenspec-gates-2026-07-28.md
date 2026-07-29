@@ -1,5 +1,18 @@
 # Working Plan: Port CrestOpenSpec Additions to crest-kitty
 
+> **Rev 4 (2026-07-28, branch `port/crest-spec-bedrock`): the concept is named
+> the crest-spec and made the bedrock.** Supersedes this plan's naming: the
+> spec home is `.kittify/crest-spec/` (config `crest_spec.root`; the legacy
+> `architecture` layout fails loud), the module is
+> `src/specify_cli/crest_spec/`, the CLI is `spec-kitty crest-spec
+> context|doctor`, the plan artifact section is `## Crest-Spec Derivation`
+> (reconciliation vocabulary retired), the software-dev workflow inserts a
+> mandatory `crest-spec` authoring phase after specify (D5/C-008 superseded by
+> operator instruction), and derivation is enforced by executable gates
+> (`CREST_SPEC_UNDERIVED`, `crest_spec_underived`, `crest_spec_unproven`,
+> `crest_spec_duplicate_artifacts`). References to `.kittify/architecture`
+> below are historical.
+
 Date: 2026-07-28 (rev 3 — Phases 0-5 complete on branch port/crestopenspec-gates; crest-synth cut over and 26/26 validations passing through the ported engine. Open: crest-kitty dogfood spec (needs owner intent) and CI enforcement once it exists.)
 Source: `~/workspace/CrestOpenSpec` (fork of Fission-AI/OpenSpec, merge-base `19d4171`)
 Feature inventory: `~/workspace/CrestOpenSpec/docs/crest-fork-features.md`

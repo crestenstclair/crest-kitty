@@ -169,10 +169,11 @@ MINIMAL_VIABLE_TRAIL_POLICY = MinimalViableTrailPolicy(
         mandatory=False,
         description=(
             "Promotion to kitty-specs/ or doctrine artifacts only when invocation "
-            "changes project-domain state. Applies to specify, plan, tasks, merge, accept only."
+            "changes project-domain state. Applies to specify, crest-spec, plan, "
+            "tasks, merge, accept only."
         ),
         storage_path="kitty-specs/{mission_slug}/",
-        promotion_trigger="spec, plan, tasks, merge, accept commands only",
+        promotion_trigger="spec, crest-spec, plan, tasks, merge, accept commands only",
     ),
 )
 
@@ -185,6 +186,7 @@ MINIMAL_VIABLE_TRAIL_POLICY = MinimalViableTrailPolicy(
 TIER_3_ACTIONS: frozenset[str] = frozenset(
     {
         "specify",
+        "crest-spec",
         "plan",
         "tasks",
         "merge",

@@ -55,6 +55,7 @@ PROMPT_BACKED_COMMANDS: tuple[str, ...] = (
     "accept",
     "analyze",
     "charter",
+    "crest-spec",
     "implement",
     "plan",
     "research",

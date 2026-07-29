@@ -327,6 +327,44 @@ topologies; primary otherwise), not the open worktree.
 
 ---
 
+## The Crest-Spec (Bedrock DDD Declaration)
+
+**The crest-spec is the single source of implementation intent.** It is the
+terse, ID-referenced YAML tree at `.kittify/crest-spec/` (config key
+`crest_spec.root`): intent (mission, goals, capabilities, requirements),
+bounded contexts and resources, the generation layer (`assetKinds` +
+`assets`), and the proof model (validations, witnesses, evidence,
+invariants). Planning, work packages, code, and proof **derive FROM it** — it
+is never reconciled to other documents after the fact, and it is never edited
+to permit code that was already planned.
+
+- **Workflow order:** `specify → crest-spec → plan → tasks → implement →
+  review → merge`. `/spec-kitty.crest-spec` is the authoring phase; every
+  mission in a crest-spec project declares `crest_spec_impact` in `meta.json`
+  (`structural` | `predeclared` | `none`).
+- **CLI:** `spec-kitty crest-spec context` (agent grounding: interpretation
+  contract + resolved model + relationships), `spec-kitty crest-spec doctor`
+  (fail-closed validation; also reachable as `spec-kitty doctor crest-spec`).
+- **Gates (executable, not prose):** plan entry `CREST_SPEC_UNDERIVED`
+  (structural mission, untouched crest-spec); implement
+  `crest_spec_underived` (WP `owned_files` trace to no declared asset
+  `filePattern`); accept `crest_spec_unproven` (added behavior without
+  declared proof) and `crest_spec_duplicate_artifacts` (`data-model.md` /
+  `contracts/` forbidden when a crest-spec exists — they fork
+  `valueObjects`/`aggregates`/`ports`).
+- **Vocabulary:** `plan.md` records `## Crest-Spec Derivation` (derivation,
+  never "reconciliation" in this direction). Say "the crest-spec", never
+  "the architecture spec".
+- **Package:** `src/specify_cli/crest_spec/` — `loader.py` (fail-closed;
+  legacy `.kittify/architecture` layouts raise `crest_spec_legacy_root` /
+  `crest_spec_legacy_config`, no silent fallback), `expansion.py`,
+  `identifiers.py`, `relationships.py`, `contract.py`, `derivation.py`
+  (the gates). Tests: `tests/crest_spec/`.
+- The schema and loader semantics are unchanged from the CrestOpenSpec port —
+  this is a naming and authority model, not a format change.
+
+---
+
 ## Merge & Preflight Patterns (0.11.0+)
 
 Merge progress saved in `.kittify/merge-state.json` for resumable operations.
@@ -607,7 +645,7 @@ When user's request matches a skill, invoke via Skill tool. When in doubt, invok
 **Spec Kitty v3.2.0rc39** — project: unknown (healthy)
 
 Two usage patterns:
-- **Full mission** (spec → plan → tasks → implement → review → merge):
+- **Full mission** (spec → crest-spec → plan → tasks → implement → review → merge):
   trigger: "spec out", "create a mission", "write a spec", "plan this"
   → run `/spec-kitty.specify`
 - **Lightweight dispatch** (ad-hoc fix, question, or advice — no mission created):

@@ -24,6 +24,7 @@ from __future__ import annotations
 CONSUMER_SKILLS: frozenset[str] = frozenset(
     {
         "specify",
+        "crest-spec",
         "plan",
         "tasks",
         "tasks-outline",
@@ -57,6 +58,7 @@ INTERNAL_SKILLS: frozenset[str] = frozenset(
 PROMPT_DRIVEN_COMMANDS: frozenset[str] = frozenset(
     {
         "specify",
+        "crest-spec",
         "plan",
         "tasks",
         "tasks-outline",

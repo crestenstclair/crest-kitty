@@ -306,11 +306,11 @@ jobs:
             acceptance:
               - 'src/specify_cli/acceptance/**'
               - 'src/specify_cli/state/**'
-              # port/crestopenspec-gates: the architecture-spec loader is the
-              # first acceptance gate (same family), so its src cone + tests
-              # route through the acceptance group instead of a new group.
-              - 'src/specify_cli/architecture/**'
-              - 'tests/architecture_spec/**'
+              # port/crest-spec-bedrock: the crest-spec loader is the first
+              # acceptance gate (same family), so its src cone + tests route
+              # through the acceptance group instead of a new group.
+              - 'src/specify_cli/crest_spec/**'
+              - 'tests/crest_spec/**'
               - 'tests/specify_cli/test_canonical_acceptance.py'
               - 'tests/specify_cli/test_gitignore_contract.py'
               - 'tests/specify_cli/test_state_contract.py'

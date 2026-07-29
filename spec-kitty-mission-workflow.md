@@ -13,19 +13,39 @@ Create the mission spec from the intake prompt:
 ```
 
 Confirm the mission slug, target branch, and requirement scope before planning.
+When the project declares a crest-spec, the spec references its canonical
+capabilities and requirements — it never restates them.
 
-## Phase 2: Plan
+## Phase 2: Crest-Spec
 
-Generate the plan from the approved spec:
+Author the crest-spec — the bedrock declaration the rest of the mission
+derives from:
+
+```bash
+/spec-kitty.crest-spec
+```
+
+Declare `crest_spec_impact` in `meta.json` (`structural` | `predeclared` |
+`none`). Structural missions edit `.kittify/crest-spec/` here — resources,
+assets, and proof — and validate with `spec-kitty crest-spec doctor` until the
+model closes. Projects without a crest-spec skip this phase. The plan gate
+(`CREST_SPEC_UNDERIVED`) refuses to advance a structural mission whose
+crest-spec is untouched.
+
+## Phase 3: Plan
+
+Generate the plan from the approved spec and the authored crest-spec:
 
 ```bash
 /spec-kitty.plan @start-here.md
 ```
 
 Keep branch intent explicit. If the mission should land somewhere other than
-`main`, resolve that before tasks are generated.
+`main`, resolve that before tasks are generated. When a crest-spec exists,
+`plan.md` records the `## Crest-Spec Derivation` section, and `data-model.md`
+/ `contracts/` are forbidden — the plan points at canonical resources.
 
-## Phase 3: Tasks
+## Phase 4: Tasks
 
 Generate and finalize tasks:
 
@@ -34,9 +54,12 @@ Generate and finalize tasks:
 spec-kitty agent mission finalize-tasks --mission <mission-slug>
 ```
 
-Review lane assignments and owned files before implementation begins.
+Review lane assignments and owned files before implementation begins. When a
+crest-spec exists, work packages derive from its `assets[]`, and every
+`owned_files` entry must trace to a declared asset's file pattern — the
+implement gate refuses undeclared work (`crest_spec_underived`).
 
-## Phase 4: Implement and Review
+## Phase 5: Implement and Review
 
 Run the implement-review loop until every WP is approved:
 
@@ -47,7 +70,7 @@ Run the implement-review loop until every WP is approved:
 Each implementer edits only the execution workspace printed by
 `spec-kitty agent action implement`.
 
-## Phase 5: Accept
+## Phase 6: Accept
 
 Run acceptance after the final WP is approved:
 
@@ -55,16 +78,20 @@ Run acceptance after the final WP is approved:
 /spec-kitty.accept
 ```
 
-Acceptance checks mission readiness. When the project declares an
+Acceptance checks mission readiness. When the project declares a
 crest-spec (`.kittify/crest-spec`), accept also runs deterministic
 acceptance — every declared project check and applicable attached validation —
-and records the versioned report to `<mission>/deterministic-acceptance.json`.
+and records the versioned report to `<mission>/deterministic-acceptance.json`,
+and it enforces the derivation direction: `plan.md` must carry the
+`## Crest-Spec Derivation` section, behavior added without declared proof
+blocks (`crest_spec_unproven`), and duplicate planning artifacts block
+(`crest_spec_duplicate_artifacts`).
 Both layers must pass: the deterministic gates and the adversarial semantic
 review embedded in the accept prompt. Accept is the only step that executes
 declared validations; archive later consumes the recorded verdict (guard AM-6)
 and never re-runs it. Merge still performs its own pre-flight validation.
 
-## Phase 6: Merge Preview
+## Phase 7: Merge Preview
 
 Preview the merge before mutating the target branch:
 
@@ -75,7 +102,7 @@ spec-kitty merge --mission <mission-slug> --dry-run
 Resolve dirty worktrees, missing worktrees, and dependency ordering issues
 before continuing.
 
-## Phase 7: Merge or Open a Focused PR
+## Phase 8: Merge or Open a Focused PR
 
 If the target branch is synchronized with its tracking branch, merge normally:
 
@@ -122,7 +149,7 @@ commits:
 gh pr merge --squash --delete-branch
 ```
 
-## Phase 8: Mission Review
+## Phase 9: Mission Review
 
 After the PR lands, run mission review from a checkout containing the landed
 changes:
@@ -133,7 +160,7 @@ spec-kitty agent mission review --mission <mission-slug>
 
 Use the review to confirm spec-to-code fidelity and requirement coverage.
 
-## Phase 9: Retrospective
+## Phase 10: Retrospective
 
 Verify or create the retrospective, then inspect synthesis proposals:
 

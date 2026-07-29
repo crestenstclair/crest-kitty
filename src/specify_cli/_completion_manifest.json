@@ -526,6 +526,23 @@
     }
    }
   },
+  "crest-spec": {
+   "help": "The crest-spec: the project's bedrock DDD declaration (context / doctor).",
+   "hidden": false,
+   "deprecated": false,
+   "commands": {
+    "context": {
+     "help": "Render the crest-spec for agent context.\n\nPrints the interpretation contract, source files, relationship index, and\nthe resolved project value from the crest-spec root (default\n.kittify/crest-spec). Agents run this at the start of crest-spec\nauthoring, planning, and implementation to ground work in the declared\nmodel. Ordinary read: never executes declared validations.",
+     "hidden": false,
+     "deprecated": false
+    },
+    "doctor": {
+     "help": "Validate the crest-spec (.kittify/crest-spec) fail-closed.\n\nLoads and expands the terse YAML crest-spec, reporting every diagnostic,\nand summarizes the resolved model. An absent crest-spec is reported as\nnot-applicable, not an error. Never executes declared validations.\n\nExamples:\n    spec-kitty crest-spec doctor\n    spec-kitty crest-spec doctor --json",
+     "hidden": false,
+     "deprecated": false
+    }
+   }
+  },
   "cutover-guard": {
    "help": "Diff-scoped fail-closed cut-over gate (pre-merge required check).",
    "hidden": false,
@@ -565,6 +582,11 @@
     },
     "skills": {
      "help": "Check command-skill manifest drift for Codex, Vibe, Pi, and Letta.",
+     "hidden": false,
+     "deprecated": false
+    },
+    "crest-spec": {
+     "help": "Validate the project crest-spec (.kittify/crest-spec).\n\nLoads and expands the terse YAML crest-spec fail-closed, reporting\nevery diagnostic, and summarizes the resolved model. An absent\ncrest-spec is reported as not-applicable, not an error. Never executes\ndeclared validations. Same runner as ``spec-kitty crest-spec doctor``.\n\nExamples:\n    spec-kitty doctor crest-spec\n    spec-kitty doctor crest-spec --json",
      "hidden": false,
      "deprecated": false
     },
