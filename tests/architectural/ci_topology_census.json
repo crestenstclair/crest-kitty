@@ -289,7 +289,6 @@
   "mapped_dirs": [
     "acceptance",
     "agent_utils",
-    "architecture",
     "audit",
     "auth",
     "bulk_edit",
@@ -301,6 +300,7 @@
     "contracts",
     "coordination",
     "core",
+    "crest_spec",
     "dashboard",
     "decisions",
     "delivery",

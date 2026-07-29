@@ -1759,7 +1759,6 @@ jobs:
               tests/_factories
               tests/_support
               tests/acceptance
-              tests/architecture_spec
               tests/calibration
               tests/characterization
               tests/ci
@@ -1767,6 +1766,7 @@ jobs:
               tests/contract
               tests/coordination
               tests/core
+              tests/crest_spec
               tests/cross_branch
               tests/docs
               tests/doctor

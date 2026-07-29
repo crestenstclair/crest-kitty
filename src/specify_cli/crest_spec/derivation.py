@@ -423,13 +423,9 @@ def forbidden_duplicate_artifacts(feature_dir: Path) -> list[str]:
 
 
 # __all__ lists only the gate entry points src/ consumers import (symbol-level
-# dead-code gate, FR-303); the pure helpers stay importable for tests without
-# being declared public surface.
+# dead-code gate, FR-303); the result dataclass, impact constants, and pure
+# helpers stay importable for tests without being declared public surface.
 __all__ = [
-    "DerivationGateResult",
-    "IMPACT_NONE",
-    "IMPACT_PREDECLARED",
-    "IMPACT_STRUCTURAL",
     "check_added_resource_proof",
     "check_plan_derivation",
     "check_wp_derivation",
