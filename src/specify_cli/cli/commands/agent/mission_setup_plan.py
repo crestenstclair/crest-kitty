@@ -393,6 +393,53 @@ def _enforce_spec_gate(
     return True
 
 
+def _enforce_crest_spec_gate(
+    repo_root: Path,
+    meta_dir: Path,
+    feature_dir: Path,
+    mission_slug: str,
+    *,
+    target_branch: str,
+    current_branch: str,
+    json_output: bool,
+) -> bool:
+    """Crest-spec derivation gate at plan entry (derivation, not reconciliation).
+
+    The crest-spec is the bedrock: a mission that declares structural change
+    must have touched it BEFORE planning advances. Blocks (returns ``True``)
+    when the crest-spec is invalid (fail-closed), when ``crest_spec_impact``
+    is undeclared, or when a structural mission's diff shows no crest-spec
+    change. Not applicable (returns ``False``) when the project has no
+    crest-spec.
+
+    The structural-diff requirement is evaluated against ``target_branch``
+    only when planning runs on a different branch (merge-base diff plus the
+    working tree); planning directly on the target branch skips just that
+    sub-check, never the impact declaration or fail-closed validity.
+    """
+    from specify_cli.crest_spec.derivation import check_plan_derivation
+
+    base_ref = target_branch if target_branch and current_branch != target_branch else None
+    result = check_plan_derivation(repo_root, meta_dir, base_ref)
+    if result.passed:
+        return False
+
+    blocked_reason = " ".join(result.errors)
+    payload = {
+        "result": "blocked",
+        "phase_complete": False,
+        "blocked_reason": blocked_reason,
+        "error_code": "CREST_SPEC_UNDERIVED",
+        "mission_slug": mission_slug,
+        "feature_dir": str(feature_dir.resolve()),
+    }
+    if json_output:
+        _emit_json(_inject_branch_contract(payload, target_branch=target_branch, current_branch=current_branch))
+    else:
+        console.print(f"[yellow]Blocked:[/yellow] {blocked_reason}")
+    return True
+
+
 def _resolve_plan_template(repo_root: Path, feature_dir: Path) -> ResolutionResult:
     """Resolve the activated mission's configured ``plan`` template once.
 
@@ -946,6 +993,20 @@ def setup_plan(
             feature_dir,
             mission_slug,
             repo_root,
+            target_branch=target_branch,
+            current_branch=current_branch,
+            json_output=json_output,
+        ):
+            return
+
+        # Crest-spec derivation gate: structural missions author the
+        # crest-spec BEFORE the plan derives from it. meta.json (canonical
+        # ``crest_spec_impact``) lives on the planning read surface.
+        if _enforce_crest_spec_gate(
+            repo_root,
+            plan_read_dir,
+            feature_dir,
+            mission_slug,
             target_branch=target_branch,
             current_branch=current_branch,
             json_output=json_output,

@@ -1208,6 +1208,30 @@ def _ensure_wp_claim_preconditions(status_feature_dir: Path, wp_id: str, declare
         raise ValueError(f"dependencies_not_satisfied: {wp_id} depends on {blocked}; all dependencies must be approved or done before implementation can start")
 
 
+def _run_crest_spec_gate(repo_root: Path, feature_dir: Path, wp_file: Path, wp_id: str) -> None:
+    """Crest-spec derivation gate: refuse a WP the crest-spec does not declare.
+
+    Blocks with ``crest_spec_underived`` when the WP's ``owned_files`` are not
+    covered by any declared asset's file pattern (and with
+    ``crest_spec_impact_undeclared`` / ``crest_spec_invalid`` for a missing
+    impact declaration or an unloadable crest-spec). Not applicable when the
+    project has no crest-spec. Raises ``typer.Exit(1)`` on failure."""
+    from specify_cli.crest_spec.derivation import check_wp_derivation
+
+    result = check_wp_derivation(repo_root, feature_dir, wp_file)
+    if result.passed:
+        return
+    console.print(
+        Panel(
+            "\n".join(f"  • {error}" for error in result.errors),
+            title=f"[bold red]Crest-Spec Gate: BLOCKED[/] ({wp_id})",
+            subtitle="The crest-spec is the bedrock — declare the work there first",
+            border_style="red",
+        )
+    )
+    raise typer.Exit(1)
+
+
 def _run_bulk_edit_gate_and_inference(feature_dir: Path, wp_file: Path, mission_slug: str, wp_id: str, acknowledge_not_bulk_edit: bool) -> None:
     """Bulk-edit occurrence-classification gate (FR-006) + inference warning
     (FR-009). Raises ``typer.Exit(1)`` on a gate failure or an un-acknowledged
@@ -1716,6 +1740,11 @@ def implement(
         # Bulk edit occurrence classification gate (FR-006) + inference
         # warning for potentially unmarked bulk edits (FR-009).
         _run_bulk_edit_gate_and_inference(feature_dir, wp_file, mission_slug, wp_id, acknowledge_not_bulk_edit)
+
+        # Crest-spec derivation gate: a WP whose owned files trace to no
+        # declared asset is refused (crest_spec_underived) — work packages
+        # derive from the crest-spec's assets[], never the reverse.
+        _run_crest_spec_gate(repo_root, feature_dir, wp_file, wp_id)
 
         # FR-017 / NFR-004: build and validate the runtime OperationalContext
         # BEFORE any worktree allocation. The shared claim builder is read-only

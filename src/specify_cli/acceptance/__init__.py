@@ -79,6 +79,11 @@ def _check_crest_spec_derivation(
     never executes declared validations) and appends the pure verdict, if any.
     The crest-spec loader is imported deferred so tests can monkeypatch
     ``specify_cli.crest_spec.load_crest_spec``.
+
+    When a crest-spec is present this also enforces the derivation direction
+    end-to-end: forbidden duplicate planning artifacts (``data-model.md`` /
+    ``contracts/`` fork the canonical resources) and ``crest_spec_unproven``
+    (behavior added by this mission must carry declared proof).
     """
     from specify_cli import crest_spec as crest_spec_module
 
@@ -98,6 +103,46 @@ def _check_crest_spec_derivation(
     issue = _evaluate_crest_spec_derivation(state, detail, plan_text)
     if issue is not None:
         activity_issues.append(issue)
+    if state == "present":
+        _check_crest_spec_derivation_extras(repo_root, feature_dir, activity_issues)
+
+
+def _check_crest_spec_derivation_extras(
+    repo_root: Path,
+    feature_dir: Path,
+    activity_issues: list[str],
+) -> None:
+    """Duplicate-artifact + added-behavior-proof checks (crest-spec present)."""
+    from specify_cli.crest_spec.derivation import (
+        check_added_resource_proof,
+        forbidden_duplicate_artifacts,
+    )
+
+    duplicates = forbidden_duplicate_artifacts(feature_dir)
+    if duplicates:
+        activity_issues.append(
+            "crest_spec_duplicate_artifacts: "
+            + ", ".join(duplicates)
+            + " restate the crest-spec's canonical resources and are forbidden "
+            "when a crest-spec exists. Fold the content into the crest-spec "
+            "(valueObjects/aggregates/ports/proof) and point the plan at the "
+            "canonical IDs instead."
+        )
+
+    target_branch = _target_branch_for_feature(feature_dir)
+    base_ref: str | None = None
+    if target_branch:
+        from specify_cli.acceptance.gates_core import _git_ref_exists
+
+        base_ref = (
+            target_branch
+            if _git_ref_exists(repo_root, target_branch)
+            else f"origin/{target_branch}"
+        )
+        if not _git_ref_exists(repo_root, base_ref):
+            base_ref = None
+    proof = check_added_resource_proof(repo_root, feature_dir, base_ref)
+    activity_issues.extend(proof.errors)
 
 
 logger = logging.getLogger(__name__)
