@@ -22,7 +22,7 @@ from specify_cli.crest_spec.derivation import (
     uncovered_owned_files,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.git_repo]
 
 PROJECT_YAML = """\
 name: demo
