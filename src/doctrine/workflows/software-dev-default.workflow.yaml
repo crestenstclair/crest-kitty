@@ -2,16 +2,23 @@
 # expect: valid
 workflow_id: software-dev-default
 description: |
-  Default software-dev mission workflow. Byte-stable to spec-kitty's
-  pre-Slice-F hardcoded sequence (C-008 binding).
+  Default software-dev mission workflow. The crest-spec is the bedrock:
+  specify references it, the crest-spec phase authors it, and plan/tasks/
+  implement/proof derive from it. Supersedes the pre-Slice-F hardcoded
+  sequence (C-008) by operator instruction (port/crest-spec-bedrock):
+  crest-spec authoring is a real phase between specify and plan, not a
+  note inside plan.
 version: 1
 initial: specify
 actions:
   - action_name: specify
-    description: Create a mission specification
+    description: Create a mission specification (references crest-spec capabilities, never restates them)
+    next: [crest-spec]
+  - action_name: crest-spec
+    description: Author the crest-spec — declare the resources, assets, and proof this mission adds, changes, or retires
     next: [plan]
   - action_name: plan
-    description: Create an implementation plan
+    description: Derive an implementation plan from the crest-spec (Crest-Spec Derivation section)
     next: [tasks]
   - action_name: tasks
     description: Decompose plan into work packages

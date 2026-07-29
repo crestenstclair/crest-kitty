@@ -49,7 +49,9 @@ pytestmark = [pytest.mark.fast, pytest.mark.doctrine]
 #: The authored ``action_sequence`` from ``mission_types/software-dev.yaml``,
 #: pre-mission -- the value this WP's per-step annotations must reproduce
 #: byte-for-byte (NFR-001a).
-_AUTHORED_ACTION_SEQUENCE = ["specify", "plan", "tasks", "implement", "review"]
+# crest-spec bedrock (2026-07-28): the crest-spec authoring phase sits between
+# specify and plan (port/crest-spec-bedrock).
+_AUTHORED_ACTION_SEQUENCE = ["specify", "crest-spec", "plan", "tasks", "implement", "review"]
 
 #: The authored ``template_set`` from ``mission_types/software-dev.yaml``,
 #: pre-mission -- same parity requirement.
@@ -86,7 +88,7 @@ class TestSoftwareDevProjectionParity:
 
         assert project_template_set(steps) == _AUTHORED_TEMPLATE_SET
 
-    def test_exactly_five_steps_are_sequence_members(self) -> None:
+    def test_exactly_the_annotated_steps_are_sequence_members(self) -> None:
         steps = _software_dev_steps()
 
         members = [step for step in steps if step.in_action_sequence]

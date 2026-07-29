@@ -763,10 +763,11 @@ class TestMissionTypeEdges:
                 f"action:{mission_id}/{step}" for step in steps
             }, f"{source_urn} edges do not match its action_sequence"
 
-    def test_total_mission_type_edge_count_is_twenty_one(self) -> None:
-        """SC-001: the four shipped types emit 21 requires edges in total.
+    def test_total_mission_type_edge_count_is_twenty_two(self) -> None:
+        """SC-001: the four shipped types emit 22 requires edges in total.
 
-        4 (plan) + 7 (documentation) + 5 (research) + 5 (software-dev) = 21.
+        4 (plan) + 7 (documentation) + 5 (research) + 6 (software-dev) = 22
+        (software-dev gained the crest-spec action, port/crest-spec-bedrock).
         This is a deliberate cardinality contract over the built-in mission
         types, not incidental golden-count debt.
         """
@@ -777,7 +778,7 @@ class TestMissionTypeEdges:
             if e.source.startswith("mission_type:")
             and e.relation is Relation.REQUIRES
         ]
-        assert len(requires_edges) == 21  # golden-count: cardinality-is-contract
+        assert len(requires_edges) == 22  # golden-count: cardinality-is-contract
 
     def test_no_mission_type_or_sequence_action_node_is_orphan(
         self, tmp_path: Path

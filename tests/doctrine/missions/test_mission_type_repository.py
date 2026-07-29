@@ -135,7 +135,7 @@ class TestBuiltinYamlFiles:
         assert mt is not None
         assert mt.id == "software-dev"
         assert mt.display_name == "Software Development"
-        assert mt.action_sequence == ["specify", "plan", "tasks", "implement", "review"]
+        assert mt.action_sequence == ["specify", "crest-spec", "plan", "tasks", "implement", "review"]
 
     def test_documentation_loads(self) -> None:
         repo = _builtin_repo()

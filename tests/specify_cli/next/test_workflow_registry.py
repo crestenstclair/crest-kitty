@@ -21,7 +21,17 @@ def test_get_workflow_loads_software_dev_default():
     assert wf.workflow_id == "software-dev-default"
     assert wf.initial == "specify"
     action_names = [a.action_name for a in wf.actions]
-    assert action_names == ["specify", "plan", "tasks", "implement", "review", "merge"]
+    # crest-spec bedrock (2026-07-28): the crest-spec authoring phase sits
+    # between specify and plan — see test_workflow_software_dev_default_is_byte_stable.
+    assert action_names == [
+        "specify",
+        "crest-spec",
+        "plan",
+        "tasks",
+        "implement",
+        "review",
+        "merge",
+    ]
 
 
 def test_unknown_workflow_id_hard_fails_with_available_list():

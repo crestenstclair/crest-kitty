@@ -13,6 +13,7 @@ detailed workflows or aliases while new public operating skills use `spk-*`.
 ## Mission
 
 - `spk-mission-specify`: specification phase.
+- `spk-mission-crest-spec`: crest-spec authoring phase (the bedrock DDD declaration; between specify and plan).
 - `spk-mission-plan`: planning phase.
 - `spk-mission-tasks`: tasks and WP authoring.
 - `spk-mission-types`: mission type selection.
@@ -30,6 +31,7 @@ detailed workflows or aliases while new public operating skills use `spk-*`.
 ## Gate
 
 - `spk-gate-accept`: final readiness gate.
+- `spk-gate-archive`: archive a terminal mission (approval-only, no acceptance rerun).
 - `spk-gate-merge`: merge gate.
 - `spk-gate-mission-review`: post-merge mission review.
 - `spk-gate-retrospective`: post-merge retrospective.

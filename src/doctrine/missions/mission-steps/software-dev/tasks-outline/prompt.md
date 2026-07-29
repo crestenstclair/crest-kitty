@@ -14,6 +14,24 @@ manifest by `finalize-tasks`.
 > ⚠️ DO NOT write `tasks.md`. The system generates it from `wps.yaml`. Writing
 > `tasks.md` manually will have it overwritten by `finalize-tasks`.
 
+## Crest-Spec Grounding (work packages derive from assets[])
+
+<!-- crest-spec:start (port/crest-spec-bedrock) -->
+If this project declares a crest-spec (`spec-kitty crest-spec context`), work
+packages are **derived from the crest-spec's `assets[]`**, not hand-authored:
+
+- Slice WPs along declared assets. Each asset already carries the generation
+  intent — `kind` (whose `filePattern` names the files), `targets`, `prompts`,
+  `profile`, and attached `validations`. A WP adds only mission-specific
+  sequencing, ownership boundaries, and test expectations.
+- Every `owned_files` entry must trace to a declared asset's file pattern —
+  the implement gate refuses the WP otherwise (`crest_spec_underived`).
+- Anything you want to put in a WP that is not in an asset is a signal the
+  asset is underspecified: STOP and push it into the crest-spec (return to
+  `/spec-kitty.crest-spec`), then derive again. Never maintain a second copy
+  of implementation intent in WP prose.
+<!-- crest-spec:end -->
+
 ## ⚠️ CRITICAL: THIS IS THE MOST IMPORTANT PLANNING WORK
 
 **You are creating the blueprint for implementation**. The quality of work packages determines:

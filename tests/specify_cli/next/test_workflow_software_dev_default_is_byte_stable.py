@@ -1,9 +1,20 @@
-"""C-008: software-dev-default workflow is byte-stable to hardcoded sequence.
+"""C-008 (superseded 2026-07-28): software-dev-default is byte-stable to the pinned sequence.
 
 ATDD anchor
 -----------
 * ``test_default_workflow_produces_byte_stable_pairs``
   covers: FR-014, C-008 — expected GREEN at: WP11 final commit
+
+History
+-------
+C-008 originally pinned the pre-Slice-F hardcoded sequence
+``specify -> plan -> tasks -> implement -> review -> merge``. The
+crest-spec-bedrock change (port/crest-spec-bedrock, operator-ordered)
+deliberately re-pins it with a ``crest-spec`` authoring phase between
+``specify`` and ``plan``: the crest-spec is the single source of
+implementation intent, so a mission that changes system structure authors it
+BEFORE planning derives from it. This test remains the byte-stability lock —
+any further sequence change must edit this pin knowingly.
 """
 from __future__ import annotations
 
@@ -12,9 +23,10 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.fast]
 
-# The pre-Slice-F hardcoded sequence the new YAML must match:
+# The pinned sequence (crest-spec bedrock, 2026-07-28):
 _HARDCODED_SEQUENCE: list[tuple[str, str | None]] = [
-    ("specify", "plan"),
+    ("specify", "crest-spec"),
+    ("crest-spec", "plan"),
     ("plan", "tasks"),
     ("tasks", "implement"),
     ("implement", "review"),
@@ -24,7 +36,7 @@ _HARDCODED_SEQUENCE: list[tuple[str, str | None]] = [
 
 
 def test_default_workflow_produces_byte_stable_pairs() -> None:
-    """For every (current, next) pair the hardcoded sequence produced,
+    """For every (current, next) pair the pinned sequence declares,
     the loaded software-dev-default workflow MUST produce the same pair."""
     from runtime.next._internal_runtime.workflow_registry import get_workflow
 

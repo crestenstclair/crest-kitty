@@ -102,29 +102,45 @@ Before asking planning questions or generating artifacts, you must make the bran
   1. immediately after parsing `setup-plan --json`
   2. again in the final report before suggesting `/spec-kitty.tasks`
 
-## Architecture Spec Grounding (required when present)
+## Crest-Spec Grounding (derive, never restate)
 
-<!-- crest-spec:start (port/crestopenspec-gates) -->
-Before composing the plan, run:
+<!-- crest-spec:start (port/crest-spec-bedrock) -->
+**The crest-spec is the bedrock and this plan derives from it.** The
+crest-spec was authored (or confirmed unchanged) in the `/spec-kitty.crest-spec`
+phase, BEFORE this command — planning never edits the crest-spec to permit
+work that was already decided. Before composing the plan, run:
 
 ```bash
 spec-kitty crest-spec context
 ```
 
 - If it reports **not applicable**, skip this section entirely.
-- If it fails with diagnostics, STOP: the spec must be repaired (see
+- If it fails with diagnostics, STOP: the crest-spec must be repaired (see
   `spec-kitty crest-spec doctor`) before planning continues — an invalid
   crest-spec blocks acceptance (fail-closed).
 - Otherwise, read the interpretation contract and the resolved project value
-  it prints. The spec is authoritative for boundaries, dependency direction,
-  contracts, invariants, and traceability. Never silently plan around a
-  conflict: if the mission changes architecture, edit the spec source files
-  under `.kittify/crest-spec/` during planning and re-run the command.
-- `plan.md` MUST include an `## Crest-Spec Derivation` section listing:
-  the affected canonical resource IDs, any spec files edited (or "none —
-  conforms"), and which declared validations/witnesses cover the change.
-  Acceptance blocks on this section when a spec exists. Keep it a dense
-  bullet index, not another prose design document.
+  it prints. The crest-spec is authoritative for boundaries, dependency
+  direction, contracts, invariants, and traceability. If planning reveals the
+  crest-spec is wrong or incomplete, STOP and return to
+  `/spec-kitty.crest-spec` to author it properly — do not plan around it and
+  do not quietly patch it from here.
+- `plan.md` MUST include a `## Crest-Spec Derivation` section listing: which
+  canonical resources this mission adds, changes, or retires (or "none —
+  conforms"), which assets therefore produce which files, and which declared
+  validations/witnesses cover the change. Acceptance blocks on this section
+  when a crest-spec exists. Keep it a dense bullet index, not another prose
+  design document.
+- **Forbidden when a crest-spec exists**: `data-model.md` and `contracts/`.
+  They are hand-copied, immediately-stale forks of `valueObjects`,
+  `aggregates`, and `ports[].contract` — acceptance rejects them
+  (`crest_spec_duplicate_artifacts`). If the plan wants to say something
+  about a value object or a port contract, that content belongs in the
+  crest-spec; the plan points at canonical IDs.
+- The plan entry gate (`error_code: CREST_SPEC_UNDERIVED`) refuses to advance
+  a mission that declares `crest_spec_impact: structural` while the
+  crest-spec is untouched, and every mission in a crest-spec project must
+  declare `crest_spec_impact` in `meta.json` (structural | predeclared |
+  none, set during the crest-spec phase).
 <!-- crest-spec:end -->
 
 ## Charter Context Bootstrap (required)
@@ -162,8 +178,8 @@ This command does **not** update agent-specific context files.
 - Planning outputs are the mission planning artifacts only:
   - `plan.md`
   - `research.md`
-  - `data-model.md`
-  - `contracts/`
+  - `data-model.md` (ONLY when no crest-spec exists — forbidden otherwise)
+  - `contracts/` (ONLY when no crest-spec exists — forbidden otherwise)
   - `quickstart.md`
   - `occurrence_map.yaml` when bulk-edit planning applies
 

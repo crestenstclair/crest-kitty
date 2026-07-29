@@ -5,6 +5,19 @@ description: Create a mission specification
 
 **Version**: 0.11.0+
 
+## Crest-Spec Grounding (derive, never restate)
+
+<!-- crest-spec:start (port/crest-spec-bedrock) -->
+If this project declares a crest-spec (`spec-kitty crest-spec context`
+reports it), the crest-spec is the bedrock: `spec.md` grounds the mission's
+why and scope in the declared `mission`, `goals`, `nonGoals`, `capabilities`,
+and `requirements`, and **references their canonical IDs instead of restating
+them**. A requirement the crest-spec already declares is cited, not
+paraphrased. If the mission needs structure the crest-spec does not declare,
+say so in the spec — the `/spec-kitty.crest-spec` phase (which runs next,
+before planning) is where those declarations are authored.
+<!-- crest-spec:end -->
+
 <!-- spdd:reasons-block:start -->
 
 ### REASONS Guidance — Specify

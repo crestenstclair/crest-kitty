@@ -104,18 +104,21 @@ token budget; whenever a fetch command appears, the accompanying
 - `spec-kitty charter context --include tactic:<id>`
 - `spec-kitty charter context --include section:<slug>`
 
-## Architecture Spec Grounding (required when present)
+## Crest-Spec Grounding (derive, never restate)
 
-<!-- crest-spec:start (port/crestopenspec-gates) -->
+<!-- crest-spec:start (port/crest-spec-bedrock) -->
 Run `spec-kitty crest-spec context` before implementing. If it reports not
-applicable, continue normally. Otherwise: implement against the rendered
-model — respect bounded contexts, ports, layer rules, and dependency
-direction; treat declared invariants as non-negotiable constraints; and check
-`plan.md`'s `## Crest-Spec Derivation` section for the canonical IDs
-this work package touches. If implementation reveals the plan's
-reconciliation was wrong, stop and update `plan.md` and the spec sources
-rather than drifting from both. A runtime success marker is intermediate
-evidence, not completion.
+applicable, continue normally. Otherwise: the crest-spec is the bedrock this
+work package derives from — implement against the rendered model; respect
+bounded contexts, ports, layer rules, and dependency direction; treat
+declared invariants as non-negotiable constraints; and check `plan.md`'s
+`## Crest-Spec Derivation` section for the canonical IDs this work package
+touches. The implement gate refuses a WP whose `owned_files` no declared
+asset covers (`crest_spec_underived`) — the remedy is declaring the asset in
+the crest-spec, never widening the WP prompt by hand. If implementation
+reveals the derivation was wrong, stop and fix the crest-spec first (then
+`plan.md`) rather than drifting from both. A runtime success marker is
+intermediate evidence, not completion.
 <!-- crest-spec:end -->
 
 ## Execution Steps

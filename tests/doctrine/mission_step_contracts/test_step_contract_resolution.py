@@ -83,4 +83,5 @@ class TestResolveStepContractIds:
         # No injected repository: the resolver constructs the built-in artefact
         # repository and answers from the shipped doctrine tree (FR-008).
         ids = resolve_step_contract_ids("software-dev")
-        assert set(ids) == {"specify", "plan", "tasks", "implement", "review"}
+        # accept joined in port/crestopenspec-gates; crest-spec in port/crest-spec-bedrock.
+        assert set(ids) == {"specify", "crest-spec", "plan", "tasks", "implement", "review", "accept"}

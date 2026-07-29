@@ -1,0 +1,47 @@
+schema_version: "1.0"
+id: crest-spec
+action: crest-spec
+mission: software-dev
+steps:
+  - id: bootstrap
+    description: Load charter context for this action
+    command: "spec-kitty charter context --action crest-spec --role crest-spec --json"
+    inputs:
+      - flag: --profile
+        source: wp.agent_profile
+        optional: true
+      - flag: --tool
+        source: env.agent_tool
+        optional: true
+
+  - id: ground_in_model
+    description: Render the current crest-spec (interpretation contract + resolved model)
+    command: "spec-kitty crest-spec context"
+
+  - id: declare_impact
+    description: >
+      Declare the mission's crest_spec_impact (structural | predeclared | none)
+      in meta.json — explicit, never a silent default
+
+  - id: author_declarations
+    description: >
+      For structural missions: edit the crest-spec sources first — intent
+      (goals, capabilities, requirements), architecture (contexts, resources,
+      adapters, layers), generation layer (assetKinds, assets), and proof
+      (validations, witnesses, evidence, invariants)
+    delegates_to:
+      kind: directive
+      candidates:
+        - 003-decision-documentation-requirement
+
+  - id: validate_model
+    description: Validate fail-closed until the model closes under expansion
+    command: "spec-kitty crest-spec doctor"
+
+  - id: commit_crest_spec
+    description: Commit the crest-spec edits ahead of any planning artifact
+    delegates_to:
+      kind: directive
+      candidates:
+        - 029-agent-commit-signing-policy
+        - 033-targeted-staging-policy

@@ -13,6 +13,20 @@ details, then generates the WP prompt files.
 
 This step assumes `wps.yaml` already exists with complete WP definitions.
 
+## Crest-Spec Grounding (WP prompts render from assets[])
+
+<!-- crest-spec:start (port/crest-spec-bedrock) -->
+If this project declares a crest-spec (`spec-kitty crest-spec context`), each
+WP prompt is **rendered from the crest-spec asset(s) it realizes** — the
+asset's `kind` (file pattern), `targets`, `prompts`, `profile`, and attached
+`validations` are the implementation intent; the WP prompt adds only
+mission-specific sequencing and ownership. Do NOT hand-write hundreds of
+lines restating what an asset already declares. Every `owned_files` entry
+must trace to a declared asset's file pattern (`crest_spec_underived`
+otherwise), and a gap in an asset is fixed in the crest-spec, never papered
+over in the WP prompt.
+<!-- crest-spec:end -->
+
 ---
 
 ## 📍 WORKING DIRECTORY: Stay in the repository root checkout

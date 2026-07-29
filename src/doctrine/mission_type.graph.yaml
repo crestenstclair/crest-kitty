@@ -64,6 +64,9 @@ edges:
   target: action:research/synthesis
   relation: requires
 - source: mission_type:software-dev
+  target: action:software-dev/crest-spec
+  relation: requires
+- source: mission_type:software-dev
   target: action:software-dev/implement
   relation: requires
 - source: mission_type:software-dev

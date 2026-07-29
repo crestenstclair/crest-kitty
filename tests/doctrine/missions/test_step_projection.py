@@ -309,7 +309,7 @@ class TestMissionTypeRepositoryProjectionInjection:
         mt = repo.get("software-dev")
 
         assert mt is not None
-        assert mt.action_sequence == ["specify", "plan", "tasks", "implement", "review"]
+        assert mt.action_sequence == ["specify", "crest-spec", "plan", "tasks", "implement", "review"]
 
     def test_annotated_builtin_steps_override_stale_authored_yaml(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch

@@ -47,6 +47,7 @@ VALID_STEP_TYPES = {"agent", "human_in_loop", "integration"}
 # Expected software-dev steps (derived from old command-templates/ stems).
 EXPECTED_SOFTWARE_DEV_STEPS = frozenset({
     "accept",
+    "crest-spec",
     "analyze",
     "charter",
     "implement",

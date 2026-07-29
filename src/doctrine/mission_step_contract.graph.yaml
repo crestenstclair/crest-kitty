@@ -38,6 +38,12 @@ nodes:
 - urn: mission_step_contract:research/synthesis
   kind: mission_step_contract
   label: synthesis
+- urn: mission_step_contract:software-dev/accept
+  kind: mission_step_contract
+  label: accept
+- urn: mission_step_contract:software-dev/crest-spec
+  kind: mission_step_contract
+  label: crest-spec
 - urn: mission_step_contract:software-dev/implement
   kind: mission_step_contract
   label: implement

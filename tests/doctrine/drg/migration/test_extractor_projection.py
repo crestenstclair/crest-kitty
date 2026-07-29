@@ -113,9 +113,14 @@ DOCTRINE_ROOT: Path = Path(__file__).resolve().parents[4] / "src" / "doctrine"
 #:     3 renames -- while the numeric assertions below stayed green. NFR-006 makes
 #:     this prose a contract precisely so the counts stay auditable; it is corrected
 #:     here rather than quietly, because a wrong ledger is what NFR-006 forbids.)
-_EXPECTED_NODE_COUNT = 305
-_EXPECTED_EDGE_COUNT = 757
-_EXPECTED_ORPHAN_COUNT = 32
+# 305 -> 308 (port/crest-spec-bedrock): the crest-spec action, its step
+# contract, and its mission-step node joined the software-dev sequence.
+_EXPECTED_NODE_COUNT = 308
+_EXPECTED_EDGE_COUNT = 758
+# 32 -> 34: mission_step_contract nodes are orphans by design; the port's
+# accept contract (port/crestopenspec-gates) was never recorded here, and
+# port/crest-spec-bedrock adds the crest-spec contract.
+_EXPECTED_ORPHAN_COUNT = 34
 
 #: software-dev steps that are not action-sequence members (retrospect lives
 #: outside every type's step directory and is asserted separately).
@@ -130,7 +135,7 @@ _SOFTWARE_DEV_NON_SEQUENCE_STEPS = frozenset(
 #: set against this independent human-authored contract rather than a raw-YAML
 #: read of a field that no longer exists.
 _SHIPPED_ACTION_SEQUENCES: dict[str, list[str]] = {
-    "software-dev": ["specify", "plan", "tasks", "implement", "review"],
+    "software-dev": ["specify", "crest-spec", "plan", "tasks", "implement", "review"],
     "documentation": ["discover", "audit", "design", "generate", "validate", "publish", "accept"],
     "research": ["scoping", "methodology", "gathering", "synthesis", "output"],
     "plan": ["specify", "research", "plan", "review"],

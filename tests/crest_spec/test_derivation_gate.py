@@ -39,7 +39,7 @@ def test_no_spec_is_not_applicable(tmp_path: Path) -> None:
     assert issues == []
 
 
-def test_spec_without_reconciliation_section_blocks(tmp_path: Path) -> None:
+def test_spec_without_derivation_section_blocks(tmp_path: Path) -> None:
     repo_root, feature_dir = _repo_with_spec(tmp_path)
     (feature_dir / "plan.md").write_text("# Plan\n\nJust vibes.\n", encoding="utf-8")
     issues: list[str] = []
@@ -48,14 +48,14 @@ def test_spec_without_reconciliation_section_blocks(tmp_path: Path) -> None:
     assert "Crest-spec derivation required" in issues[0]
 
 
-def test_missing_plan_counts_as_missing_reconciliation(tmp_path: Path) -> None:
+def test_missing_plan_counts_as_missing_derivation(tmp_path: Path) -> None:
     repo_root, feature_dir = _repo_with_spec(tmp_path)
     issues: list[str] = []
     _check_crest_spec_derivation(repo_root, feature_dir, issues)
     assert len(issues) == 1
 
 
-def test_reconciliation_section_passes(tmp_path: Path) -> None:
+def test_derivation_section_passes(tmp_path: Path) -> None:
     repo_root, feature_dir = _repo_with_spec(tmp_path)
     (feature_dir / "plan.md").write_text(
         f"# Plan\n\n{CREST_SPEC_DERIVATION_HEADING}\n\n- none — conforms\n",
@@ -78,3 +78,21 @@ def test_invalid_spec_blocks_fail_closed(tmp_path: Path) -> None:
     _check_crest_spec_derivation(repo_root, feature_dir, issues)
     assert len(issues) == 1
     assert "invalid" in issues[0] and "fail-closed" in issues[0]
+
+
+def test_duplicate_planning_artifacts_block(tmp_path: Path) -> None:
+    """data-model.md / contracts/ fork the crest-spec and are rejected."""
+    repo_root, feature_dir = _repo_with_spec(tmp_path)
+    (feature_dir / "plan.md").write_text(
+        f"# Plan\n\n{CREST_SPEC_DERIVATION_HEADING}\n\n- none — conforms\n",
+        encoding="utf-8",
+    )
+    (feature_dir / "data-model.md").write_text("# dm\n", encoding="utf-8")
+    contracts = feature_dir / "contracts"
+    contracts.mkdir()
+    (contracts / "api.md").write_text("# api\n", encoding="utf-8")
+    issues: list[str] = []
+    _check_crest_spec_derivation(repo_root, feature_dir, issues)
+    assert len(issues) == 1
+    assert "crest_spec_duplicate_artifacts" in issues[0]
+    assert "data-model.md" in issues[0] and "contracts/" in issues[0]

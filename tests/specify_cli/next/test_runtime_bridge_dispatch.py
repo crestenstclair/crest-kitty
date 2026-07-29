@@ -33,7 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.fast]
 # Known action sequences (mirrors built-in doctrine YAML values)
 # ---------------------------------------------------------------------------
 
-_SW_DEV_ACTIONS = ["specify", "plan", "tasks", "implement", "review"]
+_SW_DEV_ACTIONS = ["specify", "crest-spec", "plan", "tasks", "implement", "review"]
 _DOCUMENTATION_ACTIONS = [
     "discover",
     "audit",
