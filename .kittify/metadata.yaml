@@ -297,3 +297,32 @@ migrations:
     applied_at: '2026-06-15T06:30:20.619977'
     result: success
     notes: 'surface_repair_wiring: probed 214 tool surface(s)'
+  - id: 3.2.6_decisions_event_log_merge_driver
+    applied_at: '2026-08-05T17:26:21.084722'
+    result: success
+    notes: Configured git merge.spec-kitty-event-log.name; Configured git merge.spec-kitty-event-log.driver
+  - id: 3.2.6_gate_artifact_merge_drivers
+    applied_at: '2026-08-05T17:26:21.221104'
+    result: success
+    notes: Configured git merge.spec-kitty-acceptance-matrix.name; Configured git
+      merge.spec-kitty-acceptance-matrix.driver; Configured git merge.spec-kitty-issue-matrix.name;
+      Configured git merge.spec-kitty-issue-matrix.driver
+  - id: 3.2.6_meta_traces_merge_drivers
+    applied_at: '2026-08-05T17:26:21.354815'
+    result: success
+    notes: Configured git merge.spec-kitty-meta.name; Configured git merge.spec-kitty-meta.driver;
+      Configured git merge.spec-kitty-traces.name; Configured git merge.spec-kitty-traces.driver
+  - id: 3.2.6_vendored_review_skills
+    applied_at: '2026-08-05T17:26:21.519575'
+    result: success
+    notes: Installed 2 vendored skill(s) for 2 agent(s) (194 managed files); Updated
+      .kittify/skills-manifest.json with vendored entries
+  - id: consolidate_charter_bundle_fold
+    applied_at: '2026-08-05T17:26:21.756960'
+    result: success
+    notes: 'Relocated activation keys onto existing /Users/crestenstclair/workspace/crest-kitty/.kittify/charter/charter.yaml;
+      Deleted /Users/crestenstclair/workspace/crest-kitty/.kittify/charter/governance.yaml;
+      Deleted /Users/crestenstclair/workspace/crest-kitty/.kittify/charter/directives.yaml;
+      Deleted /Users/crestenstclair/workspace/crest-kitty/.kittify/charter/metadata.yaml;
+      Deleted /Users/crestenstclair/workspace/crest-kitty/.kittify/charter/references.yaml;
+      Updated .kittify/config.yaml: removed activated_* keys, added charter: pointer'
