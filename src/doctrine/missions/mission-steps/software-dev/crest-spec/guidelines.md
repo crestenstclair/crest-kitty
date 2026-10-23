@@ -27,6 +27,23 @@ mission. They are injected at runtime via the charter context bootstrap.
   flaky-test repairs). It disarms the asset-coverage and proof gates for this
   mission; using it to dodge authoring is a review rejection.
 
+## Structural Design Discipline
+
+- The `writing-clean-code` skill is loaded during this phase and governs the
+  `contexts` block. DDD resources and SOLID are the same decisions named
+  twice: SRP bounds a context, OCP decides whether a capability grows by
+  addition or by edit, LSP/ISP shape `ports`, and DIP is what `layerRules`
+  encode.
+- A `domainService` or `applicationService` that names a concrete adapter has
+  inverted its dependency at the model level; it receives a `port`.
+- Structural defects declared here are not local — work packages, code, and
+  proof all derive from the declaration, so the crest-spec propagates them by
+  design. Post-merge `adversarial-review` finds the smell in the code but
+  cannot reach the bedrock that generated it.
+- SOLID does not license unrequested structure. An abstraction with one
+  implementation and no second in prospect is speculative generality that the
+  crest-spec makes permanent; the Rule of Three applies to declarations.
+
 ## Model Quality
 
 - Lean on the loader's referential integrity: author, run

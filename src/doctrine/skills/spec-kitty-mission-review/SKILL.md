@@ -653,6 +653,109 @@ clean the FR coverage table looks.
 
 ---
 
+## Step 8.75: Adversarial Code-Smell Review (structural quality)
+
+Steps 5–8 ask *did the mission build what the spec promised, and is it safe?*
+They do not ask *is what it built structurally sound?* A mission can score a
+perfect FR coverage matrix and still ship a 400-line method, four copies of the
+same parsing logic, and a class that reaches three levels into another object's
+internals. Those defects survive per-WP review precisely because each WP looked
+correct in isolation — they are cross-WP structural debt, which is the class of
+problem the mission review exists to catch.
+
+This step is **mandatory** and runs the vendored `adversarial-review` pipeline
+over the mission diff. Do not hand-roll a smell hunt in its place.
+
+### Run the pipeline
+
+Invoke the skill, pinning its scope to the mission's diff rather than letting it
+infer a review set:
+
+```
+Skill(adversarial-review)
+```
+
+with this scope handoff:
+
+- **Mode**: commit range
+- **Review set**: `git diff --name-only <baseline_merge_commit>..HEAD -- src/ tests/`
+- **Changed-line narrowing**: `git diff <baseline_merge_commit>..HEAD`
+- **Report path**: `kitty-specs/<slug>/adversarial-review.md` (override the
+  skill's default `./tmp/adversarial-review.md` — the mission review's artifacts
+  live with the mission, not in a scratch directory)
+
+The pipeline's own contract governs execution and you do not relax it:
+
+1. **Phase 1 spawns all six hunters in a single message** so they run blind and
+   in parallel. Correlated hunters destroy the cross-hunter agreement signal,
+   which is the strongest true-positive evidence the pipeline produces.
+2. **Phase 3 sends every surviving finding to `finding-skeptic` with its kill
+   mandate.** A skeptic prompted to "double-check" rubber-stamps. Findings that
+   come back `REFUTED`, or `CONFIRMED` below 7/10, go to the appendix and are
+   **not** reported as mission findings.
+3. **"No findings" is a legitimate outcome.** Never pad the smell report to
+   justify having run the pipeline. An empty Critical/Major section on a small
+   mission is the expected result.
+
+Role files and smell catalogs ship with the skill at
+`adversarial-review/agents/` and `adversarial-review/references/`.
+
+### Scope discipline — what carries over, what does not
+
+The mission review has a documented boundary the smell pipeline does not share.
+Apply it when folding findings:
+
+| Pipeline output | Mission review treatment |
+|---|---|
+| Critical / Major, skeptic-`CONFIRMED` ≥7/10 | Fold into the report as `SMELL-N` findings |
+| Minor | Summarize as a count; list only if it touches an FR-owning file |
+| `REFUTED` / low-confidence | Leave in the pipeline's own appendix; do not restate |
+| Any suggested refactoring | Record as a recommendation. **You do not fix anything** (Key Rule 1) — the pipeline names a technique, you do not apply it |
+
+Two findings classes are already owned by earlier steps. When the pipeline
+raises them, do **not** create a duplicate `SMELL-N`; instead cite the smell as
+corroborating evidence on the existing finding:
+
+- **Dead Code** → already Step 7's `DEAD-CODE` risk class.
+- Anything touching subprocess, path handling, credentials, or locking →
+  already Step 8's security notes. Structural smells do not outrank a security
+  finding; they annotate it.
+
+### Severity mapping
+
+The pipeline's severities are structural; the mission review's are release
+severities. Translate rather than copying:
+
+| Pipeline | Mission review | Condition |
+|---|---|---|
+| Critical | HIGH | Confirmed duplication or a broken contract in a file that owns an FR |
+| Critical | MEDIUM | Same smell, but in test scaffolding or a non-FR-owning file |
+| Major | MEDIUM | Default |
+| Major | LOW | Speculative generality or naming in code with no FR trace |
+| Minor | — | Not individually reported |
+
+**A structural smell alone never forces a FAIL verdict.** It is a maintainability
+signal, not a correctness one. Structural findings feed Key Rule 8's threshold
+only when a `CONFIRMED` smell also demonstrates a behavior defect — for example,
+duplicated logic where the two copies have already diverged, which is a
+correctness finding that the smell merely located.
+
+### If the pipeline cannot run
+
+If the `adversarial-review` skill is not installed on this agent surface, do not
+substitute an improvised review. Record in the report:
+
+```
+### Structural Quality — NOT RUN
+Reason: adversarial-review skill unavailable on this surface.
+Remediation: `spec-kitty upgrade` (the skill ships in the doctrine layer).
+```
+
+and set the verdict to **PASS WITH NOTES** at best. An unrun mandatory step is a
+gap in the review, not a pass.
+
+---
+
 ## Step 9: Generate the Mission Review Report
 
 Produce a single structured markdown report. The report is your deliverable.
@@ -768,6 +871,32 @@ malfunction.
 
 ---
 
+## Structural Quality (adversarial-review)
+
+**Pipeline report**: `kitty-specs/<slug>/adversarial-review.md`
+**Files reviewed**: N · **Raised**: X · **Survived skeptic**: Y · **Minor (not itemized)**: Z
+
+### SMELL-1: <smell name> (<family>)
+
+**Severity**: [HIGH | MEDIUM | LOW]  *(mapped from the pipeline's Critical/Major)*
+**Location**: `<file>:<line_range>`
+**Hunter agreement**: <N hunters>
+**Skeptic**: CONFIRMED (n/10) — <the one-line rationale that survived the kill mandate>
+**Evidence**:
+```
+<quoted code, verbatim from the cited lines>
+```
+
+**Harm**: <the concrete change or bug this makes likely — not "this is untidy">
+**Suggested technique**: <named refactoring> *(recorded, not applied)*
+**FR exposure**: <FR-NNN if this file owns an FR, else "none — maintainability only">
+
+<!-- Omit this whole section's finding entries when the pipeline returned
+     nothing; keep the header and record "No structural findings survived
+     skeptic verification." Never pad. -->
+
+---
+
 ## Final Verdict
 
 **PASS** / **PASS WITH NOTES** / **FAIL**
@@ -861,7 +990,15 @@ either did not run or was skipped without a recorded reason. Check `status.event
    the source of truth, this skill produces original analysis. The spec and
    contracts are the source of truth.
 
-10. **Always include the retrospective reminder.** The report must end with a
+10. **The structural pass is delegated, not improvised.** Step 8.75 runs the
+    `adversarial-review` skill; you orchestrate it, you do not replace it. Its
+    two load-bearing constraints are yours to preserve: hunters spawn blind and
+    in parallel in a single message, and the skeptic is prompted to kill, not to
+    confirm. Weakening either turns a precision-engineered pipeline into an
+    opinion generator. A structural smell is a maintainability signal — it never
+    forces FAIL on its own, and it never outranks a security finding.
+
+11. **Always include the retrospective reminder.** The report must end with a
     `## Retrospective Reminder` section that tells the operator the
     `retrospective.yaml` was authored at the runtime terminus, and that
     `spec-kitty retrospect summary` plus

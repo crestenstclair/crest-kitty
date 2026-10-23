@@ -20,6 +20,7 @@ def _make_skill(
     references: list[str] | None = None,
     scripts: list[str] | None = None,
     assets: list[str] | None = None,
+    agents: list[str] | None = None,
 ) -> Path:
     """Helper: create a minimal skill directory under *root*."""
     skill_dir = root / name
@@ -31,6 +32,7 @@ def _make_skill(
         ("references", references or []),
         ("scripts", scripts or []),
         ("assets", assets or []),
+        ("agents", agents or []),
     ]:
         sub_dir = skill_dir / sub
         sub_dir.mkdir(exist_ok=True)
@@ -96,6 +98,55 @@ def test_discover_skills_collects_references_scripts_assets(tmp_path: Path) -> N
     # all_files includes SKILL.md + all sub-files
     assert skill.skill_md in skill.all_files
     assert len(skill.all_files) == 1 + 2 + 1 + 2  # SKILL.md + refs + scripts + assets
+
+
+# ── agents/ collection ───────────────────────────────────────────────
+#
+# A skill whose pipeline spawns subagents (adversarial-review) ships those role
+# prompts in ``agents/``. If they are not collected they are never installed,
+# and the orchestrating skill degrades to a single-reviewer pass without ever
+# erroring — so the collection is asserted directly, not via the skill.
+
+
+def test_discover_skills_collects_agents(tmp_path: Path) -> None:
+    _make_skill(
+        tmp_path,
+        "pipeline-skill",
+        agents=["finding-skeptic.md", "bloater-hunter.md"],
+    )
+    skill = SkillRegistry(tmp_path).get_skill("pipeline-skill")
+    assert skill is not None
+
+    assert sorted(p.name for p in skill.agents) == [
+        "bloater-hunter.md",
+        "finding-skeptic.md",
+    ]
+    # .gitkeep is written by the helper into every subdir and must be skipped.
+    assert all(not p.name.startswith(".") for p in skill.agents)
+
+
+def test_agents_are_installable_payload(tmp_path: Path) -> None:
+    """``agents/`` files must reach ``all_files`` or the installer skips them."""
+    _make_skill(tmp_path, "pipeline-skill", agents=["coupler-hunter.md"])
+    skill = SkillRegistry(tmp_path).get_skill("pipeline-skill")
+    assert skill is not None
+
+    agent_file = tmp_path / "pipeline-skill" / "agents" / "coupler-hunter.md"
+    assert agent_file in skill.all_files
+    # The installer keys destinations off this relative path, so the ``agents/``
+    # prefix must survive — a flattened name would collide with references/.
+    assert agent_file.relative_to(skill.skill_dir) == Path("agents/coupler-hunter.md")
+
+
+def test_skill_without_agents_dir_has_empty_agents(tmp_path: Path) -> None:
+    skill_dir = tmp_path / "plain-skill"
+    skill_dir.mkdir()
+    (skill_dir / "SKILL.md").write_text("---\nname: plain-skill\n---\n# plain\n")
+
+    skill = SkillRegistry(tmp_path).get_skill("plain-skill")
+    assert skill is not None
+    assert skill.agents == []
+    assert skill.all_files == [skill.skill_md]
 
 
 # ── get_skill ────────────────────────────────────────────────────────

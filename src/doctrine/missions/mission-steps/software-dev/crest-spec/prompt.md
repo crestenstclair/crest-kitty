@@ -77,7 +77,49 @@ Decide which of the three this mission is, and record it in
 Do not guess. If the spec's scope is ambiguous, ask the operator — this
 declaration arms or disarms the implement and accept gates.
 
-### 3. Author the crest-spec (structural missions)
+### 3. Load the design discipline BEFORE declaring structure
+
+Invoke the `writing-clean-code` skill and keep it loaded for the rest of this
+phase:
+
+```
+Skill(writing-clean-code)
+```
+
+The crest-spec's `contexts` block is a DDD declaration, and SOLID is the test
+for whether that declaration will hold. These are not two vocabularies — they
+are the same decisions named twice, and the crest-spec is where they are made:
+
+| Principle | What it constrains in the crest-spec |
+|---|---|
+| **SRP** | A bounded context, an aggregate, or a `domainService` you cannot describe without "and" is two resources wearing one ID. Split it here, before any WP owns files under it. |
+| **OCP** | A capability that grows by adding an `adapter` or an `asset` is open for extension. One that grows by editing an existing resource's branch list is a switch statement with an ID — it will be edited by every future mission. |
+| **LSP** | Every `adapter` behind a `port` must be swappable without its `applicationService` knowing which one it got. An adapter that needs the caller to special-case it means the port boundary is drawn in the wrong place. |
+| **ISP** | Ports stay narrow. A `port` whose consumers each use a different third of its operations is three ports; declaring it as one forces every adapter to implement methods nobody calls. |
+| **DIP** | This is what `layerRules` encode. Domain declares ports; adapters implement them and depend inward. A `layerRule` permitting the domain to reference an adapter has inverted the dependency and no amount of downstream code review recovers it. |
+| **DI** | A `domainService` that names a concrete adapter in its declaration has `new`-ed its dependency at the model level. It receives a `port`. |
+| **Patterns** | Read `references/design-patterns.md` before inventing a resource shape. Choose the pattern that solves a problem present in this mission's `requirements` — a `port` with exactly one adapter and no second one in prospect is speculative generality, and the crest-spec makes it permanent. |
+
+Read the reference that matches the decision in front of you
+(`references/solid.md` for boundaries, `references/design-patterns.md` for
+composition-vs-inheritance, `references/dependency-injection.md` for wiring);
+do not load all four to add one value object.
+
+**Why here and not at review.** A structural mistake in the crest-spec is not
+local. Work packages derive from `assets[]`, code derives from work packages,
+and proof derives from `validations` — so a context that violates SRP or a
+`layerRule` that inverts DIP is copied faithfully into every downstream
+artifact by design. Post-merge review (`adversarial-review`) catches the smell
+in the code; it cannot catch it in the bedrock that generated the code. The
+cheapest fix is a resource ID that does not exist yet.
+
+**What this does not license.** Applying SOLID never justifies declaring
+resources this mission's `requirements` do not need. Structure that exists
+"for future flexibility" is speculative generality, and the crest-spec makes
+it load-bearing for every mission that follows. The Rule of Three applies to
+declarations as much as to code.
+
+### 4. Author the crest-spec (structural missions)
 
 Edit the source files under `.kittify/crest-spec/` FIRST, before any planning
 artifact exists:
@@ -110,7 +152,21 @@ Authoring rules:
 - Keep declarations terse and relational. The crest-spec is not a prose
   design document.
 
-### 4. Validate until the model closes
+Before moving on, run the `writing-clean-code` self-check against what you
+declared, not against code you have not written:
+
+1. Can every new context, aggregate, and service be described without "and"?
+2. Does any `domainService` or `applicationService` name a concrete adapter
+   instead of a `port`?
+3. Would the next obvious variant of this capability require editing an
+   existing resource rather than adding an `adapter` or `asset`?
+4. Is there a resource whose name lies about what it holds, or a `port` no
+   consumer uses in full?
+5. Does every declared abstraction solve a problem in this mission's
+   `requirements` — or did one get added for a second implementation that does
+   not exist yet?
+
+### 5. Validate until the model closes
 
 ```bash
 spec-kitty crest-spec doctor
@@ -119,18 +175,20 @@ spec-kitty crest-spec doctor
 Repair every diagnostic. The phase is not complete while the doctor reports
 the crest-spec invalid.
 
-### 5. Commit the crest-spec changes
+### 6. Commit the crest-spec changes
 
 Commit the `.kittify/crest-spec/` edits (plus the `meta.json` impact
 declaration) before planning, following the repository's commit discipline.
 The plan gate evaluates the mission diff — uncommitted working-tree edits
 count, but the authored crest-spec belongs in history ahead of `plan.md`.
 
-### 6. STOP and report
+### 7. STOP and report
 
 Report: the declared `crest_spec_impact`, the canonical resource IDs added /
-changed / retired, the assets that will produce this mission's files, and the
-validations/witnesses covering the new behavior. Then STOP.
+changed / retired, the assets that will produce this mission's files, the
+validations/witnesses covering the new behavior, and any structural decision
+where SOLID and the shortest declaration disagreed — name which one won and
+why. Then STOP.
 
 **Next suggested command**: `/spec-kitty.plan` (derives from what you just
 authored; its plan.md records the `## Crest-Spec Derivation` section).

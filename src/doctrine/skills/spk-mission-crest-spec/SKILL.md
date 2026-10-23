@@ -18,14 +18,50 @@ TO other documents after the fact.
 2. Ground in the current model: `spec-kitty crest-spec context`.
 3. Declare the mission's `crest_spec_impact` in `meta.json`
    (`structural` | `predeclared` | `none`) — explicit, never a silent default.
-4. For structural missions, edit the crest-spec sources FIRST: intent (goals,
+4. Load `writing-clean-code` and keep it loaded (see **Design Discipline**
+   below). The `contexts` block is a DDD declaration; SOLID is the test for
+   whether it will hold.
+5. For structural missions, edit the crest-spec sources FIRST: intent (goals,
    capabilities, requirements), architecture (contexts, value objects,
    aggregates, ports, adapters), the generation layer (assetKinds, assets),
    and proof (validations, witnesses, evidence, invariants).
-5. Validate until the model closes: `spec-kitty crest-spec doctor` — the
+6. Validate until the model closes: `spec-kitty crest-spec doctor` — the
    loader's referential integrity is the tool; lean on it.
-6. Commit the crest-spec edits ahead of any planning artifact, then hand off
+7. Commit the crest-spec edits ahead of any planning artifact, then hand off
    to `spk-mission-plan`.
+
+## Design Discipline
+
+Invoke `Skill(writing-clean-code)` before declaring structure. DDD and SOLID
+are not two vocabularies here — they are the same decisions named twice, and
+the crest-spec is where they are made:
+
+- **SRP** — a context, aggregate, or `domainService` you cannot describe
+  without "and" is two resources sharing one ID.
+- **OCP** — a capability that grows by adding an `adapter` or `asset` is open
+  for extension; one that grows by editing a resource's branch list is a switch
+  statement with an ID.
+- **LSP / ISP** — every adapter behind a `port` swaps in without its caller
+  knowing; a port whose consumers each use a different third of it is three
+  ports.
+- **DIP / DI** — this is what `layerRules` encode. Domain declares ports;
+  adapters depend inward. A `domainService` naming a concrete adapter has
+  `new`-ed its dependency at the model level.
+
+Read the reference matching the decision at hand (`references/solid.md`,
+`references/design-patterns.md`, `references/dependency-injection.md`); do not
+load all four to add one value object.
+
+**Why here.** Work packages derive from `assets[]`, code derives from work
+packages, proof derives from `validations` — so an SRP violation or an inverted
+`layerRule` is copied faithfully into every downstream artifact by design.
+Post-merge `adversarial-review` catches the smell in the code; it cannot catch
+it in the bedrock that generated the code.
+
+**Counterweight.** SOLID never licenses declaring resources the mission's
+`requirements` do not need. A `port` with one adapter and no second in prospect
+is speculative generality, and the crest-spec makes it load-bearing for every
+mission that follows. The Rule of Three applies to declarations too.
 
 ## Guardrails
 

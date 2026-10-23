@@ -122,6 +122,29 @@ the public user-facing hierarchy moves to `spk-*`.
 | `spec-kitty-orchestrator-api-operator` | External automation via orchestrator-api |
 | `spec-kitty-bulk-edit-classification` | Detect bulk-edit intent and drive occurrence-map guardrail (DIRECTIVE_035) |
 
+## Vendored Inventory
+
+These skills come from an external repository and are **not** Spec Kitty
+operating skills — they do not teach anyone how to use Spec Kitty. They are
+code-quality disciplines that Spec Kitty doctrine invokes at defined
+point-cuts. They keep their upstream names rather than adopting the
+`spk-<family>-*` convention, because renaming breaks their internal
+cross-links and severs the upstream provenance trail.
+
+| Skill | Purpose | Invoked by |
+|---|---|---|
+| `adversarial-review` | Six blind smell hunters + a skeptic with a kill mandate, over any review set | `spec-kitty-mission-review` Step 8.75 |
+| `writing-clean-code` | SOLID, dependency injection, naming, and pattern selection as a writing discipline | `spk-mission-crest-spec`; the `software-dev` crest-spec step |
+
+Each carries a `VENDORED.md` recording its upstream, pinned commit, and update
+procedure. Re-sync wholesale; do not hand-patch individual files, or the next
+sync silently discards the edit.
+
+`adversarial-review` is the only skill that ships an `agents/` directory. Those
+seven role prompts are installable payload, collected by `SkillRegistry`
+alongside `references/`, `scripts/`, and `assets/` — if they are not installed
+the pipeline degrades to a single-reviewer pass without erroring.
+
 ## Source Location
 
 These files in `src/doctrine/skills/` are the **source of truth**. Agent

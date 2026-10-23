@@ -45,12 +45,12 @@
       "tool_key": "claude"
     },
     {
-      "file_hash": "097fb87e2464b80f2e3f4ae449d18794c6ffc13d91587bb72f94a9fe34bc356c",
+      "file_hash": "e493b0778d7e86ed88cb2ef1049a79184436e23a36a1431ed5c8ccbaa0f8c857",
       "format": "claude-agent",
       "output_path": ".claude/agents/doctrine-daphne.md",
       "profile_urn": "agent_profile:doctrine-daphne",
       "projection_version": 1,
-      "source_hash": "e020d03f500b0501eb754fd66069ec76a49bc4324bf5c0c337ca261775ad7b36",
+      "source_hash": "b65206588583db90ed9c468bd70c617c4752ced7d04a241e6c62550d52cddbcb",
       "source_layer": "builtin",
       "source_path": "src/doctrine/agent_profiles/built-in/doctrine-daphne.agent.yaml",
       "tool_key": "claude"
@@ -237,7 +237,7 @@
       "output_path": ".codex/agents/doctrine-daphne.toml",
       "profile_urn": "agent_profile:doctrine-daphne",
       "projection_version": 1,
-      "source_hash": "e020d03f500b0501eb754fd66069ec76a49bc4324bf5c0c337ca261775ad7b36",
+      "source_hash": "b65206588583db90ed9c468bd70c617c4752ced7d04a241e6c62550d52cddbcb",
       "source_layer": "builtin",
       "source_path": "src/doctrine/agent_profiles/built-in/doctrine-daphne.agent.yaml",
       "tool_key": "codex"

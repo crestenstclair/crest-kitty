@@ -16,11 +16,23 @@ class CanonicalSkill:
     references: list[Path] = field(default_factory=list)
     scripts: list[Path] = field(default_factory=list)
     assets: list[Path] = field(default_factory=list)
+    #: Subagent role prompts a skill spawns as part of its own pipeline (e.g.
+    #: ``adversarial-review/agents/bloater-hunter.md``). Uninstalled role files
+    #: do not fail loudly — the orchestrating skill silently degrades to a
+    #: single-reviewer pass — so they are installable payload, not repo-only
+    #: documentation.
+    agents: list[Path] = field(default_factory=list)
 
     @property
     def all_files(self) -> list[Path]:
-        """All installable files (SKILL.md + references + scripts + assets)."""
-        return [self.skill_md] + self.references + self.scripts + self.assets
+        """All installable files (SKILL.md + references + scripts + assets + agents)."""
+        return (
+            [self.skill_md]
+            + self.references
+            + self.scripts
+            + self.assets
+            + self.agents
+        )
 
 
 def _collect_files(directory: Path) -> list[Path]:
@@ -93,6 +105,7 @@ class SkillRegistry:
                     references=_collect_files(child / "references"),
                     scripts=_collect_files(child / "scripts"),
                     assets=_collect_files(child / "assets"),
+                    agents=_collect_files(child / "agents"),
                 )
             )
         return skills

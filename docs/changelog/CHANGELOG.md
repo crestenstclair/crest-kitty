@@ -45,6 +45,32 @@ _The 3.2.6 development cycle is open. Entries land here as missions merge._
 
 ### ✨ Added
 
+- **Vendored code-quality skills wired into mission review and crest-spec
+  authoring.** Two skills are vendored into the doctrine layer from an external
+  repository (provenance and re-sync procedure in each skill's `VENDORED.md`);
+  they keep their upstream names rather than the `spk-<family>-*` convention
+  because renaming breaks their internal cross-links.
+  - `adversarial-review` — six blind smell hunters run in parallel, then a
+    skeptic with a kill mandate refutes every finding before it is reported.
+    `spec-kitty-mission-review` now runs it as a mandatory **Step 8.75** over
+    the mission diff, writing `kitty-specs/<slug>/adversarial-review.md` and
+    folding skeptic-confirmed Critical/Major findings into a new
+    `## Structural Quality` report section. Structural smells are a
+    maintainability signal: one never forces a FAIL verdict on its own, and
+    never outranks a security finding.
+  - `writing-clean-code` — SOLID, dependency injection, naming, and pattern
+    selection. The crest-spec authoring phase now loads it before declaring
+    structure, because DDD resources and SOLID are the same decisions named
+    twice: SRP bounds a context, LSP/ISP shape `ports`, and DIP is what
+    `layerRules` encode. A structural defect in the bedrock propagates into
+    every work package, so it is caught at authoring time, not at review.
+  - `SkillRegistry` now collects a skill's `agents/` directory alongside
+    `references/`, `scripts/`, and `assets/`. Without it the seven hunter and
+    skeptic role prompts ship in the repository but reach no agent surface, and
+    the pipeline degrades to a single-reviewer pass without erroring.
+  - Migration `3.2.6_vendored_review_skills` delivers both skills to existing
+    projects. `SpkSkillPackMigration` cannot: its `detect()` filters the
+    registry to `spk-*` names and its ID is already stamped everywhere.
 - **Executable crest-spec derivation gates.** Prose is not a control:
   - Plan entry gate `CREST_SPEC_UNDERIVED` — a mission declaring
     `crest_spec_impact: structural` cannot advance planning while the
